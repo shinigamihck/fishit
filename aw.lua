@@ -357,7 +357,6 @@ sidebar.Size = UDim2.new(0,150,1,0)
 sidebar.BackgroundColor3 = THEME.BG_SIDE
 Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0,12)
 
-_G.UI.Main.Sidebar = sidebar  -- 🔥 FIX WAJIB! (biar PART 7 nggak error)
 
 local sideList = Instance.new("UIListLayout", sidebar)
 sideList.Padding = UDim.new(0,6)
@@ -514,6 +513,8 @@ _G.UI = {
     Content = content,
     Main = main,
 }
+_G.UI.Main.Sidebar = sidebar
+
 
 -- =========================================================
 -- PART 4 — TAB IMPLEMENTATION (AUTO / SPOTS / PLAYERS / SHOP / MISC / SYSTEM)
@@ -785,9 +786,8 @@ UI.SideButton("System", function()
     end)
 end)
 
--- OPEN DEFAULT TAB
-task.wait(0.1)
-UI.Notify("Fish It Dark UI Loaded")
+
+
 
 
 -- =========================================================
@@ -986,19 +986,6 @@ _G.FISHIT_SHUTDOWN = safeShutdown
 
 print("FISH IT — COMPLETE SCRIPT MERGED SUCCESSFULLY")
 -- =========================================================
--- PART 9 — FINAL FIX (SIDEBAR REFERENCE EXPORT)
--- =========================================================
--- (WAJIB supaya auto-open tab & future access tidak error)
-
-if _G.UI and _G.UI.Main then
-    for _,v in ipairs(_G.UI.Main:GetChildren()) do
-        if v:IsA("Frame") then
-            -- asumsi frame pertama di kiri = sidebar
-            _G.UI.Main.Sidebar = v
-            break
-        end
-    end
-end
 
 -- =========================================================
 -- END OF FILE
