@@ -1,6 +1,7 @@
 -- ==========================================
---  FISH IT | SANZHUY HUB (RAYFIELD VERSION)
---  PART 1: STATE + SERVICES + ANTI AFK
+-- SANZHUY HUB | FISH IT (ORION UI VERSION)
+-- PART 1 — CORE SYSTEM + STATE + SERVICES
+-- DARK MODE (A2)
 -- ==========================================
 
 if _G.FishItWORK then return end
@@ -16,20 +17,18 @@ local Stats = game:GetService("Stats")
 local LP = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- REMOTES (Net)
+-- REMOTES
 local Net = require(ReplicatedStorage.Packages.Net)
 local sellRF = Net:RemoteFunction("SellAllItems")
 
 -- ==========================================
--- STATE / SETTINGS
+-- STATE
 -- ==========================================
 
 AutoFish = false
 AutoSell = false
 AutoWeather = false
-
 AUTO_TOTEM = false
-RUNNING_TOTEM = true
 
 FlyEnabled = false
 FlySpeed = 50
@@ -38,15 +37,26 @@ FishDelay = 0.13
 SellInterval = 5
 WeatherDelay = 5
 
--- ping display safe later
+RUNNING_TOTEM = true
+
+_G.ANTI_AFK = true
+_G.CLEAN_FISH_UI = true
+
+-- ==========================================
+-- PING FUNCTION
+-- ==========================================
+
 local function getRealPing()
     local network = Stats:FindFirstChild("Network")
     if not network then return nil end
+
     local serverStats = network:FindFirstChild("ServerStatsItem")
     if not serverStats then return nil end
-    local ping = serverStats:FindFirstChild("Data Ping")
-    if not ping then return nil end
-    return ping:GetValue()
+
+    local pingStat = serverStats:FindFirstChild("Data Ping")
+    if not pingStat then return nil end
+
+    return pingStat:GetValue()
 end
 
 -- ==========================================
@@ -55,7 +65,7 @@ end
 
 local vu = game:GetService("VirtualUser")
 LP.Idled:Connect(function()
-    if _G.ANTI_AFK == false then return end
+    if not _G.ANTI_AFK then return end
     vu:CaptureController()
     vu:ClickButton2(Vector2.new())
 end)
@@ -77,20 +87,21 @@ end
 function startFly()
     local char = LP.Character
     if not char then return end
+
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
     bg = Instance.new("BodyGyro", hrp)
     bg.P = 9e4
-    bg.MaxTorque = Vector3.new(9e9,9e9,9e9)
+    bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
     bg.CFrame = hrp.CFrame
 
     bv = Instance.new("BodyVelocity", hrp)
-    bv.MaxForce = Vector3.new(9e9,9e9,9e9)
+    bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
 
     flyConn = RunService.RenderStepped:Connect(function()
         if not FlyEnabled then return end
-        
+
         local cam = workspace.CurrentCamera
         local move = Vector3.zero
 
@@ -112,7 +123,7 @@ LP.CharacterAdded:Connect(function()
 end)
 
 -- ==========================================
--- FISHING CONTROLLER LOAD
+-- FISHING CONTROLLER AUTO LOAD
 -- ==========================================
 
 FishingController = nil
@@ -129,18 +140,11 @@ task.spawn(function()
     until FishingController
 end)
 
+print("PART 1 Loaded ✓ (CORE READY)")
 -- ==========================================
--- CLEAN FISH UI TOGGLE FLAG
+-- PART 2 — ORION UI (DARK MODE)
 -- ==========================================
 
-_G.CLEAN_FISH_UI = true
-_G.ANTI_AFK = true
-
--- PART 1 SELESAI
-print("PART 1 Loaded ✓")
--- ==========================================
--- PART 2: RAYFIELD UI (DEFAULT STYLE)
--- ==========================================
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
 local Window = OrionLib:MakeWindow({
@@ -149,6 +153,10 @@ local Window = OrionLib:MakeWindow({
     SaveConfig = true,
     ConfigFolder = "SanzhuyHub"
 })
+
+-- ==========================================
+-- MAIN TAB (Auto Farm)
+-- ==========================================
 
 local MainTab = Window:MakeTab({
     Name = "Main",
@@ -180,6 +188,52 @@ MainTab:AddToggle({
     end
 })
 
+MainTab:AddSlider({
+    Name = "Sell Interval",
+    Min = 1,
+    Max = 30,
+    Default = SellInterval,
+    Increment = 1,
+    ValueName = "s",
+    Callback = function(v)
+        SellInterval = v
+    end
+})
+
+-- ==========================================
+-- FARM TAB
+-- ==========================================
+
+local FarmTab = Window:MakeTab({
+    Name = "Farm Settings",
+    Icon = "rbxassetid://4483362458",
+    PremiumOnly = false
+})
+
+FarmTab:AddSlider({
+    Name = "Fishing Delay",
+    Min = 0.05,
+    Max = 0.3,
+    Default = FishDelay,
+    Increment = 0.01,
+    ValueName = "sec",
+    Callback = function(v)
+        FishDelay = v
+    end
+})
+
+FarmTab:AddToggle({
+    Name = "Clean Fish UI (FPS Boost)",
+    Default = _G.CLEAN_FISH_UI,
+    Callback = function(v)
+        _G.CLEAN_FISH_UI = v
+    end
+})
+
+-- ==========================================
+-- UTILITY TAB (Fly, Speeds)
+-- ==========================================
+
 local UtilTab = Window:MakeTab({
     Name = "Utility",
     Icon = "rbxassetid://4483362458",
@@ -201,29 +255,31 @@ UtilTab:AddSlider({
     Max = 800,
     Default = FlySpeed,
     Increment = 25,
+    ValueName = "speed",
     Callback = function(v)
         FlySpeed = v
     end
 })
 
-OrionLib:Init()
-
-
 -- ==========================================
--- SHOP TAB
+-- SHOP TAB (Totem System)
 -- ==========================================
 
-local ShopTab = Window:CreateTab("Shop", 4483362458)
+local ShopTab = Window:MakeTab({
+    Name = "Totem / Merchant",
+    Icon = "rbxassetid://4483362458",
+    PremiumOnly = false
+})
 
-ShopTab:CreateToggle({
+ShopTab:AddToggle({
     Name = "Auto Totem",
-    CurrentValue = AUTO_TOTEM,
+    Default = false,
     Callback = function(v)
         AUTO_TOTEM = v
     end
 })
 
-ShopTab:CreateButton({
+ShopTab:AddButton({
     Name = "Toggle Merchant",
     Callback = function()
         local gui = LP.PlayerGui:FindFirstChild("Merchant")
@@ -237,50 +293,47 @@ ShopTab:CreateButton({
 -- MISC TAB
 -- ==========================================
 
-local MiscTab = Window:CreateTab("Misc", 4483362458)
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483362458",
+    PremiumOnly = false
+})
 
-MiscTab:CreateToggle({
+MiscTab:AddToggle({
     Name = "Anti AFK",
-    CurrentValue = _G.ANTI_AFK,
+    Default = true,
     Callback = function(v)
         _G.ANTI_AFK = v
     end
 })
 
-MiscTab:CreateButton({
+MiscTab:AddButton({
     Name = "Hide / Show UI",
     Callback = function()
-        Rayfield:ToggleUI()
+        OrionLib:Toggle()
     end
 })
 
-MiscTab:CreateButton({
+MiscTab:AddButton({
     Name = "Close Script",
     Callback = function()
+        AUTO_TOTEM = false
         AutoFish = false
         AutoSell = false
         AutoWeather = false
-        AUTO_TOTEM = false
         FlyEnabled = false
         pcall(stopFly)
-        Rayfield:Destroy()
         _G.FishItWORK = false
+        OrionLib:Destroy()
     end
 })
 
-Rayfield:Notify({
-    Title = "Loaded!",
-    Content = "Fish It Hub (Rayfield UI) siap digunakan",
-    Duration = 5
-})
-
-print("PART 2 Loaded ✓")
+print("PART 2 Loaded ✓ (ORION UI READY)")
 -- ==========================================
--- PART 3: AUTO FISH + AUTO SELL + AUTO WEATHER
+-- PART 3 — AUTO FISH / SELL / WEATHER
 -- ==========================================
 
--- ========= AUTO FISH LOOP =========
-
+-- AUTO FISH
 task.spawn(function()
     while _G.FishItWORK do
         task.wait(FishDelay)
@@ -289,7 +342,6 @@ task.spawn(function()
             local guid = FishingController:GetCurrentGUID()
 
             if not guid then
-                -- lempar kail
                 pcall(function()
                     FishingController:RequestChargeFishingRod(
                         workspace.CurrentCamera.ViewportSize / 2,
@@ -297,7 +349,6 @@ task.spawn(function()
                     )
                 end)
             else
-                -- mini game click
                 pcall(function()
                     FishingController:FishingMinigameClick()
                 end)
@@ -306,9 +357,7 @@ task.spawn(function()
     end
 end)
 
-
--- ========= AUTO SELL LOOP =========
-
+-- AUTO SELL
 task.spawn(function()
     while _G.FishItWORK do
         task.wait(SellInterval)
@@ -321,22 +370,19 @@ task.spawn(function()
     end
 end)
 
-
--- ========= AUTO WEATHER LOOP =========
-
+-- AUTO WEATHER
 task.spawn(function()
     local purchaseRF = Net:RemoteFunction("PurchaseWeatherEvent")
     local WeatherList = {"Storm", "Cloudy", "Wind"}
 
     while _G.FishItWORK do
         task.wait(WeatherDelay)
-
-        if AutoWeather and purchaseRF then
-            for _,weather in ipairs(WeatherList) do
+        if AutoWeather then
+            for _,w in ipairs(WeatherList) do
                 pcall(function()
-                    purchaseRF:InvokeServer(weather)
+                    purchaseRF:InvokeServer(w)
                 end)
-                task.wait(1.5)
+                task.wait(1.25)
             end
         end
     end
@@ -344,66 +390,44 @@ end)
 
 print("PART 3 Loaded ✓")
 -- ==========================================
--- PART 4: FLY LOOP + CLEAN FISH UI (FPS BOOST)
+-- PART 4 — CLEAN FISH UI + FLY AUTO FIX
 -- ==========================================
 
-
--- ========= FLY MOVEMENT LOOP =========
-
+-- Fly auto-reapply
 task.spawn(function()
     while _G.FishItWORK do
-        task.wait(0.1)
-        if FlyEnabled == false then continue end
-
-        -- Safety auto-reapply if body movers vanish
-        local char = LP.Character
-        if not char then continue end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then continue end
-
-        if not bv or not bg then
+        task.wait(0.15)
+        if FlyEnabled and (not bv or not bg) then
             startFly()
         end
     end
 end)
 
-
-
--- ========= CLEAN FISH UI (HIDE BIG TEXT) =========
-
+-- Clean Fish UI
 local function shouldHideLabel(label)
     if not label:IsA("TextLabel") then return false end
-    if not label.Text or label.Text == "" then return false end
+    if not label.Text then return false end
 
-    local text = label.Text:lower()
+    local t = label.Text:lower()
 
-    -- KEEP only “you got:”
-    if text:match("^%s*you%s+got%s*:") then
-        return false
-    end
+    if t:match("^%s*you%s+got") then return false end
+    if t:match("%d+%.?%d*%s*kg") then return true end
+    if t:match("^1%s+in%s+%d+") then return true end
+    if t:find("lvl") then return true end
 
-    -- Hide KG, chances, level text
-    if text:match("%d+%.?%d*%s*kg") then return true end
-    if text:match("^1%s+in%s+%d+") then return true end
-    if text:find("lvl") then return true end
-
-    -- Hide large banner text
     if label.TextSize >= 26 then
         local y = label.AbsolutePosition.Y
-        local camY = workspace.CurrentCamera.ViewportSize.Y
-        if y > camY*0.2 and y < camY*0.6 then
+        local cy = workspace.CurrentCamera.ViewportSize.Y
+        if y > cy*0.25 and y < cy*0.65 then
             return true
         end
     end
-
     return false
 end
 
-
 task.spawn(function()
     while _G.FishItWORK do
-        task.wait(1.5)
-
+        task.wait(1.4)
         if not _G.CLEAN_FISH_UI then continue end
 
         local pg = LP:FindFirstChild("PlayerGui")
@@ -412,48 +436,37 @@ task.spawn(function()
         local fishGui = pg:FindFirstChild("FishingUI")
         if not fishGui then continue end
 
-        for _, obj in ipairs(fishGui:GetDescendants()) do
-            if shouldHideLabel(obj) then
-                obj.Visible = false
+        for _,o in ipairs(fishGui:GetDescendants()) do
+            if shouldHideLabel(o) then
+                o.Visible = false
             end
         end
     end
 end)
 
-
 print("PART 4 Loaded ✓")
 -- ==========================================
--- PART 5: AUTO TOTEM SYSTEM (FULL CLEAN)
+-- PART 5 — AUTO TOTEM SYSTEM
 -- ==========================================
 
--- Load Replion for Data Inventory
 local Replion = require(ReplicatedStorage.Packages.Replion)
 local Data = Replion.Client:WaitReplion("Data")
 
--- Remotes
 local SpawnTotem = Net:RemoteEvent("SpawnTotem")
 local TotemSpawned = Net:RemoteEvent("TotemSpawned")
 local EquipToolFromHotbar = Net:RemoteEvent("EquipToolFromHotbar")
 
--- Internal state
 local COOLDOWN = 0
 local retryWait = false
-local TRY_INTERVAL = 300  -- Retry 5 menit
-
-
--- ======== Ambil UUID Totem Player ========
+local TRY_INTERVAL = 300
 
 local function GetTotemUUID()
-    local inv = Data:Get({"Inventory", "Totems"})
-    if inv and #inv > 0 then
-        return inv[1].UUID
-    end
+    local inv = Data:Get({"Inventory","Totems"})
+    if inv and #inv > 0 then return inv[1].UUID end
     return nil
 end
 
-
--- ======== Auto Equip Rod (Wajib setiap 2.5s) ========
-
+-- auto equip rod
 task.spawn(function()
     while _G.FishItWORK do
         task.wait(2.5)
@@ -465,47 +478,25 @@ task.spawn(function()
     end
 end)
 
-
--- ======== Saat Server Confirm Totem Spawn ========
-
 TotemSpawned.OnClientEvent:Connect(function()
-    COOLDOWN = 3600 -- cooldown totem 1 jam
+    COOLDOWN = 3600
 end)
-
-
--- ======== AUTO TOTEM LOOP UTAMA ========
 
 task.spawn(function()
     while _G.FishItWORK do
         task.wait(1)
+        if not AUTO_TOTEM then continue end
 
-        if not AUTO_TOTEM then
-            continue
-        end
-
-        -- Cooldown berjalan normal
         if COOLDOWN > 0 then
             COOLDOWN -= 1
             continue
         end
 
-        -- Jika lagi masa retry
-        if retryWait then
-            if os.clock() < retryWait then
-                continue
-            else
-                retryWait = false
-            end
-        end
+        if retryWait and os.clock() < retryWait then continue end
 
-        -- Cari totem
         local uuid = GetTotemUUID()
-        if not uuid then
-            warn("[TOTEM] Tidak ada Totem di inventory.")
-            continue
-        end
+        if not uuid then continue end
 
-        -- Fire to server
         local success = false
         local conn
 
@@ -518,9 +509,7 @@ task.spawn(function()
         task.wait(0.6)
 
         if conn then conn:Disconnect() end
-
         if not success then
-            warn("[TOTEM] Gagal spawn. Retry 5 menit.")
             retryWait = os.clock() + TRY_INTERVAL
         end
     end
@@ -528,88 +517,13 @@ end)
 
 print("PART 5 Loaded ✓")
 -- ==========================================
--- PART 6: SCREEN SCALE (MOBILE) + FPS BOOST
+-- PART 6 — TELEPORT TAB
 -- ==========================================
 
--- ========= SCREEN SCALE FIX (MOBILE SAFE) =========
-
-task.spawn(function()
-    local player = Players.LocalPlayer
-    local gui = player:WaitForChild("PlayerGui")
-
-    local function applyScale()
-        local cam = workspace.CurrentCamera
-        if not cam then return end
-
-        local w = cam.ViewportSize.X
-        local scale = 1
-
-        if UIS.TouchEnabled then
-            if w <= 360 then
-                scale = 0.45
-            elseif w <= 400 then
-                scale = 0.5
-            elseif w <= 440 then
-                scale = 0.55
-            elseif w <= 480 then
-                scale = 0.6
-            elseif w <= 600 then
-                scale = 0.7
-            else
-                scale = 0.8
-            end
-        end
-
-        -- Rayfield pakai ScreenGui internal
-        for _,g in ipairs(gui:GetChildren()) do
-            if g:IsA("ScreenGui") and g:FindFirstChildOfClass("UIScale") then
-                g:FindFirstChildOfClass("UIScale").Scale = scale
-            end
-        end
-    end
-
-    applyScale()
-    workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(applyScale)
-end)
-
-
--- ========= FPS BOOSTER (GUI FILTER) =========
-
-task.spawn(function()
-    while _G.FishItWORK do
-        task.wait(3)
-
-        local pg = LP:FindFirstChild("PlayerGui")
-        if not pg then continue end
-
-        -- matikan gui berat yang gak penting
-        for _,gui in ipairs(pg:GetChildren()) do
-            if gui:IsA("ScreenGui") then
-                if gui.Name ~= "Rayfield" and gui.Name ~= "Chat" then
-                    -- jangan destroy, cukup disable jika bisa
-                    pcall(function()
-                        if gui.Enabled ~= nil then
-                            gui.Enabled = true
-                        end
-                    end)
-                end
-            end
-        end
-    end
-end)
-
-print("PART 6 Loaded ✓")
--- ==========================================
--- PART 7: TELEPORT SYSTEM + FINALIZE
--- ==========================================
-
--- ========= TELEPORT LOCATIONS =========
--- (diambil dari script asli kamu, FULL)
-
-Locations = {
+local Locations = {
     { Name = "Ancient Jungle", CFrame = CFrame.new(1562.54, 6.62, -233.16) },
     { Name = "Ancient Ruin", CFrame = CFrame.new(6076.29, -585.92, 4625.92) },
-    { Name = "Coral Reefs", CFrame = CFrame.new(-2752.80, 4.0, 2165.78) },
+    { Name = "Coral Reefs", CFrame = CFrame.new(-2752.80, 4, 2165.78) },
     { Name = "Crater Island", CFrame = CFrame.new(1027.12, 2.89, 5148.10) },
     { Name = "Fisherman Island", CFrame = CFrame.new(73.35, 9.53, 2709.50) },
     { Name = "Kohana", CFrame = CFrame.new(-595.69, 19.25, 429.86) },
@@ -619,31 +533,33 @@ Locations = {
     { Name = "Weather Machine", CFrame = CFrame.new(-1527.67, 2.87, 1914.66) },
 }
 
--- ========= RAYFIELD TELEPORT TAB =========
+local TeleportTab = Window:MakeTab({
+    Name = "Teleport",
+    Icon = "rbxassetid://4483362458",
+    PremiumOnly = false
+})
 
-local TeleportTab = Window:CreateTab("Teleport", 4483362458)
-
-TeleportTab:CreateSection("Teleport To Players")
+TeleportTab:AddSection("Teleport To Players")
 
 for _,plr in ipairs(Players:GetPlayers()) do
     if plr ~= LP then
-        TeleportTab:CreateButton({
+        TeleportTab:AddButton({
             Name = plr.Name,
             Callback = function()
-                local hrp1 = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-                local hrp2 = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-                if hrp1 and hrp2 then
-                    hrp1.CFrame = hrp2.CFrame * CFrame.new(0,0,-3)
+                local me = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+                local him = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+                if me and him then
+                    me.CFrame = him.CFrame * CFrame.new(0,0,-3)
                 end
             end
         })
     end
 end
 
-TeleportTab:CreateSection("Teleport To Fishing Spots")
+TeleportTab:AddSection("Teleport To Spots")
 
 for _,spot in ipairs(Locations) do
-    TeleportTab:CreateButton({
+    TeleportTab:AddButton({
         Name = spot.Name,
         Callback = function()
             local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
@@ -654,14 +570,5 @@ for _,spot in ipairs(Locations) do
     })
 end
 
-
--- ========= FINAL CONFIRM =========
-
-Rayfield:Notify({
-    Title = "Sanzhuy Hub",
-    Content = "All systems loaded successfully ✅",
-    Duration = 6
-})
-
-print("PART 7 Loaded ✓")
-print("✅ FULL SCRIPT LOADED — RAYFIELD VERSION")
+print("PART 6 Loaded ✓")
+print("✓ FULL ORION VERSION LOADED — DELTA READY")
