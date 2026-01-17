@@ -310,6 +310,10 @@ local visible = true
 floatBtn.MouseButton1Click:Connect(function()
     visible = not visible
     main.Visible = visible
+
+    if blur then
+        blur.Enabled = visible
+    end
 end)
 
 print("✔ BATCH 2 Loaded | Glass UI Ready")
@@ -386,17 +390,25 @@ createToggle(MainPage, "Auto Totem",   function(v) _G.ApplyToggle("Auto Totem", 
 
 
 ------------------------------------------------------
--- UPDATE TOTEM STATUS TEXT
+-- FULL TOTEM STATUS SYSTEM (SEPERTI UI LAMA)
 ------------------------------------------------------
 task.spawn(function()
     while _G.FishItHubLoaded do
         task.wait(1)
 
+        -- Jika Auto Totem OFF → IDLE (UI lama style)
+        if not F.AutoTotem then
+            TotemStatus.Text = "Totem Status: Idle"
+            TotemStatus.TextColor3 = Color3.fromRGB(200,200,200)
+            continue
+        end
+
+        -- READY
         if F.TotemCooldown <= 0 then
             TotemStatus.Text = "Totem Status: READY"
             TotemStatus.TextColor3 = Color3.fromRGB(0,255,120)
-
         else
+            -- COOLDOWN
             local m = math.floor(F.TotemCooldown / 60)
             local s = F.TotemCooldown % 60
             TotemStatus.Text = string.format("Totem Status: %02dm %02ds", m, s)
@@ -404,6 +416,7 @@ task.spawn(function()
         end
     end
 end)
+
 
 
 createToggle(MainPage, "Fly",          function(v) _G.ApplyToggle("Fly", v) end)
@@ -416,9 +429,10 @@ TotemStatus.Size = UDim2.new(0,300,0,20)
 TotemStatus.BackgroundTransparency = 1
 TotemStatus.Font = Enum.Font.Gotham
 TotemStatus.TextSize = 12
-TotemStatus.TextColor3 = THEME.TEXT
 TotemStatus.TextXAlignment = Enum.TextXAlignment.Left
-TotemStatus.Text = "Totem Status: --"
+TotemStatus.TextColor3 = THEME.TEXT
+TotemStatus.Text = "Totem Status: Idle"
+
 
 
 ------------------------------------------------------
@@ -571,18 +585,32 @@ local function GetTotemUUID()
 end
 
 ------------------------------------------------------
--- CONFIRM TOTEM SPAWN → RESET COOLDOWN
+-- TOTEM SPAWNED → EQUIP ROD (VERSI FINAL)
 ------------------------------------------------------
 TotemSpawned.OnClientEvent:Connect(function()
-    F.TotemCooldown = 3600  -- 1 jam cooldown
+    F.TotemCooldown = 3600
 
-    -- re-equip rod setelah spawn
+    -- UI Lama: Status EQUIPPING ROD
+    TotemStatus.Text = "Totem Status: Equipping Rod..."
+    TotemStatus.TextColor3 = Color3.fromRGB(80,160,255)
+
     task.delay(0.25, function()
-        pcall(function()
-            EquipToolFromHotbar:FireServer(1)
-        end)
+        local equipped = Data:Get("EquippedItems")
+
+        if equipped and equipped[1] then
+            pcall(function() EquipToolFromHotbar:FireServer(1) end)
+        else
+            -- brute search slot 1–9
+            for slot = 1,9 do
+                pcall(function()
+                    EquipToolFromHotbar:FireServer(slot)
+                end)
+                task.wait(0.05)
+            end
+        end
     end)
 end)
+
 
 ------------------------------------------------------
 -- AUTO TOTEM CORE LOOP
@@ -825,6 +853,37 @@ createToggle(VisualPage, "Show Ping Panel", function(state)
     PingPanel.Visible = state
 end)
 
+
+------------------------------------------------------
+-- VISUAL TAB : MERCHANT BUTTON (AUTO CLOSE 5s)
+------------------------------------------------------
+
+local MerchantBtn = Instance.new("TextButton", VisualPage)
+MerchantBtn.Size = UDim2.new(0,300,0,34)
+MerchantBtn.BackgroundColor3 = THEME.BUTTON
+MerchantBtn.BackgroundTransparency = 0.25
+MerchantBtn.TextColor3 = THEME.TEXT
+MerchantBtn.Font = Enum.Font.GothamBold
+MerchantBtn.TextSize = 12
+MerchantBtn.BorderSizePixel = 0
+MerchantBtn.Text = "Open Merchant (Auto Close 5s)"
+
+Instance.new("UICorner", MerchantBtn).CornerRadius = UDim.new(0,8)
+
+local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
+
+MerchantBtn.MouseButton1Click:Connect(function()
+    if not merchantGui then return end
+
+    merchantGui.Enabled = true
+
+    -- Auto close setelah 5 detik
+    task.delay(5, function()
+        if merchantGui then
+            merchantGui.Enabled = false
+        end
+    end)
+end)
 
 
 ------------------------------------------------------
