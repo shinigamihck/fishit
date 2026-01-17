@@ -26,7 +26,7 @@ local AutoSell = false
 local AutoWeather = false
 local AUTO_TOTEM = false
 local WeatherDelay = 5
-local SellInterval = 5
+local SellInterval = 30
 
 -- ANTI AFK
 local VirtualUser = game:GetService("VirtualUser")
@@ -384,18 +384,21 @@ newTab("Auto", function()
         autoFish = not autoFish
         Core.AutoFish(autoFish)
         btn.Text = "Auto Fish: " .. (autoFish and "ON" or "OFF")
+        notify("Auto Fish: " .. (autoFish and "ON" or "OFF"))
     end)
 
     addButton("Auto Sell: OFF", function(btn)
         autoSell = not autoSell
         Core.AutoSell(autoSell)
         btn.Text = "Auto Sell: " .. (autoSell and "ON" or "OFF")
+        notify("Auto Sell: " .. (autoSell and "ON" or "OFF"))
     end)
 
     addButton("Auto Weather: OFF", function(btn)
         autoWeather = not autoWeather
         Core.AutoWeather(autoWeather)
         btn.Text = "Auto Weather: " .. (autoWeather and "ON" or "OFF")
+        notify("Auto Weather: " .. (autoWeather and "ON" or "OFF"))
     end)
 end)
 
@@ -454,24 +457,27 @@ end)
 -- TAB: SHOP (dengan indikator ON/OFF)
 -- =========================================================
 newTab("Shop", function()
+    local autoTotem = AUTO_TOTEM
+    local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
+
     addLabel("Shop & Totem")
 
-    local autoTotem = false
+    addButton("Auto Totem: " .. (autoTotem and "ON" or "OFF"), function(btn)
+    autoTotem = not autoTotem
+    Core.AutoTotem(autoTotem)
+    btn.Text = "Auto Totem: " .. (autoTotem and "ON" or "OFF")
+    notify("Auto Totem: " .. (autoTotem and "ON" or "OFF"))
+end)
 
-    addButton("Auto Totem: OFF", function(btn)
-        autoTotem = not autoTotem
-        Core.AutoTotem(autoTotem)
-        btn.Text = "Auto Totem: " .. (autoTotem and "ON" or "OFF")
-    end)
-
-    local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
-    addButton("Toggle Merchant UI", function()
+    addButton("Merchant UI (Auto Close 3s)", function(btn)
         if merchantGui then
-            merchantGui.Enabled = not merchantGui.Enabled
+            merchantGui.Enabled = true
+            task.delay(3, function()
+                merchantGui.Enabled = false
+            end)
         end
     end)
 end)
-
 
 -- =========================================================
 -- TAB: SYSTEM
@@ -483,10 +489,12 @@ newTab("System", function()
         gui:Destroy()
     end)
 
-    addButton("Show Ping", function()
-        local ping = Core.GetPing()
-        warn("Ping:", ping)
+    addButton("Show Ping Panel", function()
+    togglePingPanel()
     end)
+    addButton("Rejoin Server", function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, LP)
+  end)
 end)
 
 -- OPEN DEFAULT TAB
@@ -495,7 +503,7 @@ local first = topBar:GetChildren()[1]
 if first and first:IsA("TextButton") then
     first.MouseButton1Click:Fire()
 end
-
+makeResizable(main)
 print("UI TopBar Loaded | Clean | Modern | Working")
 
 
@@ -535,6 +543,103 @@ floatBtn.MouseButton1Click:Connect(function()
     panelVisible = not panelVisible
     mainFrame.Visible = panelVisible
 end)
+
+local function notify(msg)
+    local n = Instance.new("Frame", gui)
+    n.Size = UDim2.new(0,220,0,36)
+    n.Position = UDim2.new(1,-240,1,-80)
+    n.BackgroundColor3 = Color3.fromRGB(25,25,30)
+    n.BackgroundTransparency = 0.2
+
+    Instance.new("UICorner", n).CornerRadius = UDim.new(0,10)
+
+    local txt = Instance.new("TextLabel", n)
+    txt.Size = UDim2.new(1,-10,1,0)
+    txt.Position = UDim2.new(0,10,0,0)
+    txt.BackgroundTransparency = 1
+    txt.Font = Enum.Font.Gotham
+    txt.TextSize = 13
+    txt.TextColor3 = Color3.fromRGB(255,255,255)
+    txt.Text = msg
+    txt.TextXAlignment = Enum.TextXAlignment.Left
+
+    task.spawn(function()
+        for i = 1,40 do
+            task.wait(0.03)
+            n.BackgroundTransparency += 0.02
+            txt.TextTransparency += 0.02
+        end
+        n:Destroy()
+    end)
+end
+
+local UIS = game:GetService("UserInputService")
+
+local function makeResizable(frame)
+    local minW, minH = 120, 60
+
+    local handle = Instance.new("Frame", frame)
+    handle.Size = UDim2.new(0,18,0,18)
+    handle.Position = UDim2.new(1,-18,1,-18)
+    handle.BackgroundColor3 = Color3.fromRGB(100,100,120)
+    handle.Active = true
+    handle.Draggable = true
+
+    Instance.new("UICorner", handle).CornerRadius = UDim.new(0,6)
+
+    handle.MouseMoved:Connect(function()
+        if UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+            local m = UIS:GetMouseLocation()
+            local x = math.max(minW, m.X - frame.AbsolutePosition.X)
+            local y = math.max(minH, m.Y - frame.AbsolutePosition.Y)
+            frame.Size = UDim2.new(0, x, 0, y)
+        end
+    end)
+end
+
+---------------------------------------------------------
+-- 📊 PING PANEL TOGGLE (FINAL FIX)
+---------------------------------------------------------
+local pingPanel
+
+local function togglePingPanel()
+    if pingPanel and pingPanel.Parent then
+        pingPanel:Destroy()
+        pingPanel = nil
+        return
+    end
+
+    pingPanel = Instance.new("Frame", gui)
+    pingPanel.Size = UDim2.new(0,160,0,60)
+    pingPanel.Position = UDim2.new(1,-180,1,-100)
+    pingPanel.BackgroundColor3 = Color3.fromRGB(25,28,35)
+    pingPanel.BackgroundTransparency = 0.1
+    pingPanel.Active = true
+    pingPanel.Draggable = true
+
+    Instance.new("UICorner", pingPanel).CornerRadius = UDim.new(0,10)
+    Instance.new("UIStroke", pingPanel).Color = Color3.fromRGB(0,170,255)
+
+    local txt = Instance.new("TextLabel", pingPanel)
+    txt.Size = UDim2.new(1,0,1,0)
+    txt.BackgroundTransparency = 1
+    txt.Font = Enum.Font.GothamBold
+    txt.TextSize = 14
+    txt.TextColor3 = Color3.fromRGB(255,255,255)
+    txt.Text = "Ping: ..."
+
+    -- Auto update ping
+    task.spawn(function()
+        while pingPanel do
+            task.wait(1)
+            if not pingPanel then break end
+            txt.Text = "Ping: " .. math.floor(Core.GetPing()) .. " ms"
+        end
+    end)
+
+    -- allow resize
+    makeResizable(pingPanel)
+end
 
 
 
