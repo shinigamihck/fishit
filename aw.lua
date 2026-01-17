@@ -49,7 +49,7 @@ _G.FISH = {
 
     FlySpeed      = 80,
     FishDelay     = 0.13,
-    SellInterval  = 5,
+    SellInterval  = 60,
     WeatherDelay  = 5,
 
     TotemCooldown = 0,
@@ -162,7 +162,7 @@ titleBar.Size = UDim2.new(1,0,0,38)
 titleBar.BackgroundTransparency = 1
 
 local title = Instance.new("TextLabel", titleBar)
-title.Text = "FishIt Hub — Glass Minimal"
+title.Text = "SanzHuy — Di Joki ChatGPT"
 title.Size = UDim2.new(1,-50,1,0)
 title.Position = UDim2.new(0,16,0,0)
 title.Font = Enum.Font.GothamBold
@@ -451,7 +451,7 @@ end
 
 
 ------------------------------------------------------
--- FLY ENGINE
+-- FLY ENGINE (FINAL SMOOTH)
 ------------------------------------------------------
 local flyConn, bv, bg
 
@@ -463,17 +463,19 @@ function _G.StopFly()
 end
 
 function _G.StartFly()
-    local char = LP.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
+    local char = LP.Character or LP.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
 
+    -- stabilizer
     bg = Instance.new("BodyGyro", hrp)
     bg.P = 9e4
     bg.MaxTorque = Vector3.new(9e9,9e9,9e9)
+    bg.CFrame = hrp.CFrame
 
+    -- pendorong
     bv = Instance.new("BodyVelocity", hrp)
     bv.MaxForce = Vector3.new(9e9,9e9,9e9)
+    bv.Velocity = Vector3.zero
 
     flyConn = RS.RenderStepped:Connect(function()
         if not F.FlyEnabled then return end
@@ -481,17 +483,29 @@ function _G.StartFly()
         local cam = workspace.CurrentCamera
         local move = Vector3.zero
 
+        -- arah WASD
         if UIS:IsKeyDown(Enum.KeyCode.W) then move += cam.CFrame.LookVector end
         if UIS:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
         if UIS:IsKeyDown(Enum.KeyCode.A) then move -= cam.CFrame.RightVector end
         if UIS:IsKeyDown(Enum.KeyCode.D) then move += cam.CFrame.RightVector end
+
+        -- naik turun (lebih halus)
         if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.new(0,1,0) end
 
-        bv.Velocity = move.Magnitude > 0 and move.Unit * F.FlySpeed or Vector3.zero
+        -- apply movement
+        if move.Magnitude > 0 then
+            bv.Velocity = move.Unit * F.FlySpeed
+        else
+            bv.Velocity = Vector3.zero
+        end
+
+        -- body menghadap ke kamera
         bg.CFrame = cam.CFrame
     end)
 end
+
+
 
 
 ------------------------------------------------------
