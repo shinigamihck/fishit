@@ -878,7 +878,7 @@ task.spawn(function()
 end)
 
 -- =========================================================
--- THEME APPLY (NO LOOP)
+-- THEME APPLY (FIXED)
 -- =========================================================
 
 local THEME = {
@@ -888,21 +888,29 @@ local THEME = {
     BORDER = Color3.fromRGB(0,170,220),
 }
 
-for _,v in ipairs(gui:GetDescendants()) do
+for _,v in ipairs(main:GetDescendants()) do
+
+    -- BASIC COLOR APPLY
     if v:IsA("Frame") and v ~= main then
         v.BackgroundColor3 = THEME.PANEL
+
     elseif v:IsA("TextButton") then
         v.BackgroundColor3 = THEME.BTN
         v.TextColor3 = THEME.TEXT
+        v.TextTransparency = 0
+
     elseif v:IsA("TextLabel") then
         v.TextColor3 = THEME.TEXT
+        v.TextTransparency = 0
     end
 
+    -- CORNER
     if (v:IsA("Frame") or v:IsA("TextButton")) and not v:FindFirstChild("UICorner") then
         Instance.new("UICorner", v).CornerRadius = UDim.new(0,6)
     end
 
-    if (v:IsA("Frame") or v:IsA("TextButton"))
+    -- STROKE
+    if (v:IsA("Frame") or v:IsA("TextButton")) 
         and not v:FindFirstChildOfClass("UIStroke")
         and v ~= main then
 
@@ -912,6 +920,8 @@ for _,v in ipairs(gui:GetDescendants()) do
         s.Transparency = 0.6
     end
 end
+
+
 
 print("FISH IT — FINAL UI MERGED SCRIPT LOADED")
 -- =========================================================
@@ -961,12 +971,11 @@ end)
 task.delay(0.1, function()
     for _,btn in ipairs(_G.UI.Main.Sidebar:GetChildren()) do
         if btn:IsA("TextButton") then
-            btn:MouseButton1Click()
+            btn:Activate() -- ✅ BENAR
             break
         end
     end
 end)
-
 -- =========================================================
 -- PART 8 — SAFETY EXIT & CLEANUP
 -- =========================================================
