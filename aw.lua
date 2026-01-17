@@ -32,6 +32,45 @@ gui.Name = "FishItUI"
 gui.ResetOnSpawn = false
 gui.Parent = pg
 
+local UI_MODE = "AUTO"
+
+local uiScale = Instance.new("UIScale")
+uiScale.Parent = gui
+
+local Camera = workspace.CurrentCamera
+
+local function applyGlobalScale()
+    local scale = 1
+
+    if UI_MODE == "SMALL" then
+        scale = 0.65
+
+    elseif UI_MODE == "NORMAL" then
+        scale = 0.8
+
+    elseif UI_MODE == "BIG" then
+        scale = 1
+
+    elseif UI_MODE == "AUTO" then
+        if UIS.TouchEnabled then
+            local w = Camera.ViewportSize.X
+            if w <= 360 then scale = 0.45
+            elseif w <= 400 then scale = 0.5
+            elseif w <= 480 then scale = 0.6
+            elseif w <= 600 then scale = 0.7
+            else scale = 0.8 end
+        else
+            scale = 0.85
+        end
+    end
+
+    uiScale.Scale = scale
+end
+
+applyGlobalScale()
+Camera:GetPropertyChangedSignal("ViewportSize"):Connect(applyGlobalScale)
+
+
 -- =========================================================
 -- THEME (DARK)
 -- =========================================================
@@ -84,6 +123,30 @@ end
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.fromOffset(640,380)
 main.Position = UDim2.new(0.5,-320,0.5,-190)
+local pingLabel = Instance.new("TextLabel", main)
+pingLabel.Size = UDim2.new(0,140,0,18)
+pingLabel.AnchorPoint = Vector2.new(1,1)
+pingLabel.Position = UDim2.new(1,-10,1,-8)
+pingLabel.BackgroundTransparency = 1
+pingLabel.Font = Enum.Font.Gotham
+pingLabel.TextSize = 11
+
+task.spawn(function()
+    while _G.FishItWORK do
+        task.wait(1)
+        local p = Core.GetPing()
+        pingLabel.Text = string.format("Ping: %.0f ms", p)
+
+        if p <= 80 then
+            pingLabel.TextColor3 = Color3.fromRGB(0,255,120)
+        elseif p <= 150 then
+            pingLabel.TextColor3 = Color3.fromRGB(255,200,0)
+        else
+            pingLabel.TextColor3 = Color3.fromRGB(255,80,80)
+        end
+    end
+end)
+
 main.BackgroundColor3 = THEME.BG_MAIN
 main.Active = true
 main.Draggable = true
@@ -238,41 +301,7 @@ floatBtn.MouseButton1Click:Connect(function()
     main.Visible = visible
 end)
 
--- =========================================================
--- PLACEHOLDER TABS (LOGIC MASUK DI PART 2)
--- =========================================================
-sideButton("Auto", function()
-    label("Auto Features")
-    label("Loading...")
-end)
 
-sideButton("Spots", function()
-    label("Teleport Spots")
-    label("Loading...")
-end)
-
-sideButton("Players", function()
-    label("Players")
-    label("Loading...")
-end)
-
-sideButton("Shop", function()
-    label("Shop & Totem")
-    label("Loading...")
-end)
-
-sideButton("Misc", function()
-    label("Performance")
-    label("Loading...")
-end)
-
-sideButton("System", function()
-    label("System")
-    label("Loading...")
-end)
-
--- OPEN DEFAULT
-sidebar:GetChildren()[3].MouseButton1Click:Fire()
 
 -- EXPORT UI HELPERS FOR PART 2
 _G.__FISH_UI = {
@@ -395,8 +424,9 @@ UI.SideButton("Shop", function()
         end
     end)
 end)
+
 -- =========================================================
--- MISC TAB (Performance)
+-- MISC TAB (Performance) — FIXED
 -- =========================================================
 
 UI.SideButton("Misc", function()
@@ -404,27 +434,48 @@ UI.SideButton("Misc", function()
     UI.Label("Performance & Utility")
 
     local lowPerf = false
-    local function applyLow(state)
-        lowPerf = state
+
+    local function applyLowPerformance(state)
         if state then
             settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+            
             local L = game:GetService("Lighting")
             L.GlobalShadows = false
+
+            for _,e in ipairs(L:GetChildren()) do
+                if e:IsA("BloomEffect") 
+                or e:IsA("BlurEffect") 
+                or e:IsA("SunRaysEffect") then
+                    e.Enabled = false
+                end
+            end
+
             UI.Notify("Low Performance: ON")
         else
             settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+
             local L = game:GetService("Lighting")
             L.GlobalShadows = true
+            
+            for _,e in ipairs(L:GetChildren()) do
+                if e:IsA("BloomEffect") 
+                or e:IsA("BlurEffect") 
+                or e:IsA("SunRaysEffect") then
+                    e.Enabled = true
+                end
+            end
+
             UI.Notify("Low Performance: OFF")
         end
     end
 
     UI.ContentButton("Low Performance: OFF", function(btn)
         lowPerf = not lowPerf
-        applyLow(lowPerf)
+        applyLowPerformance(lowPerf)
         btn.Text = "Low Performance: " .. (lowPerf and "ON" or "OFF")
     end)
 end)
+
 -- =========================================================
 -- SYSTEM TAB
 -- =========================================================
@@ -478,178 +529,7 @@ UI.SideButton("System", function()
     end)
 end)
 
--- =========================================================
--- FINAL LINKER (WAJIB)
--- =========================================================
 
-local UI = _G.__FISH_UI
-if not UI then
-    warn("UI Core not loaded")
-    return
-end
-
-------------------------------------------------------------
--- APPLY SIDEBAR TABS (RE-BIND, FIX URUTAN)
-------------------------------------------------------------
-
--- === AUTO TAB ===
-UI.SideButton("Auto", function()
-    UI.Clear()
-    UI.Label("Auto Features")
-
-    local autoFish = false
-    local autoSell = false
-    local autoWeather = false
-
-    UI.ContentButton("Auto Fish: OFF", function(btn)
-        autoFish = not autoFish
-        Core.AutoFish(autoFish)
-        btn.Text = "Auto Fish: " .. (autoFish and "ON" or "OFF")
-        UI.Notify("Auto Fish: " .. (autoFish and "ON" or "OFF"))
-    end)
-
-    UI.ContentButton("Auto Sell: OFF", function(btn)
-        autoSell = not autoSell
-        Core.AutoSell(autoSell)
-        btn.Text = "Auto Sell: " .. (autoSell and "ON" or "OFF")
-        UI.Notify("Auto Sell: " .. (autoSell and "ON" or "OFF"))
-    end)
-
-    UI.ContentButton("Auto Weather: OFF", function(btn)
-        autoWeather = not autoWeather
-        Core.AutoWeather(autoWeather)
-        btn.Text = "Auto Weather: " .. (autoWeather and "ON" or "OFF"))
-        UI.Notify("Auto Weather: " .. (autoWeather and "ON" or "OFF"))
-    end)
-end)
-
--- === SPOTS TAB ===
-UI.SideButton("Spots", function()
-    UI.Clear()
-    UI.Label("Teleport Spots")
-
-    for _,spot in ipairs(Core.Spots) do
-        UI.ContentButton(spot.Name, function()
-            local char = LP.Character or LP.CharacterAdded:Wait()
-            char:WaitForChild("HumanoidRootPart").CFrame = spot.CFrame + Vector3.new(0,4,0)
-            UI.Notify("Teleported to: " .. spot.Name)
-        end)
-    end
-end)
-
--- === PLAYERS TAB ===
-UI.SideButton("Players", function()
-    local function build()
-        UI.Clear()
-        UI.Label("Teleport Players")
-
-        UI.ContentButton("🔄 Refresh", build)
-
-        for _,plr in ipairs(Players:GetPlayers()) do
-            if plr ~= LP then
-                UI.ContentButton(plr.Name, function()
-                    local hrp = LP.Character.HumanoidRootPart
-                    if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                        hrp.CFrame = plr.Character.HumanoidRootPart.CFrame + Vector3.new(0,3,0)
-                        UI.Notify("Teleported to " .. plr.Name)
-                    end
-                end)
-            end
-        end
-    end
-
-    build()
-end)
-
--- === SHOP TAB ===
-UI.SideButton("Shop", function()
-    UI.Clear()
-    UI.Label("Shop & Totem")
-
-    local autoTotem = false
-
-    UI.ContentButton("Auto Totem: OFF", function(btn)
-        autoTotem = not autoTotem
-        Core.AutoTotem(autoTotem)
-        btn.Text = "Auto Totem: " .. (autoTotem and "ON" or "OFF"))
-        UI.Notify("Auto Totem: " .. (autoTotem and "ON" or "OFF"))
-    end)
-
-    UI.ContentButton("Open Merchant UI", function()
-        local m = LP.PlayerGui:FindFirstChild("Merchant")
-        if m then
-            m.Enabled = true
-            task.delay(3, function() m.Enabled = false end)
-        end
-    end)
-end)
-
--- === MISC TAB ===
-UI.SideButton("Misc", function()
-    UI.Clear()
-    UI.Label("Performance")
-
-    local lowPerf = false
-
-    UI.ContentButton("Low Performance: OFF", function(btn)
-        lowPerf = not lowPerf
-        if lowPerf then
-            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-            game:GetService("Lighting").GlobalShadows = false
-        else
-            settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
-            game:GetService("Lighting").GlobalShadows = true
-        end
-        btn.Text = "Low Performance: " .. (lowPerf and "ON" or "OFF"))
-        UI.Notify("Low Performance: " .. (lowPerf and "ON" or "OFF"))
-    end)
-end)
-
--- === SYSTEM TAB ===
-local pingPanel
-
-local function togglePingPanel()
-    if pingPanel then
-        pingPanel:Destroy()
-        pingPanel = nil
-        return
-    end
-
-    pingPanel = Instance.new("Frame", gui)
-    pingPanel.Size = UDim2.new(0,180,0,60)
-    pingPanel.Position = UDim2.new(1,-200,1,-140)
-    pingPanel.BackgroundColor3 = UI.Theme.BG_SIDE
-    Instance.new("UICorner", pingPanel).CornerRadius = UDim.new(0,10)
-
-    local txt = Instance.new("TextLabel", pingPanel)
-    txt.BackgroundTransparency = 1
-    txt.Size = UDim2.new(1,0,1,0)
-    txt.Font = Enum.Font.GothamBold
-    txt.TextSize = 16
-    txt.TextColor3 = UI.Theme.TEXT
-
-    task.spawn(function()
-        while pingPanel and task.wait(0.8) do
-            txt.Text = "Ping: " .. math.floor(Core.GetPing()) .. " ms"
-        end
-    end)
-end
-
-UI.SideButton("System", function()
-    UI.Clear()
-    UI.Label("System Tools")
-
-    UI.ContentButton("Ping Panel", togglePingPanel)
-
-    UI.ContentButton("Rejoin Server", function()
-        game:GetService("TeleportService"):Teleport(game.PlaceId, LP)
-    end)
-
-    UI.ContentButton("Close UI", function()
-        _G.FishItWORK = nil
-        gui:Destroy()
-    end)
-end)
 
 ------------------------------------------------------------
 -- OPEN DEFAULT TAB
@@ -657,5 +537,34 @@ end)
 task.wait(0.1)
 main.Visible = true
 UI.Notify("Fish It Dark UI Loaded")
+local function shouldHide(label)
+    if not label:IsA("TextLabel") then return false end
+    if not label.Text then return false end
+
+    local t = label.Text:lower()
+
+    if t:match("^%s*you%s+got%s*:") then return false end
+    if t:match("^1%s+in%s+%d+") then return true end
+    if t:find("%(%s*[%d%.]+%s*kg") then return true end
+    if t:find("lvl") then return true end
+    if label.TextSize >= 26 then return true end
+
+    return false
+end
+
+task.spawn(function()
+    while _G.FishItWORK do
+        task.wait(2)
+        local fishUI = pg:FindFirstChild("FishingUI")
+        if not fishUI then continue end
+
+        for _,v in ipairs(fishUI:GetDescendants()) do
+            if shouldHide(v) then
+                v.Visible = false
+            end
+        end
+    end
+end)
+
 
 print("FISH IT | DARK UI | LOADED")
