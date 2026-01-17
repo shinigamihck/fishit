@@ -293,6 +293,15 @@ end)
 -- =====================================================
 
 print("✅ BAGIAN 1 UI CORE LOADED")
+-- EXPOSE TABS (WAJIB)
+_G.SZ_TABS = {
+    MAIN = NewTab("MAIN"),
+    UTIL = NewTab("UTIL"),
+    SHOP = NewTab("SHOP"),
+    TP   = NewTab("TP"),
+    MISC = NewTab("MISC")
+}
+
 _G.SZ_UI_READY = true
 
 -- =====================================================
@@ -330,7 +339,7 @@ _G.SZ_STATE = _G.SZ_STATE or {
 -- =====================================================
 -- CREATE TABS (FROM UI CORE)
 -- =====================================================
-local tMain = NewTab("MAIN")
+local tMain = _G.SZ_TABS.MAIN
 
 -- =====================================================
 -- UI ELEMENTS (MAIN TAB)
@@ -485,7 +494,7 @@ _G.SZ_STATE.Fly = false
 _G.SZ_STATE.FlySpeed = 50
 
 -- Create UTIL TAB
-local tUtil = NewTab("UTIL")
+local tUtil = _G.SZ_TABS.UTIL
 
 -- =====================================================
 -- ANTI AFK
@@ -646,7 +655,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- =====================================================
 -- NEW TAB
 -- =====================================================
-local tShop = NewTab("SHOP")
+local tShop = _G.SZ_TABS.SHOP
 
 -- =====================================================
 -- ORIGINAL STATE
@@ -823,7 +832,7 @@ local LP = Players.LocalPlayer
 -- =====================================================
 -- TAB TP
 -- =====================================================
-local tTP = NewTab("TP")
+local tTP = _G.SZ_TABS.TP
 
 -- =====================================================
 -- TAB SWITCH BUTTONS
