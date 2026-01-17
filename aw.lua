@@ -325,11 +325,17 @@ local THEME = {
     BG_MAIN = Color3.fromRGB(18,18,22),
     BG_SIDE = Color3.fromRGB(24,24,30),
     BG_PANEL = Color3.fromRGB(32,32,40),
-    BTN      = Color3.fromRGB(42,42,54),
+
+    PANEL = Color3.fromRGB(20,24,30), -- panel apply
+    BTN = Color3.fromRGB(42,42,54),
     BTN_HVR  = Color3.fromRGB(52,52,66),
-    TXT      = Color3.fromRGB(235,235,255),
-    ACCENT   = Color3.fromRGB(0,170,255),
+
+    TEXT = Color3.fromRGB(235,235,255),
+    ACCENT = Color3.fromRGB(0,170,255),
+    BORDER = Color3.fromRGB(0,170,220),
 }
+
+
 
 ------------------------------------------------------------
 -- MAIN FRAME
@@ -415,7 +421,7 @@ local function Label(t)
     l.Font = Enum.Font.GothamBold
     l.TextSize = 14
     l.BackgroundTransparency = 1
-    l.TextColor3 = THEME.TXT
+    l.TextColor3 = THEME.TEXT
 end
 
 local function ContentButton(text, callback)
@@ -424,7 +430,7 @@ local function ContentButton(text, callback)
     b.Text = text
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 12
-    b.TextColor3 = THEME.TXT
+    b.TextColor3 = THEME.TEXT
     b.BackgroundColor3 = THEME.BTN
     b.AutoButtonColor = false
 
@@ -449,7 +455,7 @@ local function SideButton(name, builder)
     b.Text = name
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 12
-    b.TextColor3 = THEME.TXT
+    b.TextColor3 = THEME.TEXT
     b.BackgroundColor3 = THEME.BTN
     b.AutoButtonColor = false
 
@@ -484,7 +490,7 @@ local function Notify(msg)
     txt.Size = UDim2.new(1,-12,1,0)
     txt.Position = UDim2.new(0,12,0,0)
     txt.Text = msg
-    txt.TextColor3 = THEME.TXT
+    txt.TextColor3 = THEME.TEXT
     txt.BackgroundTransparency = 1
     txt.Font = Enum.Font.Gotham
     txt.TextSize = 13
@@ -881,12 +887,6 @@ end)
 -- THEME APPLY (FIXED)
 -- =========================================================
 
-local THEME = {
-    PANEL = Color3.fromRGB(20,24,30),
-    BTN = Color3.fromRGB(30,34,42),
-    TEXT = Color3.fromRGB(220,235,255),
-    BORDER = Color3.fromRGB(0,170,220),
-}
 
 for _,v in ipairs(main:GetDescendants()) do
 
