@@ -279,15 +279,62 @@ gui.Name = "FishItUI"
 gui.ResetOnSpawn = false
 gui.Parent = pg
 
+-- =====================================
+-- GLOBAL UI SCALE CONTROLLER (FINAL)
+-- =====================================
+
+local Camera = workspace.CurrentCamera
+
+local uiScale = gui:FindFirstChild("UIScale")
+if not uiScale then
+    uiScale = Instance.new("UIScale")
+    uiScale.Parent = gui
+end
+
+-- MODE:
+-- "AUTO"  = otomatis (mobile / pc)
+-- "SMALL" = kecil
+-- "NORMAL"
+-- "BIG"
+local UI_MODE = "AUTO"
+
+local function applyGlobalScale()
+    local scale = 1
+
+    if UI_MODE == "SMALL" then
+        scale = 0.65
+
+    elseif UI_MODE == "NORMAL" then
+        scale = 0.8
+
+    elseif UI_MODE == "BIG" then
+        scale = 1
+
+    elseif UI_MODE == "AUTO" then
+        if UIS.TouchEnabled then
+            local w = Camera.ViewportSize.X
+            if w <= 360 then scale = 0.45
+            elseif w <= 400 then scale = 0.5
+            elseif w <= 480 then scale = 0.6
+            elseif w <= 600 then scale = 0.7
+            else scale = 0.8 end
+        else
+            scale = 0.85 -- PC default
+        end
+    end
+
+    uiScale.Scale = scale
+end
+
+applyGlobalScale()
+Camera:GetPropertyChangedSignal("ViewportSize"):Connect(applyGlobalScale)
+
+
 -- MAIN FRAME
 local main = Instance.new("Frame", gui)
 
--- DETECT MOBILE ATAU PC
-if UIS.TouchEnabled then
-    main.Size = UDim2.fromOffset(460, 300) -- mobile
-else
-    main.Size = UDim2.fromOffset(420, 260) -- pc
-end
+main.Size = UDim2.fromOffset(420, 260)
+
 
 
 main.Position = UDim2.new(0.32, 0, 0.3, 0)
@@ -677,6 +724,24 @@ newTab("Misc", function()
         ApplyLowPerformance(lowPerfEnabled)
         btn.Text = "Low Performance Mode: " .. (lowPerfEnabled and "ON" or "OFF")
     end)
+    addButton("UI Size: NORMAL", function(btn)
+    if UI_MODE == "NORMAL" then
+        UI_MODE = "SMALL"
+        btn.Text = "UI Size: SMALL"
+    elseif UI_MODE == "SMALL" then
+        UI_MODE = "BIG"
+        btn.Text = "UI Size: BIG"
+    elseif UI_MODE == "BIG" then
+        UI_MODE = "AUTO"
+        btn.Text = "UI Size: AUTO"
+    else
+        UI_MODE = "NORMAL"
+        btn.Text = "UI Size: NORMAL"
+    end
+
+    applyGlobalScale()
+    notify("UI Size Mode: " .. UI_MODE)
+end)
 end)
 
 
@@ -819,34 +884,7 @@ task.spawn(function()
 end)
 
 
--- =====================================
--- MOBILE SCALE FIX (FINAL)
--- =====================================
 
-local UIS = game:GetService("UserInputService")
-local Camera = workspace.CurrentCamera
-
-local scale = gui:FindFirstChildOfClass("UIScale")
-if not scale then
-    scale = Instance.new("UIScale", gui)
-end
-
-local function applyScale()
-    if not UIS.TouchEnabled then
-        scale.Scale = 1
-        return
-    end
-
-    local w = Camera.ViewportSize.X
-    if w <= 360 then scale.Scale = 0.45
-    elseif w <= 400 then scale.Scale = 0.5
-    elseif w <= 480 then scale.Scale = 0.6
-    elseif w <= 600 then scale.Scale = 0.7
-    else scale.Scale = 0.8 end
-end
-
-applyScale()
-Camera:GetPropertyChangedSignal("ViewportSize"):Connect(applyScale)
 
 
 -- =====================================
