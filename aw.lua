@@ -789,7 +789,7 @@ end)
 
 
 ------------------------------------------------------
--- PING UPDATE LOOP (SAFE & LIGHT)
+-- PING UPDATE LOOP (COLOR SYSTEM + SAFE)
 ------------------------------------------------------
 task.spawn(function()
     while _G.FishItHubLoaded do
@@ -800,13 +800,27 @@ task.spawn(function()
         end
 
         local ping = GetRealPing()
+
         if not ping then
             PingText.Text = "Ping: --"
+            PingText.TextColor3 = Color3.fromRGB(200,200,200)
         else
             PingText.Text = string.format("Ping: %.1f ms", ping)
+
+            -- ⚡ WARNA PING
+            if ping < 60 then
+                PingText.TextColor3 = Color3.fromRGB(0,255,120)   -- hijau
+            elseif ping < 120 then
+                PingText.TextColor3 = Color3.fromRGB(255,255,0)   -- kuning
+            elseif ping < 200 then
+                PingText.TextColor3 = Color3.fromRGB(255,150,0)   -- oranye
+            else
+                PingText.TextColor3 = Color3.fromRGB(255,70,70)   -- merah
+            end
         end
     end
 end)
+
 
 ------------------------------------------------------
 -- AUTO FOLLOW FLOAT BUTTON (PING NEMPEL)
@@ -823,6 +837,35 @@ task.spawn(function()
                 floatBtn.Position.Y.Offset + floatBtn.Size.Y.Offset + 5
             )
         end
+    end
+end)
+
+------------------------------------------------------
+-- MAKE PING PANEL DRAGGABLE
+------------------------------------------------------
+local dragging = false
+local dragPos = Vector2.new()
+
+PingPanel.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragPos = Vector2.new(input.Position.X - PingPanel.AbsolutePosition.X,
+                              input.Position.Y - PingPanel.AbsolutePosition.Y)
+    end
+end)
+
+PingPanel.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        PingPanel.Position = UDim2.fromOffset(
+            input.Position.X - dragPos.X,
+            input.Position.Y - dragPos.Y
+        )
     end
 end)
 
