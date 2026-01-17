@@ -25,7 +25,7 @@ local AutoFish = false
 local AutoSell = false
 local AutoWeather = false
 local FlyEnabled = false
-local FlySpeed = 50
+local FlySpeedValue = 50
 local AUTO_TOTEM = false
 local WeatherDelay = 5
 local SellInterval = 5
@@ -73,7 +73,7 @@ local function startFly()
         if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.new(0,1,0) end
 
-        bv.Velocity = move.Magnitude > 0 and move.Unit * FlySpeed or Vector3.zero
+        bv.Velocity = move.Magnitude > 0 and move.Unit * FlySpeedValue or Vector3.zero
         bg.CFrame = cam.CFrame
     end)
 end
@@ -263,7 +263,9 @@ _G.FishCore = {
         FlyEnabled = v
         if v then startFly() else stopFly() end
     end,
-    FlySpeed = function(v) FlySpeed = v end,
+FlySpeed = function(v)
+    FlySpeedValue = tonumber(v) or FlySpeedValue
+end,
     GetPing = getRealPing,
     Spots = Locations,
 }
@@ -274,7 +276,6 @@ _G.FishCore = {
 --  Connects To: CoreSystem.lua
 -- =========================================================
 
-local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 local pg = LP:WaitForChild("PlayerGui")
 
@@ -388,6 +389,12 @@ end
 -- =========================================================
 -- CREATE TOP TAB BUTTON
 -- =========================================================
+local THEME = {
+    PANEL = Color3.fromRGB(20,24,30),
+    BTN = Color3.fromRGB(30,34,42),
+    TEXT = Color3.fromRGB(220,235,255),
+    BORDER = Color3.fromRGB(0,170,220)
+}
 local currentTab = ""
 
 local function newTab(name, callback)
@@ -407,10 +414,10 @@ local function newTab(name, callback)
         -- highlight
         for _,other in ipairs(topBar:GetChildren()) do
             if other:IsA("TextButton") then
-                other.TextColor3 = Color3.fromRGB(200,200,255)
+                other.TextColor3 = THEME.TEXT
             end
         end
-        btn.TextColor3 = Color3.fromRGB(0, 170, 255)
+        btn.TextColor3 = THEME.BORDER
     end)
 end
 
@@ -419,19 +426,27 @@ end
 -- =========================================================
 newTab("Auto", function()
     addLabel("Auto Features")
-    
+
+    local autoFish = false
+    local autoSell = false
+    local autoWeather = false
+
     addButton("Auto Fish", function()
-        Core.AutoFish(true)
+        autoFish = not autoFish
+        Core.AutoFish(autoFish)
     end)
 
     addButton("Auto Sell", function()
-        Core.AutoSell(true)
+        autoSell = not autoSell
+        Core.AutoSell(autoSell)
     end)
 
     addButton("Auto Weather", function()
-        Core.AutoWeather(true)
+        autoWeather = not autoWeather
+        Core.AutoWeather(autoWeather)
     end)
 end)
+
 
 -- =========================================================
 -- TAB: TELEPORT
@@ -441,31 +456,38 @@ newTab("Teleport", function()
 
     for _,spot in ipairs(Core.Spots) do
         addButton(spot.Name, function()
-            local char = LP.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                hrp.CFrame = spot.CFrame + Vector3.new(0,4,0)
-            end
+            local char = LP.Character or LP.CharacterAdded:Wait()
+            local hrp = char:WaitForChild("HumanoidRootPart")
+            hrp.CFrame = spot.CFrame + Vector3.new(0,4,0)
         end)
     end
 end)
+
 
 -- =========================================================
 -- TAB: FLY
 -- =========================================================
 newTab("Fly", function()
+    local flyToggle = false
+
     addButton("Toggle Fly", function()
-        Core.Fly(true)
+        flyToggle = not flyToggle
+        Core.Fly(flyToggle)
+        Core.FlySpeed(FlySpeedValue)
     end)
 
     addButton("Fly Speed +50", function()
-        Core.FlySpeed( Core.FlySpeed + 50 )
+        FlySpeedValue += 50
+        Core.FlySpeed(FlySpeedValue)
     end)
 
     addButton("Fly Speed -50", function()
-        Core.FlySpeed( Core.FlySpeed - 50 )
+        FlySpeedValue -= 50
+        if FlySpeedValue < 10 then FlySpeedValue = 10 end
+        Core.FlySpeed(FlySpeedValue)
     end)
 end)
+
 
 -- =========================================================
 -- TAB: SHOP
@@ -473,8 +495,11 @@ end)
 newTab("Shop", function()
     addLabel("Shop & Totem")
 
+    local autoTotem = false
+
     addButton("Auto Totem", function()
-        Core.AutoTotem(true)
+        autoTotem = not autoTotem
+        Core.AutoTotem(autoTotem)
     end)
 
     local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
@@ -503,22 +528,23 @@ end)
 
 -- OPEN DEFAULT TAB
 task.wait(0.1)
-topBar:GetChildren()[1]:Fire("MouseButton1Click")
+local first = topBar:GetChildren()[1]
+if first and first:IsA("TextButton") then
+    first.MouseButton1Click:Fire()
+end
 
 print("UI TopBar Loaded | Clean | Modern | Working")
 
 
 -- =====================================
--- FLOATING TOGGLE BUTTON
+-- FLOATING TOGGLE BUTTON (FULL FIXED)
 -- =====================================
 
-local player = game:GetService("Players").LocalPlayer
-local pg = player:WaitForChild("PlayerGui")
-local gui = pg:FindFirstChild("FishItUI") or pg:FindFirstChild("FishItWORKUI")
-if not gui then return end
+local guiRef = pg:FindFirstChild("FishItUI")
+if not guiRef then return end
 
 local mainFrame
-for _,v in ipairs(gui:GetChildren()) do
+for _,v in ipairs(guiRef:GetChildren()) do
     if v:IsA("Frame") then
         mainFrame = v
         break
@@ -548,18 +574,13 @@ floatBtn.MouseButton1Click:Connect(function()
 end)
 
 
+
 -- =====================================
 -- REAL PING UI
 -- =====================================
 
 local Stats = game:GetService("Stats")
 
-local function getPing()
-    local net = Stats:FindFirstChild("Network")
-    local srv = net and net:FindFirstChild("ServerStatsItem")
-    local ping = srv and srv:FindFirstChild("Data Ping")
-    return ping and ping:GetValue()
-end
 
 local pingLabel = Instance.new("TextLabel", mainFrame)
 pingLabel.Size = UDim2.new(0,140,0,18)
@@ -572,7 +593,7 @@ pingLabel.TextColor3 = Color3.fromRGB(0,255,120)
 task.spawn(function()
     while _G.FishItWORK do
         task.wait(1)
-        local p = getPing()
+        local p = Core.GetPing()
         if p then
             pingLabel.Text = string.format("Ping: %.0f ms", p)
             if p <= 80 then
@@ -655,15 +676,10 @@ Camera:GetPropertyChangedSignal("ViewportSize"):Connect(applyScale)
 -- THEME APPLY (NO LOOP)
 -- =====================================
 
-local THEME = {
-    PANEL = Color3.fromRGB(20,24,30),
-    BTN = Color3.fromRGB(30,34,42),
-    TEXT = Color3.fromRGB(220,235,255),
-    BORDER = Color3.fromRGB(0,170,220)
-}
+
 
 for _,v in ipairs(gui:GetDescendants()) do
-    if v:IsA("Frame") then
+    if v:IsA("Frame") and v ~= main then -- jangan timpa main frame
         v.BackgroundColor3 = THEME.PANEL
     elseif v:IsA("TextButton") then
         v.BackgroundColor3 = THEME.BTN
@@ -676,7 +692,11 @@ for _,v in ipairs(gui:GetDescendants()) do
         Instance.new("UICorner", v).CornerRadius = UDim.new(0,6)
     end
 
-    if (v:IsA("Frame") or v:IsA("TextButton")) and not v:FindFirstChild("UIStroke") then
+    if (v:IsA("Frame") or v:IsA("TextButton"))
+and not v:FindFirstChildOfClass("UIStroke")
+and v ~= topBar
+and v ~= panel
+then
         local s = Instance.new("UIStroke", v)
         s.Color = THEME.BORDER
         s.Thickness = 1
