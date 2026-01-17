@@ -504,7 +504,6 @@ createToggle(MainPage, "Auto Totem",   function(v) _G.ApplyToggle("Auto Totem", 
 
 
 
-createToggle(MainPage, "Fly",          function(v) _G.ApplyToggle("Fly", v) end)
 
 ------------------------------------------------------
 -- TOTEM STATUS LABEL (DI MAIN TAB)
@@ -722,6 +721,7 @@ createToggle(MiscPage, "Walk on Water", function(state)
     end
 end)
 
+createToggle(MainPage, "Fly",          function(v) _G.ApplyToggle("Fly", v) end)
 
 print("✔ BATCH 3 Loaded | Toggles + Engine Active")
 
