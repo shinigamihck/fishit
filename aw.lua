@@ -141,115 +141,73 @@ print("PART 1 Loaded ✓")
 -- ==========================================
 -- PART 2: RAYFIELD UI (DEFAULT STYLE)
 -- ==========================================
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 
-local Rayfield = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/shlexware/Rayfield/main/source"
-))()
-
-local Window = Rayfield:CreateWindow({
+local Window = OrionLib:MakeWindow({
     Name = "Fish It | Sanzhuy Hub",
-    LoadingTitle = "Fish It Hub",
-    LoadingSubtitle = "Rayfield UI",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = "SanzhuyHub",
-        FileName = "FishIt_Default"
-    }
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "SanzhuyHub"
 })
 
--- ==========================================
--- MAIN TAB
--- ==========================================
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483362458",
+    PremiumOnly = false
+})
 
-local MainTab = Window:CreateTab("Main", 4483362458)
-
-MainTab:CreateToggle({
+MainTab:AddToggle({
     Name = "Auto Fish",
-    CurrentValue = AutoFish,
+    Default = false,
     Callback = function(v)
         AutoFish = v
     end
 })
 
-MainTab:CreateToggle({
+MainTab:AddToggle({
     Name = "Auto Sell",
-    CurrentValue = AutoSell,
+    Default = false,
     Callback = function(v)
         AutoSell = v
     end
 })
 
-MainTab:CreateSlider({
-    Name = "Sell Interval",
-    Range = {1, 30},
-    Increment = 1,
-    Suffix = "s",
-    CurrentValue = SellInterval,
-    Callback = function(v)
-        SellInterval = v
-    end
-})
-
-MainTab:CreateToggle({
+MainTab:AddToggle({
     Name = "Auto Weather",
-    CurrentValue = AutoWeather,
+    Default = false,
     Callback = function(v)
         AutoWeather = v
     end
 })
 
--- ==========================================
--- FARM TAB
--- ==========================================
-
-local FarmTab = Window:CreateTab("Farm", 4483362458)
-
-FarmTab:CreateSlider({
-    Name = "Fishing Delay",
-    Range = {0.05, 0.3},
-    Increment = 0.01,
-    CurrentValue = FishDelay,
-    Callback = function(v)
-        FishDelay = v
-    end
+local UtilTab = Window:MakeTab({
+    Name = "Utility",
+    Icon = "rbxassetid://4483362458",
+    PremiumOnly = false
 })
 
-FarmTab:CreateToggle({
-    Name = "Clean Fish UI (FPS Boost)",
-    CurrentValue = _G.CLEAN_FISH_UI,
-    Callback = function(v)
-        _G.CLEAN_FISH_UI = v
-    end
-})
-
--- ==========================================
--- UTILITY TAB
--- ==========================================
-
-local UtilTab = Window:CreateTab("Utility", 4483362458)
-
-UtilTab:CreateToggle({
+UtilTab:AddToggle({
     Name = "Fly",
-    CurrentValue = FlyEnabled,
+    Default = false,
     Callback = function(v)
         FlyEnabled = v
-        if v then
-            startFly()
-        else
-            stopFly()
-        end
+        if v then startFly() else stopFly() end
     end
 })
 
-UtilTab:CreateSlider({
+UtilTab:AddSlider({
     Name = "Fly Speed",
-    Range = {50, 800},
+    Min = 50,
+    Max = 800,
+    Default = FlySpeed,
     Increment = 25,
-    CurrentValue = FlySpeed,
     Callback = function(v)
         FlySpeed = v
     end
 })
+
+OrionLib:Init()
+
 
 -- ==========================================
 -- SHOP TAB
