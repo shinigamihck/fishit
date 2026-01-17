@@ -974,7 +974,7 @@ end)
 task.delay(0.1, function()
     for _,btn in ipairs(_G.UI.Main.Sidebar:GetChildren()) do
         if btn:IsA("TextButton") then
-            btn:Activate() -- ✅ BENAR
+            btn.MouseButton1Click:Fire()
             break
         end
     end
