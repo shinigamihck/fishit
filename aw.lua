@@ -525,13 +525,15 @@ clickBtn.ZIndex = 999
 
     Instance.new("UICorner", clickBtn).CornerRadius = UDim.new(1,0)
 
-   clickBtn.MouseButton1Click:Connect(function()
+clickBtn.MouseButton1Click:Connect(function()
     clicking = not clicking
     clickBtn.BackgroundColor3 = clicking
         and Color3.fromRGB(80,200,120)
         or Color3.fromRGB(255,80,80)
 end)
+
 end
+
 
 -- =========================================================
 -- TAB: AUTO (dengan indikator ON/OFF)
