@@ -875,7 +875,13 @@ local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
 MerchantBtn.MouseButton1Click:Connect(function()
     if not merchantGui then return end
 
+    -- Buka merchant
     merchantGui.Enabled = true
+
+    -- Tutup panel utama kayak floatBtn
+    if main.Visible then
+        main.Visible = false
+    end
 
     -- Auto close setelah 5 detik
     task.delay(5, function()
@@ -884,6 +890,7 @@ MerchantBtn.MouseButton1Click:Connect(function()
         end
     end)
 end)
+
 
 
 ------------------------------------------------------
