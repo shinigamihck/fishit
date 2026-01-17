@@ -335,6 +335,105 @@ local function addLabel(text)
     l.Font = Enum.Font.Gotham
 end
 
+
+local function notify(msg)
+    local n = Instance.new("Frame", gui)
+    n.Size = UDim2.new(0,220,0,36)
+    n.Position = UDim2.new(1,-240,1,-80)
+    n.BackgroundColor3 = Color3.fromRGB(25,25,30)
+    n.BackgroundTransparency = 0.2
+
+    Instance.new("UICorner", n).CornerRadius = UDim.new(0,10)
+
+    local txt = Instance.new("TextLabel", n)
+    txt.Size = UDim2.new(1,-10,1,0)
+    txt.Position = UDim2.new(0,10,0,0)
+    txt.BackgroundTransparency = 1
+    txt.Font = Enum.Font.Gotham
+    txt.TextSize = 13
+    txt.TextColor3 = Color3.fromRGB(255,255,255)
+    txt.Text = msg
+    txt.TextXAlignment = Enum.TextXAlignment.Left
+
+    task.spawn(function()
+        for i = 1,40 do
+            task.wait(0.03)
+            n.BackgroundTransparency += 0.02
+            txt.TextTransparency += 0.02
+        end
+        n:Destroy()
+    end)
+end
+
+local UIS = game:GetService("UserInputService")
+
+local function makeResizable(frame)
+    local minW, minH = 120, 60
+
+    local handle = Instance.new("Frame", frame)
+    handle.Size = UDim2.new(0,18,0,18)
+    handle.Position = UDim2.new(1,-18,1,-18)
+    handle.BackgroundColor3 = Color3.fromRGB(100,100,120)
+    handle.Active = true
+    handle.Draggable = true
+
+    Instance.new("UICorner", handle).CornerRadius = UDim.new(0,6)
+
+    handle.MouseMoved:Connect(function()
+        if UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+            local m = UIS:GetMouseLocation()
+            local x = math.max(minW, m.X - frame.AbsolutePosition.X)
+            local y = math.max(minH, m.Y - frame.AbsolutePosition.Y)
+            frame.Size = UDim2.new(0, x, 0, y)
+        end
+    end)
+end
+
+---------------------------------------------------------
+-- 📊 PING PANEL TOGGLE (FINAL FIX)
+---------------------------------------------------------
+local pingPanel
+
+local function togglePingPanel()
+    if pingPanel and pingPanel.Parent then
+        pingPanel:Destroy()
+        pingPanel = nil
+        return
+    end
+
+    pingPanel = Instance.new("Frame", gui)
+    pingPanel.Size = UDim2.new(0,160,0,60)
+    pingPanel.Position = UDim2.new(1,-180,1,-100)
+    pingPanel.BackgroundColor3 = Color3.fromRGB(25,28,35)
+    pingPanel.BackgroundTransparency = 0.1
+    pingPanel.Active = true
+    pingPanel.Draggable = true
+
+    Instance.new("UICorner", pingPanel).CornerRadius = UDim.new(0,10)
+    Instance.new("UIStroke", pingPanel).Color = Color3.fromRGB(0,170,255)
+
+    local txt = Instance.new("TextLabel", pingPanel)
+    txt.Size = UDim2.new(1,0,1,0)
+    txt.BackgroundTransparency = 1
+    txt.Font = Enum.Font.GothamBold
+    txt.TextSize = 14
+    txt.TextColor3 = Color3.fromRGB(255,255,255)
+    txt.Text = "Ping: ..."
+
+    -- Auto update ping
+    task.spawn(function()
+        while pingPanel do
+            task.wait(1)
+            if not pingPanel then break end
+            txt.Text = "Ping: " .. math.floor(Core.GetPing()) .. " ms"
+        end
+    end)
+
+    -- allow resize
+    makeResizable(pingPanel)
+end
+
+
 -- =========================================================
 -- CREATE TOP TAB BUTTON
 -- =========================================================
@@ -486,8 +585,10 @@ newTab("System", function()
     addLabel("System & Debug")
 
     addButton("Close UI", function()
-        gui:Destroy()
-    end)
+    _G.FishItWORK = nil
+    gui:Destroy()
+end)
+
 
     addButton("Show Ping Panel", function()
     togglePingPanel()
@@ -503,10 +604,10 @@ local first = topBar:GetChildren()[1]
 if first and first:IsA("TextButton") then
     first.MouseButton1Click:Fire()
 end
-makeResizable(main)
+
 print("UI TopBar Loaded | Clean | Modern | Working")
 
-
+makeResizable(main)
 -- =====================================
 -- FLOATING TOGGLE BUTTON (FULL FIXED)
 -- =====================================
@@ -544,102 +645,7 @@ floatBtn.MouseButton1Click:Connect(function()
     mainFrame.Visible = panelVisible
 end)
 
-local function notify(msg)
-    local n = Instance.new("Frame", gui)
-    n.Size = UDim2.new(0,220,0,36)
-    n.Position = UDim2.new(1,-240,1,-80)
-    n.BackgroundColor3 = Color3.fromRGB(25,25,30)
-    n.BackgroundTransparency = 0.2
 
-    Instance.new("UICorner", n).CornerRadius = UDim.new(0,10)
-
-    local txt = Instance.new("TextLabel", n)
-    txt.Size = UDim2.new(1,-10,1,0)
-    txt.Position = UDim2.new(0,10,0,0)
-    txt.BackgroundTransparency = 1
-    txt.Font = Enum.Font.Gotham
-    txt.TextSize = 13
-    txt.TextColor3 = Color3.fromRGB(255,255,255)
-    txt.Text = msg
-    txt.TextXAlignment = Enum.TextXAlignment.Left
-
-    task.spawn(function()
-        for i = 1,40 do
-            task.wait(0.03)
-            n.BackgroundTransparency += 0.02
-            txt.TextTransparency += 0.02
-        end
-        n:Destroy()
-    end)
-end
-
-local UIS = game:GetService("UserInputService")
-
-local function makeResizable(frame)
-    local minW, minH = 120, 60
-
-    local handle = Instance.new("Frame", frame)
-    handle.Size = UDim2.new(0,18,0,18)
-    handle.Position = UDim2.new(1,-18,1,-18)
-    handle.BackgroundColor3 = Color3.fromRGB(100,100,120)
-    handle.Active = true
-    handle.Draggable = true
-
-    Instance.new("UICorner", handle).CornerRadius = UDim.new(0,6)
-
-    handle.MouseMoved:Connect(function()
-        if UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-            local m = UIS:GetMouseLocation()
-            local x = math.max(minW, m.X - frame.AbsolutePosition.X)
-            local y = math.max(minH, m.Y - frame.AbsolutePosition.Y)
-            frame.Size = UDim2.new(0, x, 0, y)
-        end
-    end)
-end
-
----------------------------------------------------------
--- 📊 PING PANEL TOGGLE (FINAL FIX)
----------------------------------------------------------
-local pingPanel
-
-local function togglePingPanel()
-    if pingPanel and pingPanel.Parent then
-        pingPanel:Destroy()
-        pingPanel = nil
-        return
-    end
-
-    pingPanel = Instance.new("Frame", gui)
-    pingPanel.Size = UDim2.new(0,160,0,60)
-    pingPanel.Position = UDim2.new(1,-180,1,-100)
-    pingPanel.BackgroundColor3 = Color3.fromRGB(25,28,35)
-    pingPanel.BackgroundTransparency = 0.1
-    pingPanel.Active = true
-    pingPanel.Draggable = true
-
-    Instance.new("UICorner", pingPanel).CornerRadius = UDim.new(0,10)
-    Instance.new("UIStroke", pingPanel).Color = Color3.fromRGB(0,170,255)
-
-    local txt = Instance.new("TextLabel", pingPanel)
-    txt.Size = UDim2.new(1,0,1,0)
-    txt.BackgroundTransparency = 1
-    txt.Font = Enum.Font.GothamBold
-    txt.TextSize = 14
-    txt.TextColor3 = Color3.fromRGB(255,255,255)
-    txt.Text = "Ping: ..."
-
-    -- Auto update ping
-    task.spawn(function()
-        while pingPanel do
-            task.wait(1)
-            if not pingPanel then break end
-            txt.Text = "Ping: " .. math.floor(Core.GetPing()) .. " ms"
-        end
-    end)
-
-    -- allow resize
-    makeResizable(pingPanel)
-end
 
 
 
