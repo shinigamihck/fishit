@@ -862,37 +862,19 @@ end)
 
 
 for _,v in ipairs(main:GetDescendants()) do
-
-    -- BASIC COLOR APPLY
-    if v:IsA("Frame") and v ~= main then
-        v.BackgroundColor3 = THEME.PANEL
+    if v:IsA("TextLabel") then
+        v.TextColor3 = THEME.TEXT
 
     elseif v:IsA("TextButton") then
-        v.BackgroundColor3 = THEME.BTN
+        -- BIARKAN warna original dari ContentButton/SideButton
         v.TextColor3 = THEME.TEXT
-        v.TextTransparency = 0
 
-    elseif v:IsA("TextLabel") then
-        v.TextColor3 = THEME.TEXT
-        v.TextTransparency = 0
-    end
-
-    -- CORNER
-    if (v:IsA("Frame") or v:IsA("TextButton")) and not v:FindFirstChild("UICorner") then
-        Instance.new("UICorner", v).CornerRadius = UDim.new(0,6)
-    end
-
-    -- STROKE
-    if (v:IsA("Frame") or v:IsA("TextButton")) 
-        and not v:FindFirstChildOfClass("UIStroke")
-        and v ~= main then
-
-        local s = Instance.new("UIStroke", v)
-        s.Color = THEME.BORDER
-        s.Thickness = 1
-        s.Transparency = 0.6
+    elseif v:IsA("Frame") and v.Name ~= "Content" and v.Name ~= "Sidebar" then
+        -- hanya frame-frame kecil
+        v.BackgroundColor3 = THEME.PANEL
     end
 end
+
 
 -- =========================================================
 -- CLEAN FISH UI (KEEP "You got:")
