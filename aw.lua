@@ -316,6 +316,59 @@ floatBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+------------------------------------------------------
+-- NOTIFICATION SYSTEM (KANAN BAWAH)
+------------------------------------------------------
+local NotificationFrame = Instance.new("Frame", gui)
+NotificationFrame.Size = UDim2.new(0, 320, 1, -40)
+NotificationFrame.Position = UDim2.new(1, -330, 0, 20)
+NotificationFrame.BackgroundTransparency = 1
+
+local NotiLayout = Instance.new("UIListLayout", NotificationFrame)
+NotiLayout.SortOrder = Enum.SortOrder.LayoutOrder
+NotiLayout.Padding = UDim.new(0, 6)
+NotiLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+
+function Notify(msg, color)
+    color = color or Color3.fromRGB(80,160,255)
+
+    local box = Instance.new("Frame", NotificationFrame)
+    box.Size = UDim2.new(1, 0, 0, 28)
+    box.BackgroundColor3 = Color3.fromRGB(25,25,30)
+    box.BackgroundTransparency = 0.15
+    box.BorderSizePixel = 0
+    box.ClipsDescendants = true
+
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+
+    local stroke = Instance.new("UIStroke", box)
+    stroke.Color = color
+    stroke.Transparency = 0.4
+
+    local label = Instance.new("TextLabel", box)
+    label.Size = UDim2.new(1, -12, 1, 0)
+    label.Position = UDim2.new(0, 6, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.GothamSemibold
+    label.TextColor3 = color
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Text = msg
+
+    -- fade animation
+    task.spawn(function()
+        task.wait(2.2)
+        for i = 0,1,0.05 do
+            box.BackgroundTransparency = 0.15 + i
+            stroke.Transparency = 0.4 + i
+            label.TextTransparency = i
+            task.wait(0.05)
+        end
+        box:Destroy()
+    end)
+end
+
+
 print("✔ BATCH 2 Loaded | Glass UI Ready")
 
 --====================================================--
@@ -324,6 +377,56 @@ print("✔ BATCH 2 Loaded | Glass UI Ready")
 --====================================================--
 
 local F = _G.FISH
+
+------------------------------------------------------
+-- WALK ON WATER ENGINE (FOR MISC TAB)
+------------------------------------------------------
+_G.WalkWaterEnabled = false
+local waterLoop
+local waterTargetY
+
+local function StartWalkOnWater()
+    local char = LP.Character or LP.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    local hum = char:WaitForChild("Humanoid")
+
+    waterTargetY = hrp.Position.Y
+    _G.WalkWaterEnabled = true
+
+    waterLoop = RS.RenderStepped:Connect(function()
+        if not _G.WalkWaterEnabled then return end
+        if not hrp or not hum then return end
+
+        -- tahan humanoid supaya ga jatuh
+        hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+hum.PlatformStand = false
+
+
+        -- lock posisi Y (jalan di air)
+        hrp.CFrame = CFrame.new(
+            hrp.Position.X,
+            waterTargetY,
+            hrp.Position.Z
+        )
+
+        -- buang velocity jatuh
+        hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
+    end)
+end
+
+local function StopWalkOnWater()
+    _G.WalkWaterEnabled = false
+    if waterLoop then waterLoop:Disconnect() end
+
+    local char = LP.Character
+    if char then
+        local hum = char:FindFirstChild("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end
+    end
+end
+
 
 ------------------------------------------------------
 -- TOGGLE BUILDER (MASTER)
@@ -342,15 +445,21 @@ local function createToggle(parent, text, callback)
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
 
     local state = false
-    btn.MouseButton1Click:Connect(function()
-        state = not state
-        btn.Text = text .. " : " .. (state and "ON" or "OFF")
-        btn.BackgroundColor3 = state and THEME.ACTIVE or THEME.BUTTON
-        callback(state)
-    end)
+   btn.MouseButton1Click:Connect(function()
+    state = not state
 
-    return btn
-end
+    local stateText = state and "ON" or "OFF"
+    local col = state and Color3.fromRGB(0,255,120) or Color3.fromRGB(255,80,80)
+
+    btn.Text = text .. " : " .. stateText
+    btn.BackgroundColor3 = state and THEME.ACTIVE or THEME.BUTTON
+
+    -- 🔔 NOTIFICATION
+    Notify(text .. " : " .. stateText, col)
+
+    callback(state)
+end)
+
 
 
 ------------------------------------------------------
@@ -462,7 +571,11 @@ function _G.StopFly()
     if lv then lv:Destroy() end
     if ao then ao:Destroy() end
     if attach then attach:Destroy() end
+
+    local hum = LP.Character and LP.Character:FindFirstChild("Humanoid")
+    if hum then hum.PlatformStand = false end
 end
+
 
 function _G.StartFly()
     local char = LP.Character or LP.CharacterAdded:Wait()
@@ -591,9 +704,19 @@ RejoinBtn.Text = "Rejoin Server"
 Instance.new("UICorner", RejoinBtn).CornerRadius = UDim.new(0,8)
 
 RejoinBtn.MouseButton1Click:Connect(function()
+    Notify("Rejoining server...", Color3.fromRGB(80,160,255)) -- ⬅ Tambah DI SINI
     pcall(function()
         TeleportService:Teleport(game.PlaceId, LP)
     end)
+end)
+
+
+createToggle(MiscPage, "Walk on Water", function(state)
+    if state then
+        StartWalkOnWater()
+    else
+        StopWalkOnWater()
+    end
 end)
 
 
@@ -623,6 +746,8 @@ end
 -- TOTEM SPAWNED → STATUS + AUTO EQUIP ROD
 ------------------------------------------------------
 TotemSpawned.OnClientEvent:Connect(function()
+    Notify("Totem placed!", Color3.fromRGB(0,255,120)) -- ⬅ Tambah di sini
+
     F.TotemCooldown = 3600
 
     SetTotemStatus("Totem placed! Cooldown started", Color3.fromRGB(255,200,0))
@@ -901,25 +1026,22 @@ Instance.new("UICorner", MerchantBtn).CornerRadius = UDim.new(0,8)
 local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
 
 MerchantBtn.MouseButton1Click:Connect(function()
-    if not merchantGui then return end
+    Notify("Merchant opened", Color3.fromRGB(80,160,255)) -- ⬅ Tambah DI SINI
 
-    -- buka merchant
+    if not merchantGui then return end
     merchantGui.Enabled = true
 
-    -- tutup panel utama + blur
     main.Visible = false
     if blur then blur.Enabled = false end
 
-    -- auto close 5 detik
     task.delay(5, function()
-        if merchantGui then
-            merchantGui.Enabled = false
-        end
-
-        -- restore blur
+        if merchantGui then merchantGui.Enabled = false end
         if blur then blur.Enabled = true end
+
+        Notify("Merchant closed", Color3.fromRGB(255,80,80)) -- ⬅ DAN DI SINI
     end)
 end)
+
 
 
 
