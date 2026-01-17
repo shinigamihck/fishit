@@ -357,28 +357,44 @@ sidebar.Size = UDim2.new(0,150,1,0)
 sidebar.BackgroundColor3 = THEME.BG_SIDE
 Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0,12)
 
+_G.UI.Main.Sidebar = sidebar  -- 🔥 FIX WAJIB! (biar PART 7 nggak error)
+
 local sideList = Instance.new("UIListLayout", sidebar)
-sideList.Padding = UDim.new(0,8)
+sideList.Padding = UDim.new(0,6)
 sideList.FillDirection = Enum.FillDirection.Vertical
 sideList.SortOrder = Enum.SortOrder.LayoutOrder
 
 Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,10)
 
+
 ------------------------------------------------------------
 -- CONTENT PANEL
 ------------------------------------------------------------
 
-local content = Instance.new("Frame", main)
+local content = Instance.new("ScrollingFrame", main)
+content.Name = "Content"
 content.Position = UDim2.new(0,160,0,10)
 content.Size = UDim2.new(1,-170,1,-20)
+content.CanvasSize = UDim2.new(0,0,0,0)
+content.AutomaticCanvasSize = Enum.AutomaticSize.Y
+content.ScrollBarThickness = 4
+content.ScrollBarImageTransparency = 0.2
 content.BackgroundColor3 = THEME.BG_PANEL
+content.ClipsDescendants = true
+
 Instance.new("UICorner", content).CornerRadius = UDim.new(0,10)
 
 local contentList = Instance.new("UIListLayout", content)
-contentList.Padding = UDim.new(0,8)
+contentList.Padding = UDim.new(0,6)
 contentList.SortOrder = Enum.SortOrder.LayoutOrder
 
-Instance.new("UIPadding", content).PaddingTop = UDim.new(0,8)
+local pad = Instance.new("UIPadding", content)
+pad.PaddingTop = UDim.new(0,10)
+pad.PaddingBottom = UDim.new(0,10)
+pad.PaddingLeft = UDim.new(0,10)
+pad.PaddingRight = UDim.new(0,10)
+
+
 
 ------------------------------------------------------------
 -- CONTENT TOOLS
@@ -386,9 +402,12 @@ Instance.new("UIPadding", content).PaddingTop = UDim.new(0,8)
 
 local function Clear()
     for _,v in ipairs(content:GetChildren()) do
-        if v:IsA("GuiObject") then v:Destroy() end
+        if v:IsA("GuiObject") and not v:IsA("UIListLayout") and not v:IsA("UIPadding") then
+            v:Destroy()
+        end
     end
 end
+
 
 local function Label(t)
     local l = Instance.new("TextLabel", content)
@@ -402,37 +421,54 @@ end
 
 local function ContentButton(text, callback)
     local b = Instance.new("TextButton", content)
-    b.Size = UDim2.new(1,-20,0,36)
+    b.Size = UDim2.new(1, -20, 0, 30) -- 🔥 lebih slim
     b.Text = text
-    b.Font = Enum.Font.Gotham
-    b.TextSize = 13
-    b.BackgroundColor3 = THEME.BTN
+    b.Font = Enum.Font.GothamMedium
+    b.TextSize = 12
     b.TextColor3 = THEME.TXT
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+    b.BackgroundColor3 = THEME.BTN
+    b.AutoButtonColor = false
 
-    b.MouseEnter:Connect(function() b.BackgroundColor3 = THEME.BTN_HVR end)
-    b.MouseLeave:Connect(function() b.BackgroundColor3 = THEME.BTN end)
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+
+    b.MouseEnter:Connect(function()
+        b.BackgroundColor3 = THEME.BTN_HVR
+    end)
+    b.MouseLeave:Connect(function()
+        b.BackgroundColor3 = THEME.BTN
+    end)
 
     b.MouseButton1Click:Connect(function()
         callback(b)
     end)
 end
 
+
 local function SideButton(name, builder)
     local b = Instance.new("TextButton", sidebar)
-    b.Size = UDim2.new(1,-12,0,32)
+    b.Size = UDim2.new(1,-14,0,28) -- 🔥 lebih kecil
     b.Text = name
-    b.Font = Enum.Font.GothamBold
-    b.TextSize = 13
+    b.Font = Enum.Font.GothamMedium
+    b.TextSize = 12
     b.TextColor3 = THEME.TXT
     b.BackgroundColor3 = THEME.BTN
+    b.AutoButtonColor = false
+
     Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+
+    b.MouseEnter:Connect(function()
+        b.BackgroundColor3 = THEME.BTN_HVR
+    end)
+    b.MouseLeave:Connect(function()
+        b.BackgroundColor3 = THEME.BTN
+    end)
 
     b.MouseButton1Click:Connect(function()
         Clear()
         builder()
     end)
 end
+
 
 ------------------------------------------------------------
 -- NOTIFY SYSTEM
@@ -539,32 +575,40 @@ UI.SideButton("Spots", function()
 end)
 
 -- =======================
--- PLAYERS TAB
+-- PLAYERS TAB (FIXED SCROLL)
 -- =======================
 UI.SideButton("Players", function()
+
     local function build()
         UI.Clear()
+
+        -- WAJIB supaya scrolling reset & UIListLayout tetap jalan
+        UI.Content.CanvasSize = UDim2.new(0,0,0,0)
+
         UI.Label("Teleport Players")
 
         UI.ContentButton("🔄 Refresh", function()
             build()
         end)
 
-        for _,plr in ipairs(Players:GetPlayers()) do
+        for _, plr in ipairs(Players:GetPlayers()) do
             if plr ~= LP then
                 UI.ContentButton(plr.Name, function()
                     local myChar = LP.Character or LP.CharacterAdded:Wait()
                     local myHRP = myChar:WaitForChild("HumanoidRootPart")
+
                     if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                         myHRP.CFrame = plr.Character.HumanoidRootPart.CFrame + Vector3.new(0,3,0)
-                        UI.Notify("Teleported to "..plr.Name)
+                        UI.Notify("Teleported to " .. plr.Name)
                     end
                 end)
             end
         end
     end
+
     build()
 end)
+
 
 -- =======================
 -- SHOP TAB
@@ -601,13 +645,17 @@ UI.SideButton("Misc", function()
     UI.Label("Performance & Utility")
 
     local lowPerf = false
+    local ultra = false
 
+    local Lighting = game:GetService("Lighting")
+    local Terrain = workspace:FindFirstChildOfClass("Terrain")
+
+    -- 🔥 LOW PERFORMANCE (bawaan)
     local function applyLow(state)
         if state then
             settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-            local L = game:GetService("Lighting")
-            L.GlobalShadows = false
-            for _,e in ipairs(L:GetChildren()) do
+            Lighting.GlobalShadows = false
+            for _,e in ipairs(Lighting:GetChildren()) do
                 if e:IsA("BloomEffect") or e:IsA("BlurEffect") or e:IsA("SunRaysEffect") then
                     e.Enabled = false
                 end
@@ -615,9 +663,8 @@ UI.SideButton("Misc", function()
             UI.Notify("Low Performance: ON")
         else
             settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
-            local L = game:GetService("Lighting")
-            L.GlobalShadows = true
-            for _,e in ipairs(L:GetChildren()) do
+            Lighting.GlobalShadows = true
+            for _,e in ipairs(Lighting:GetChildren()) do
                 if e:IsA("BloomEffect") or e:IsA("BlurEffect") or e:IsA("SunRaysEffect") then
                     e.Enabled = true
                 end
@@ -626,12 +673,67 @@ UI.SideButton("Misc", function()
         end
     end
 
+    -- 🔥 ULTRA LOW PERFORMANCE (baru)
+    local function applyUltra(state)
+        if state then
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+
+            Lighting.GlobalShadows = false
+            Lighting.EnvironmentDiffuseScale = 0
+            Lighting.EnvironmentSpecularScale = 0
+            Lighting.FogEnd = 9e9
+
+            for _,v in ipairs(Lighting:GetChildren()) do
+                if v:IsA("BloomEffect")
+                or v:IsA("BlurEffect")
+                or v:IsA("SunRaysEffect")
+                or v:IsA("ColorCorrectionEffect")
+                or v:IsA("DepthOfFieldEffect") then
+                    v.Enabled = false
+                end
+            end
+
+            if Terrain then
+                Terrain.WaterWaveSize = 0
+                Terrain.WaterWaveSpeed = 0
+                Terrain.WaterReflectance = 0
+                Terrain.WaterTransparency = 1
+            end
+
+            for _,obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("ParticleEmitter") or obj:IsA("Smoke") or obj:IsA("Fire") then
+                    obj.Enabled = false
+                elseif obj:IsA("BasePart") then
+                    obj.CastShadow = false
+                    obj.Material = Enum.Material.Plastic
+                elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                    obj.Transparency = 1
+                end
+            end
+
+            UI.Notify("ULTRA Low Performance: ON")
+        else
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+            Lighting.GlobalShadows = true
+            UI.Notify("ULTRA Low Performance: OFF")
+        end
+    end
+
+    -- 🔘 LOW PERFORM
     UI.ContentButton("Low Performance: OFF", function(btn)
         lowPerf = not lowPerf
         applyLow(lowPerf)
         btn.Text = "Low Performance: " .. (lowPerf and "ON" or "OFF")
     end)
+
+    -- 🔥 ULTRA LOW PERFORM BUTTON
+    UI.ContentButton("ULTRA Low Performance: OFF", function(btn)
+        ultra = not ultra
+        applyUltra(ultra)
+        btn.Text = "ULTRA Low Performance: " .. (ultra and "ON" or "OFF")
+    end)
 end)
+
 
 -- =======================
 -- SYSTEM TAB
