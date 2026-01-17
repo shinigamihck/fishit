@@ -1,13 +1,14 @@
--- =========================================================
---  FISH IT | CORE SYSTEM (NO UI) — FULL & CLEAN
--- =========================================================
+--=========================================================
+--  FISH IT | CORE SYSTEM — FINAL CLEAN & STABLE
+--=========================================================
 
 if _G.FishItWORK then return end
 _G.FishItWORK = true
 
--- SERVICES (SATU KALI SAJA)
+--=========================================================
+-- SERVICES
+--=========================================================
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Stats = game:GetService("Stats")
 local UIS = game:GetService("UserInputService")
@@ -16,9 +17,9 @@ local VirtualUser = game:GetService("VirtualUser")
 local LP = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
--- =========================================================
+--=========================================================
 -- NETWORK
--- =========================================================
+--=========================================================
 local Net = require(ReplicatedStorage.Packages.Net)
 local sellRF = Net:RemoteFunction("SellAllItems")
 local purchaseRF = Net:RemoteFunction("PurchaseWeatherEvent")
@@ -26,9 +27,9 @@ local SpawnTotem = Net:RemoteEvent("SpawnTotem")
 local TotemSpawned = Net:RemoteEvent("TotemSpawned")
 local EquipToolFromHotbar = Net:RemoteEvent("EquipToolFromHotbar")
 
--- =========================================================
--- STATE VARIABLES (DONT TOUCH)
--- =========================================================
+--=========================================================
+-- STATE VARIABLES
+--=========================================================
 local AutoFish = false
 local AutoSell = false
 local AutoWeather = false
@@ -38,34 +39,31 @@ local WeatherDelay = 5
 local SellInterval = 30
 local FishDelay = 0.13
 
--- =========================================================
+--=========================================================
 -- ANTI AFK
--- =========================================================
+--=========================================================
 LP.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
 end)
 
--- =========================================================
+--=========================================================
 -- REAL PING READER
--- =========================================================
+--=========================================================
 local function getRealPing()
     local network = Stats:FindFirstChild("Network")
     if not network then return 0 end
-
     local serverStats = network:FindFirstChild("ServerStatsItem")
     if not serverStats then return 0 end
-
     local pingStat = serverStats:FindFirstChild("Data Ping")
     if not pingStat then return 0 end
-
     local v = pingStat:GetValue()
     return typeof(v) == "number" and v or 0
 end
 
--- =========================================================
+--=========================================================
 -- FISHING CONTROLLER (SAFE LOAD)
--- =========================================================
+--=========================================================
 local FishingController
 task.spawn(function()
     repeat
@@ -79,20 +77,18 @@ task.spawn(function()
     until FishingController
 end)
 
--- =========================================================
+--=========================================================
 -- AUTO FISH LOOP
--- =========================================================
+--=========================================================
 task.spawn(function()
     while _G.FishItWORK do
         task.wait(FishDelay)
-
         if AutoFish and FishingController then
             local guid = FishingController:GetCurrentGUID()
             if not guid then
                 pcall(function()
                     FishingController:RequestChargeFishingRod(
-                        Camera.ViewportSize / 2,
-                        true
+                        Camera.ViewportSize/2, true
                     )
                 end)
             else
@@ -104,9 +100,9 @@ task.spawn(function()
     end
 end)
 
--- =========================================================
+--=========================================================
 -- AUTO SELL LOOP
--- =========================================================
+--=========================================================
 task.spawn(function()
     while _G.FishItWORK do
         if AutoSell then
@@ -118,10 +114,10 @@ task.spawn(function()
     end
 end)
 
--- =========================================================
+--=========================================================
 -- AUTO WEATHER LOOP
--- =========================================================
-local WeatherList = {"Storm", "Cloudy", "Wind"}
+--=========================================================
+local WeatherList = {"Storm","Cloudy","Wind"}
 
 task.spawn(function()
     while _G.FishItWORK do
@@ -137,9 +133,9 @@ task.spawn(function()
     end
 end)
 
--- =========================================================
--- AUTO TOTEM SYSTEM (FULL)
--- =========================================================
+--=========================================================
+-- AUTO TOTEM SYSTEM
+--=========================================================
 local Replion = require(ReplicatedStorage.Packages.Replion)
 local Data = Replion.Client:WaitReplion("Data")
 
@@ -163,7 +159,7 @@ end
 
 TotemSpawned.OnClientEvent:Connect(function()
     COOLDOWN = 3600
-    task.delay(0.2, EquipRod)
+    task.delay(.2, EquipRod)
 end)
 
 task.spawn(function()
@@ -178,7 +174,6 @@ end)
 task.spawn(function()
     while RUNNING_TOTEM and _G.FishItWORK do
         task.wait(1)
-
         if not AUTO_TOTEM then continue end
 
         if COOLDOWN > 0 then
@@ -203,8 +198,7 @@ task.spawn(function()
         end)
 
         SpawnTotem:FireServer(uuid)
-
-        task.wait(0.5)
+        task.wait(.5)
         if conn then conn:Disconnect() end
 
         if not success then
@@ -213,74 +207,25 @@ task.spawn(function()
     end
 end)
 
--- =========================================================
+--=========================================================
 -- TELEPORT SPOTS (FULL LIST)
--- =========================================================
-
+--=========================================================
 local Locations = {
-    { Name = "Ancient Jungle", CFrame = CFrame.new(1562.54028, 6.62499952, -233.164978) },
-    { Name = "Ancient Ruin", CFrame = CFrame.new(6076.29297, -585.924255, 4625.92578) },
-    { Name = "Captain Jones ( Quest )", CFrame = CFrame.new(
-        3312.1604, 9.09943581, 3681.58276,
-        -0.620493293, 3.23666143e-08, 0.784211755,
-        1.96114573e-08, 1, -2.57555914e-08,
-        -0.784211755, -6.01637129e-10, -0.620493293
-    ) },
-    { Name = "Coral Reefs", CFrame = CFrame.new(-2752.8064, 4.00034237, 2165.78516) },
-    { Name = "Crater Island", CFrame = CFrame.new(1027.12122, 2.89895344, 5148.10498) },
-    { Name = "Deadman Compas ( Quest )", CFrame = CFrame.new(
-        -3437.02661, -22.3605175, -1500.29492,
-        0.949759126, -0.000316226506, -0.312981725,
-        -0.00030944933, 0.999998033, -0.0019494053,
-        0.312981725, 0.0019483174, 0.949757159
-    ) },
-    { Name = "Esoteric Depths", CFrame = CFrame.new(3249.08862, -1301.52979, 1373.68054) },
-    { Name = "Fisherman Island", CFrame = CFrame.new(73.3565826, 9.53157043, 2709.50098) },
-    { Name = "Kohana", CFrame = CFrame.new(-595.69751, 19.2500706, 429.863037) },
-    { Name = "Kohana Volcano", CFrame = CFrame.new(-559.593994, 21.2289829, 153.752396) },
-    { Name = "Kuil Suci", CFrame = CFrame.new(1471.79675, -22.1250019, -607.50592) },
-    { Name = "Pirate Cove", CFrame = CFrame.new(
-        3398.70093, 10.3427305, 3491.1123,
-        0.350104898, -5.98848899e-08, -0.936710477,
-        4.57310989e-08, 1, -4.68386041e-08,
-        0.936710477, -2.64383768e-08, 0.350104898
-    ) },
-    { Name = "Pirate Treasure Room", CFrame = CFrame.new(
-        3340.80273, -301.512665, 3090.66382,
-        0.851593554, -5.62464919e-08, 0.524202645,
-        4.72129109e-08, 1, 3.05993844e-08,
-        -0.524202645, -1.30910449e-09, 0.851593554
-    ) },
-    { Name = "Sisyphus Statue", CFrame = CFrame.new(-3745.26025, -135.074417, -1008.6817) },
-    { Name = "Traveling Merchant", CFrame = CFrame.new(
-        -133.942184, 3.1812315, 2767.25952,
-        0.9507429, 1.0076019e-07, -0.309980601,
-        -8.28868707e-08, 1, 7.08305095e-08,
-        0.309980601, -4.16482813e-08, 0.9507429
-    ) },
-    { Name = "Treasure Room", CFrame = CFrame.new(-3597.20093, -280.117279, -1633.28735) },
-    { Name = "Tropical Grove", CFrame = CFrame.new(-2128.62183, 53.487011, 3637.66479) },
-    { Name = "Weather Machine", CFrame = CFrame.new(-1527.67334, 2.87499976, 1914.66492) }
+    {Name="Ancient Jungle",CFrame=CFrame.new(1562.54,6.62,-233.16)},
+    {Name="Ancient Ruin",CFrame=CFrame.new(6076.29,-585.92,4625.92)},
+    {Name="Coral Reefs",CFrame=CFrame.new(-2752.8,4,2165.78)},
+    {Name="Crater Island",CFrame=CFrame.new(1027.12,2.89,5148.10)},
+    {Name="Fisherman Island",CFrame=CFrame.new(73.35,9.53,2709.5)},
+    {Name="Kohana",CFrame=CFrame.new(-595.69,19.25,429.86)},
+    {Name="Kuil Suci",CFrame=CFrame.new(1471.79,-22.12,-607.50)},
+    {Name="Volcano",CFrame=CFrame.new(-559.59,21.22,153.75)},
+    {Name="Weather Machine",CFrame=CFrame.new(-1527.67,2.87,1914.66)},
+    {Name="Tropical Grove",CFrame=CFrame.new(-2128.62,53.48,3637.66)},
 }
+--=========================================================
+-- UI DARK MODE | FINAL CLEAN VERSION
+--=========================================================
 
--- =========================================================
--- EXPORT CORE API (DIPAKAI UI)
--- =========================================================
-
-_G.FishCore = {
-    AutoFish = function(v) AutoFish = v end,
-    AutoSell = function(v) AutoSell = v end,
-    AutoWeather = function(v) AutoWeather = v end,
-    AutoTotem = function(v) AUTO_TOTEM = v end,
-    GetPing = getRealPing,
-    Spots = Locations,
-}
-
--- =========================================================
---  UI DARK MODE | HOHO STYLE | SIDEBAR KIRI
--- =========================================================
-
-local LP = Players.LocalPlayer
 local pg = LP:WaitForChild("PlayerGui")
 local Core = _G.FishCore
 
@@ -292,17 +237,14 @@ end)
 local gui = Instance.new("ScreenGui")
 gui.Name = "FishItUI"
 gui.ResetOnSpawn = false
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Global -- ⭐ WAJIB
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 gui.Parent = pg
 
-------------------------------------------------------------
--- GLOBAL UI SCALE
-------------------------------------------------------------
-
+--=========================================================
+-- GLOBAL SCALE
+--=========================================================
 local uiScale = Instance.new("UIScale", gui)
-local UI_MODE = "AUTO"
-
-local function applyGlobalScale()
+local function applyScale()
     local w = workspace.CurrentCamera.ViewportSize.X
     if UIS.TouchEnabled then
         if w < 350 then uiScale.Scale = .45
@@ -314,62 +256,44 @@ local function applyGlobalScale()
         uiScale.Scale = .9
     end
 end
+applyScale()
+workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(applyScale)
 
-applyGlobalScale()
-workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(applyGlobalScale)
-
-------------------------------------------------------------
+--=========================================================
 -- THEME
-------------------------------------------------------------
-
+--=========================================================
 local THEME = {
     BG_MAIN = Color3.fromRGB(18,18,22),
     BG_SIDE = Color3.fromRGB(24,24,30),
     BG_PANEL = Color3.fromRGB(32,32,40),
-
-    PANEL = Color3.fromRGB(20,24,30), -- panel apply
     BTN = Color3.fromRGB(42,42,54),
-    BTN_HVR  = Color3.fromRGB(52,52,66),
-
+    BTN_HVR = Color3.fromRGB(52,52,66),
     TEXT = Color3.fromRGB(235,235,255),
     ACCENT = Color3.fromRGB(0,170,255),
-    BORDER = Color3.fromRGB(0,170,220),
 }
 
-
-
-------------------------------------------------------------
+--=========================================================
 -- MAIN FRAME
-------------------------------------------------------------
-
-------------------------------------------------------------
--- MAIN FRAME (FINAL FIXED)
-------------------------------------------------------------
-
+--=========================================================
 local main = Instance.new("Frame", gui)
-main.ZIndex = 1  -- ⭐ ZINDEX UTAMA
+main.ZIndex = 1
 main.Size = UDim2.fromOffset(640, 380)
-main.Position = UDim2.new(0.5, -320, 0.5, -190)
+main.Position = UDim2.new(0.5,-320,0.5,-190)
 main.BackgroundColor3 = THEME.BG_MAIN
 main.Active = true
 main.Draggable = true
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
 
 local stroke = Instance.new("UIStroke", main)
 stroke.Color = THEME.ACCENT
 stroke.Thickness = 1
 stroke.Transparency = 0.6
 
-------------------------------------------------------------
--- SIDEBAR (KIRI)
-------------------------------------------------------------
-
-------------------------------------------------------------
--- SIDEBAR (KIRI) — FINAL FIX
-------------------------------------------------------------
-
+--=========================================================
+-- SIDEBAR
+--=========================================================
 local sidebar = Instance.new("Frame", main)
-sidebar.Name = "Sidebar"   -- ⭐ WAJIB
+sidebar.Name = "Sidebar"
 sidebar.ZIndex = 3
 sidebar.Size = UDim2.new(0,150,1,0)
 sidebar.BackgroundColor3 = THEME.BG_SIDE
@@ -382,25 +306,21 @@ sideList.SortOrder = Enum.SortOrder.LayoutOrder
 
 Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,10)
 
-
-
-------------------------------------------------------------
+--=========================================================
 -- CONTENT PANEL
-------------------------------------------------------------
-
+--=========================================================
 local content = Instance.new("ScrollingFrame", main)
-content.ZIndex = 2  -- ⭐ DI BAWAH SIDEBAR, DI ATAS MAIN
 content.Name = "Content"
-content.Position = UDim2.new(0, 160, 0, 10)
-content.Size = UDim2.new(1, -170, 1, -20)
-content.CanvasSize = UDim2.new(0, 0, 0, 0)
+content.ZIndex = 2
+content.Position = UDim2.new(0,160,0,10)
+content.Size = UDim2.new(1,-170,1,-20)
+content.CanvasSize = UDim2.new(0,0,0,0)
 content.AutomaticCanvasSize = Enum.AutomaticSize.Y
 content.ScrollBarThickness = 4
 content.ScrollBarImageTransparency = 0.2
 content.BackgroundColor3 = THEME.BG_PANEL
 content.ClipsDescendants = true
-Instance.new("UICorner", content).CornerRadius = UDim.new(0, 10)
-
+Instance.new("UICorner", content).CornerRadius = UDim.new(0,10)
 
 local contentList = Instance.new("UIListLayout", content)
 contentList.Padding = UDim.new(0,6)
@@ -412,20 +332,18 @@ pad.PaddingBottom = UDim.new(0,10)
 pad.PaddingLeft = UDim.new(0,10)
 pad.PaddingRight = UDim.new(0,10)
 
-
-
-------------------------------------------------------------
--- CONTENT TOOLS
-------------------------------------------------------------
-
+--=========================================================
+-- UI BUILD FUNCTIONS
+--=========================================================
 local function Clear()
     for _,v in ipairs(content:GetChildren()) do
-        if v:IsA("GuiObject") and not v:IsA("UIListLayout") and not v:IsA("UIPadding") then
-            v:Destroy()
+        if v:IsA("GuiObject") then
+            if not v:IsA("UIListLayout") and not v:IsA("UIPadding") then
+                v:Destroy()
+            end
         end
     end
 end
-
 
 local function Label(t)
     local l = Instance.new("TextLabel", content)
@@ -439,15 +357,14 @@ end
 
 local function ContentButton(text, callback)
     local b = Instance.new("TextButton", content)
-    b.ZIndex = content.ZIndex + 1
-    b.Size = UDim2.new(1, -20, 0, 30) -- 🔥 lebih slim
+    b.ZIndex = 10
+    b.Size = UDim2.new(1,-20,0,30)
     b.Text = text
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 12
     b.TextColor3 = THEME.TEXT
     b.BackgroundColor3 = THEME.BTN
     b.AutoButtonColor = false
-
     Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
 
     b.MouseEnter:Connect(function()
@@ -456,24 +373,21 @@ local function ContentButton(text, callback)
     b.MouseLeave:Connect(function()
         b.BackgroundColor3 = THEME.BTN
     end)
-
     b.MouseButton1Click:Connect(function()
         callback(b)
     end)
 end
 
-
 local function SideButton(name, builder)
     local b = Instance.new("TextButton", sidebar)
-    b.ZIndex = sidebar.ZIndex + 1
-    b.Size = UDim2.new(1,-14,0,28) -- 🔥 lebih kecil
+    b.ZIndex = 10
+    b.Size = UDim2.new(1,-14,0,28)
     b.Text = name
     b.Font = Enum.Font.GothamMedium
     b.TextSize = 12
     b.TextColor3 = THEME.TEXT
     b.BackgroundColor3 = THEME.BTN
     b.AutoButtonColor = false
-
     Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
 
     b.MouseEnter:Connect(function()
@@ -488,11 +402,6 @@ local function SideButton(name, builder)
         builder()
     end)
 end
-
-
-------------------------------------------------------------
--- NOTIFY SYSTEM
-------------------------------------------------------------
 
 local function Notify(msg)
     local box = Instance.new("Frame", gui)
@@ -512,7 +421,7 @@ local function Notify(msg)
     txt.TextXAlignment = Enum.TextXAlignment.Left
 
     task.spawn(function()
-        for i = 1,35 do
+        for i=1,35 do
             task.wait(.03)
             box.BackgroundTransparency += .02
             txt.TextTransparency += .02
@@ -520,10 +429,6 @@ local function Notify(msg)
         box:Destroy()
     end)
 end
-
-------------------------------------------------------------
--- EXPORT UI
-------------------------------------------------------------
 
 _G.UI = {
     Clear = Clear,
@@ -536,19 +441,12 @@ _G.UI = {
 }
 _G.UI.Main.Sidebar = sidebar
 
-
--- =========================================================
--- PART 4 — TAB IMPLEMENTATION (AUTO / SPOTS / PLAYERS / SHOP / MISC / SYSTEM)
--- =========================================================
-
 local UI = _G.UI
 local Core = _G.FishCore
-local Players = game:GetService("Players")
-local LP = Players.LocalPlayer
 
--- =======================
+--=========================================================
 -- AUTO TAB
--- =======================
+--=========================================================
 UI.SideButton("Auto", function()
     UI.Clear()
     UI.Label("Auto Features")
@@ -579,9 +477,9 @@ UI.SideButton("Auto", function()
     end)
 end)
 
--- =======================
+--=========================================================
 -- SPOTS TAB
--- =======================
+--=========================================================
 UI.SideButton("Spots", function()
     UI.Clear()
     UI.Label("Teleport Spots")
@@ -591,34 +489,30 @@ UI.SideButton("Spots", function()
             local char = LP.Character or LP.CharacterAdded:Wait()
             local hrp = char:WaitForChild("HumanoidRootPart")
             hrp.CFrame = spot.CFrame + Vector3.new(0,4,0)
-            UI.Notify("Teleported: "..spot.Name)
+            UI.Notify("Teleported: " .. spot.Name)
         end)
     end
 end)
 
--- =======================
--- PLAYERS TAB (FIXED SCROLL)
--- =======================
+--=========================================================
+-- PLAYERS TAB
+--=========================================================
 UI.SideButton("Players", function()
 
     local function build()
         UI.Clear()
-
-        -- WAJIB supaya scrolling reset & UIListLayout tetap jalan
-        UI.Content.CanvasSize = UDim2.new(0,0,0,0)
-
         UI.Label("Teleport Players")
+        UI.Content.CanvasSize = UDim2.new(0,0,0,0)
 
         UI.ContentButton("🔄 Refresh", function()
             build()
         end)
 
-        for _, plr in ipairs(Players:GetPlayers()) do
+        for _,plr in ipairs(Players:GetPlayers()) do
             if plr ~= LP then
                 UI.ContentButton(plr.Name, function()
                     local myChar = LP.Character or LP.CharacterAdded:Wait()
                     local myHRP = myChar:WaitForChild("HumanoidRootPart")
-
                     if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                         myHRP.CFrame = plr.Character.HumanoidRootPart.CFrame + Vector3.new(0,3,0)
                         UI.Notify("Teleported to " .. plr.Name)
@@ -631,10 +525,9 @@ UI.SideButton("Players", function()
     build()
 end)
 
-
--- =======================
+--=========================================================
 -- SHOP TAB
--- =======================
+--=========================================================
 UI.SideButton("Shop", function()
     UI.Clear()
     UI.Label("Shop & Totem")
@@ -659,9 +552,9 @@ UI.SideButton("Shop", function()
     end)
 end)
 
--- =======================
+--=========================================================
 -- MISC TAB (PERFORMANCE)
--- =======================
+--=========================================================
 UI.SideButton("Misc", function()
     UI.Clear()
     UI.Label("Performance & Utility")
@@ -672,94 +565,35 @@ UI.SideButton("Misc", function()
     local Lighting = game:GetService("Lighting")
     local Terrain = workspace:FindFirstChildOfClass("Terrain")
 
-    -- 🔥 LOW PERFORMANCE (bawaan)
-    local function applyLow(state)
-        if state then
-            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-            Lighting.GlobalShadows = false
-            for _,e in ipairs(Lighting:GetChildren()) do
-                if e:IsA("BloomEffect") or e:IsA("BlurEffect") or e:IsA("SunRaysEffect") then
-                    e.Enabled = false
-                end
-            end
-            UI.Notify("Low Performance: ON")
-        else
-            settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
-            Lighting.GlobalShadows = true
-            for _,e in ipairs(Lighting:GetChildren()) do
-                if e:IsA("BloomEffect") or e:IsA("BlurEffect") or e:IsA("SunRaysEffect") then
-                    e.Enabled = true
-                end
-            end
-            UI.Notify("Low Performance: OFF")
-        end
-    end
-
-    -- 🔥 ULTRA LOW PERFORMANCE (baru)
-    local function applyUltra(state)
-        if state then
-            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-
-            Lighting.GlobalShadows = false
-            Lighting.EnvironmentDiffuseScale = 0
-            Lighting.EnvironmentSpecularScale = 0
-            Lighting.FogEnd = 9e9
-
-            for _,v in ipairs(Lighting:GetChildren()) do
-                if v:IsA("BloomEffect")
-                or v:IsA("BlurEffect")
-                or v:IsA("SunRaysEffect")
-                or v:IsA("ColorCorrectionEffect")
-                or v:IsA("DepthOfFieldEffect") then
-                    v.Enabled = false
-                end
-            end
-
-            if Terrain then
-                Terrain.WaterWaveSize = 0
-                Terrain.WaterWaveSpeed = 0
-                Terrain.WaterReflectance = 0
-                Terrain.WaterTransparency = 1
-            end
-
-            for _,obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("ParticleEmitter") or obj:IsA("Smoke") or obj:IsA("Fire") then
-                    obj.Enabled = false
-                elseif obj:IsA("BasePart") then
-                    obj.CastShadow = false
-                    obj.Material = Enum.Material.Plastic
-                elseif obj:IsA("Decal") or obj:IsA("Texture") then
-                    obj.Transparency = 1
-                end
-            end
-
-            UI.Notify("ULTRA Low Performance: ON")
-        else
-            settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
-            Lighting.GlobalShadows = true
-            UI.Notify("ULTRA Low Performance: OFF")
-        end
-    end
-
-    -- 🔘 LOW PERFORM
     UI.ContentButton("Low Performance: OFF", function(btn)
         lowPerf = not lowPerf
-        applyLow(lowPerf)
+        if lowPerf then
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+            Lighting.GlobalShadows = false
+        else
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+            Lighting.GlobalShadows = true
+        end
         btn.Text = "Low Performance: " .. (lowPerf and "ON" or "OFF")
     end)
 
-    -- 🔥 ULTRA LOW PERFORM BUTTON
     UI.ContentButton("ULTRA Low Performance: OFF", function(btn)
         ultra = not ultra
-        applyUltra(ultra)
+        if ultra then
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+            Lighting.GlobalShadows = false
+            Lighting.FogEnd = 9e9
+        else
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+            Lighting.GlobalShadows = true
+        end
         btn.Text = "ULTRA Low Performance: " .. (ultra and "ON" or "OFF")
     end)
 end)
 
-
--- =======================
+--=========================================================
 -- SYSTEM TAB
--- =======================
+--=========================================================
 local pingPanel
 local function togglePing()
     if pingPanel then
@@ -806,31 +640,15 @@ UI.SideButton("System", function()
         UI.Main.Parent:Destroy()
     end)
 end)
-
-
-
-
-
--- =========================================================
--- PART 5 — FLOATING BUTTON + REAL PING UI + FISH UI CLEANER
--- =========================================================
-
-local gui = pg:FindFirstChild("FishItUI")
-if not gui then return end
-
-local main = _G.UI.Main
-
--- =========================================================
--- FLOAT TOGGLE BUTTON
--- =========================================================
-
+--=========================================================
+-- FLOAT BUTTON
+--=========================================================
 local floatBtn = Instance.new("ImageButton", gui)
 floatBtn.Size = UDim2.new(0,48,0,48)
 floatBtn.Position = UDim2.new(0.03,0,0.45,0)
-floatBtn.Image = "rbxassetid://72407089659970" -- ASSET MU
+floatBtn.Image = "rbxassetid://72407089659970"
 floatBtn.BackgroundColor3 = Color3.fromRGB(0,140,180)
 floatBtn.BorderSizePixel = 0
-floatBtn.Active = true
 floatBtn.Draggable = true
 Instance.new("UICorner", floatBtn).CornerRadius = UDim.new(0,12)
 
@@ -840,10 +658,9 @@ floatBtn.MouseButton1Click:Connect(function()
     main.Visible = visible
 end)
 
--- =========================================================
--- REAL PING TEXT DI MAIN PANEL
--- =========================================================
-
+--=========================================================
+-- LIVE PING LABEL
+--=========================================================
 local pingLabel = Instance.new("TextLabel", main)
 pingLabel.Size = UDim2.new(0,140,0,18)
 pingLabel.AnchorPoint = Vector2.new(1,1)
@@ -857,80 +674,16 @@ task.spawn(function()
         task.wait(1)
         local p = Core.GetPing()
         pingLabel.Text = string.format("Ping: %.0f ms", p)
-        if p <= 80 then
-            pingLabel.TextColor3 = Color3.fromRGB(0,255,120)
-        elseif p <= 150 then
-            pingLabel.TextColor3 = Color3.fromRGB(255,200,0)
-        else
-            pingLabel.TextColor3 = Color3.fromRGB(255,80,80)
-        end
+        pingLabel.TextColor3 =
+            p <= 80 and Color3.fromRGB(0,255,120)
+        or (p <= 150 and Color3.fromRGB(255,200,0))
+        or Color3.fromRGB(255,80,80)
     end
 end)
 
--- =========================================================
--- THEME APPLY (SAFE MODE)
--- =========================================================
-
-for _,v in ipairs(main:GetDescendants()) do
-
-    -- JANGAN rubah warna sidebar & content panel
-    if v:IsA("Frame") then
-        if v.Name ~= "Sidebar" and v.Name ~= "Content" then
-            v.BackgroundColor3 = v.BackgroundColor3
-        end
-    end
-
-    -- TextButton: JANGAN rubah background-nya (biar tombol terlihat)
-    if v:IsA("TextButton") then
-        v.TextColor3 = THEME.TEXT
-        v.TextTransparency = 0
-    end
-
-    -- TextLabel aman
-    if v:IsA("TextLabel") then
-        v.TextColor3 = THEME.TEXT
-        v.TextTransparency = 0
-    end
-end
-
-
--- =========================================================
--- CLEAN FISH UI (KEEP "You got:")
--- =========================================================
-
-local function shouldHide(label)
-    if not label:IsA("TextLabel") then return false end
-    if not label.Text then return false end
-    local t = label.Text:lower()
-
-    if t:match("^%s*you%s+got%s*:") then return false end
-    if t:match("^1%s+in%s+%d+") then return true end
-    if t:find("%(%s*[%d%.]+%s*kg") then return true end
-    if t:find("lvl") then return true end
-    if label.TextSize >= 26 then return true end
-
-    return false
-end
-
-task.spawn(function()
-    while _G.FishItWORK do
-        task.wait(2)
-        local fishUI = pg:FindFirstChild("FishingUI")
-        if not fishUI then continue end
-        for _,v in ipairs(fishUI:GetDescendants()) do
-            if shouldHide(v) then
-                v.Visible = false
-            end
-        end
-    end
-end)
-
-
-print("FISH IT — FINAL UI MERGED SCRIPT LOADED")
--- =========================================================
--- PART 6 — RESIZE PANEL + FINAL POLISHING
--- =========================================================
-
+--=========================================================
+-- RESIZE HANDLE
+--=========================================================
 local UserInputService = game:GetService("UserInputService")
 local resizing = false
 local startPos
@@ -961,45 +714,30 @@ UserInputService.InputChanged:Connect(function(input)
     if resizing and input.UserInputType == Enum.UserInputType.MouseMovement then
         local mouse = UserInputService:GetMouseLocation()
         local dy = mouse.Y - startPos.Y
-
         main.Size = UDim2.new(startSize.X.Scale, startSize.X.Offset,
                               startSize.Y.Scale, startSize.Y.Offset + dy)
     end
 end)
 
--- =========================================================
--- PART 7 — AUTO OPEN DEFAULT TAB (AUTO)
--- =========================================================
-
-task.delay(0.2, function()
+--=========================================================
+-- AUTO OPEN DEFAULT TAB
+--=========================================================
+task.delay(.2, function()
     for _,btn in ipairs(sidebar:GetChildren()) do
-        if btn:IsA("TextButton") and btn.Visible then
+        if btn:IsA("TextButton") then
             btn.MouseButton1Click:Fire()
             break
         end
     end
 end)
 
--- =========================================================
--- PART 8 — SAFETY EXIT & CLEANUP
--- =========================================================
-
+--=========================================================
+-- SAFE EXIT
+--=========================================================
 local function safeShutdown()
     _G.FishItWORK = false
     pcall(function()
         gui:Destroy()
     end)
 end
-
 _G.FISHIT_SHUTDOWN = safeShutdown
-
--- =========================================================
--- SCRIPT SELESAI
--- =========================================================
-
-print("FISH IT — COMPLETE SCRIPT MERGED SUCCESSFULLY")
--- =========================================================
-
--- =========================================================
--- END OF FILE
--- =========================================================
