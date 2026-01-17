@@ -383,6 +383,29 @@ createToggle(MainPage, "Auto Fish",    function(v) _G.ApplyToggle("Auto Fish", v
 createToggle(MainPage, "Auto Sell",    function(v) _G.ApplyToggle("Auto Sell", v) end)
 createToggle(MainPage, "Auto Weather", function(v) _G.ApplyToggle("Auto Weather", v) end)
 createToggle(MainPage, "Auto Totem",   function(v) _G.ApplyToggle("Auto Totem", v) end)
+
+
+------------------------------------------------------
+-- UPDATE TOTEM STATUS TEXT
+------------------------------------------------------
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        task.wait(1)
+
+        if F.TotemCooldown <= 0 then
+            TotemStatus.Text = "Totem Status: READY"
+            TotemStatus.TextColor3 = Color3.fromRGB(0,255,120)
+
+        else
+            local m = math.floor(F.TotemCooldown / 60)
+            local s = F.TotemCooldown % 60
+            TotemStatus.Text = string.format("Totem Status: %02dm %02ds", m, s)
+            TotemStatus.TextColor3 = Color3.fromRGB(255,200,80)
+        end
+    end
+end)
+
+
 createToggle(MainPage, "Fly",          function(v) _G.ApplyToggle("Fly", v) end)
 
 ------------------------------------------------------
@@ -744,25 +767,6 @@ print("✔ BATCH 4 Loaded | Auto Totem + Teleport Ready")
 --========= CLEAN UI + FPS BOOST + FINALIZE ==========--
 --====================================================--
 
-------------------------------------------------------
--- UPDATE TOTEM STATUS TEXT
-------------------------------------------------------
-task.spawn(function()
-    while _G.FishItHubLoaded do
-        task.wait(1)
-
-        if F.TotemCooldown <= 0 then
-            TotemStatus.Text = "Totem Status: READY"
-            TotemStatus.TextColor3 = Color3.fromRGB(0,255,120)
-
-        else
-            local m = math.floor(F.TotemCooldown / 60)
-            local s = F.TotemCooldown % 60
-            TotemStatus.Text = string.format("Totem Status: %02dm %02ds", m, s)
-            TotemStatus.TextColor3 = Color3.fromRGB(255,200,80)
-        end
-    end
-end)
 
 
 
