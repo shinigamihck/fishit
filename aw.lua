@@ -376,6 +376,30 @@ end
 
 print("✅ PART 2 LOADED : UI COMPONENTS")
 
+-- =====================================================
+-- PART 3 : TAB CONTAINER SYSTEM (ANTI ACAK)
+-- =====================================================
+
+local function CreateTabContainer(tab)
+    local Holder = Instance.new("Frame", tab)
+    Holder.Size = UDim2.new(1, 0, 1, 0)
+    Holder.BackgroundTransparency = 1
+
+    local Padding = Instance.new("UIPadding", Holder)
+    Padding.PaddingTop = UDim.new(0, 10)
+    Padding.PaddingLeft = UDim.new(0, 10)
+    Padding.PaddingRight = UDim.new(0, 10)
+
+    local Layout = Instance.new("UIListLayout", Holder)
+    Layout.Padding = UDim.new(0, 10)
+    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+    return Holder
+end
+
+print("✅ PART 3 LOADED : TAB CONTAINER READY")
+
+
 
 -- =====================================================
 -- PART 3 : CONNECT UI COMPONENTS TO YOUR LOGIC
@@ -513,6 +537,39 @@ CreateButton(SecOther, "Close UI", function()
 end)
 
 print("✅ PART 3 LOADED : UI MAPPING COMPLETE")
+
+-- =====================================================
+-- PART 4 : AUTOMATION TAB (CLEAN)
+-- =====================================================
+
+local AutoHolder = CreateTabContainer(TabAutomation)
+
+CreateSection(AutoHolder, "AUTO FARM")
+
+CreateToggle(AutoHolder, "Auto Fish", AutoFish, function(v)
+    AutoFish = v
+end)
+
+CreateToggle(AutoHolder, "Auto Sell", AutoSell, function(v)
+    AutoSell = v
+end)
+
+CreateSlider(AutoHolder, "Sell Interval (S)", 1, 30, SellInterval, function(v)
+    SellInterval = v
+end)
+
+CreateSection(AutoHolder, "WEATHER")
+
+CreateToggle(AutoHolder, "Auto Weather", AutoWeather, function(v)
+    AutoWeather = v
+end)
+
+CreateSlider(AutoHolder, "Delay Weather (S)", 1, 15, WeatherDelay, function(v)
+    WeatherDelay = v
+end)
+
+print("✅ PART 4 LOADED : AUTOMATION CLEAN")
+
 
 -- =====================================================
 -- PART 4 : LOGIC LOOPS (FINAL)
@@ -668,6 +725,69 @@ end)
 print("✅ PART 4 LOADED : ALL LOGIC RUNNING")
 
 -- =====================================================
+-- PART 5 : TELEPORT TAB (CLEAN)
+-- =====================================================
+
+local TPHolder = CreateTabContainer(TabTeleport)
+
+CreateSection(TPHolder, "TELEPORT TO PLAYER")
+
+local PlayerList = Instance.new("ScrollingFrame", TPHolder)
+PlayerList.Size = UDim2.new(1, 0, 0, 200)
+PlayerList.ScrollBarThickness = 4
+PlayerList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+PlayerList.CanvasSize = UDim2.new(0,0,0,0)
+PlayerList.BackgroundTransparency = 1
+
+local plLayout = Instance.new("UIListLayout", PlayerList)
+plLayout.Padding = UDim.new(0, 6)
+
+local function RefreshPlayers()
+    for _,v in ipairs(PlayerList:GetChildren()) do
+        if v:IsA("TextButton") then v:Destroy() end
+    end
+
+    for _,plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LP then
+            local btn = CreateButton(PlayerList, plr.Name, function()
+                local hrp1 = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+                local hrp2 = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+                if hrp1 and hrp2 then
+                    hrp1.CFrame = hrp2.CFrame * CFrame.new(0,0,-3)
+                end
+            end)
+            btn.Size = UDim2.new(1, 0, 0, 28)
+        end
+    end
+end
+
+RefreshPlayers()
+
+CreateSection(TPHolder, "TELEPORT TO SPOT")
+
+local SpotList = Instance.new("ScrollingFrame", TPHolder)
+SpotList.Size = UDim2.new(1, 0, 0, 260)
+SpotList.ScrollBarThickness = 4
+SpotList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+SpotList.BackgroundTransparency = 1
+
+local spotLayout = Instance.new("UIListLayout", SpotList)
+spotLayout.Padding = UDim.new(0, 6)
+
+for _,spot in ipairs(Locations) do
+    local btn = CreateButton(SpotList, spot.Name, function()
+        local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            hrp.CFrame = spot.CFrame + Vector3.new(0,5,0)
+        end
+    end)
+    btn.Size = UDim2.new(1, 0, 0, 28)
+end
+
+print("✅ PART 5 LOADED : TELEPORT CLEAN")
+
+
+-- =====================================================
 -- PART 5 : ADD-ON SYSTEM (OPTIONAL EXTRAS)
 -- =====================================================
 
@@ -783,6 +903,29 @@ for _,v in ipairs(hubGui:GetDescendants()) do
 end
 
 print("✅ PART 5 LOADED : ADD-ON FEATURES ACTIVE")
+
+-- =====================================================
+-- PART 6 : SHOP TAB (CLEAN)
+-- =====================================================
+
+local ShopHolder = CreateTabContainer(TabShop)
+
+CreateSection(ShopHolder, "TOTEM")
+
+CreateToggle(ShopHolder, "Auto Totem", AUTO_TOTEM, function(v)
+    AUTO_TOTEM = v
+end)
+
+CreateSection(ShopHolder, "MERCHANT")
+
+CreateButton(ShopHolder, "Open Merchant", function()
+    local mg = LP.PlayerGui:FindFirstChild("Merchant")
+    if mg then mg.Enabled = not mg.Enabled end
+end)
+
+print("✅ PART 6 LOADED : SHOP CLEAN")
+
+
 
 -- =====================================================
 -- PART 6 : ADVANCED FEATURES (TELEPORT + PING + SAFETY)
@@ -937,6 +1080,26 @@ end)
 print("✅ PART 6 LOADED : TELEPORT + PING + SAFETY")
 
 -- =====================================================
+-- PART 7 : FLY TAB (CLEAN)
+-- =====================================================
+
+local FlyHolder = CreateTabContainer(TabFly)
+
+CreateSection(FlyHolder, "FLY MODE")
+
+CreateToggle(FlyHolder, "Fly Enabled", FlyEnabled, function(v)
+    FlyEnabled = v
+    if v then startFly() else stopFly() end
+end)
+
+CreateSlider(FlyHolder, "Fly Speed", 50, 800, FlySpeed, function(v)
+    FlySpeed = v
+end)
+
+print("✅ PART 7 LOADED : FLY CLEAN")
+
+
+-- =====================================================
 -- PART 7 : STABILITY, RESPAWN & FAIL-SAFE SYSTEM
 -- =====================================================
 
@@ -1049,6 +1212,25 @@ task.spawn(function()
 end)
 
 print("✅ PART 7 LOADED : STABILITY & FAIL-SAFE ACTIVE")
+
+
+-- =====================================================
+-- PART 8 : SETTINGS TAB (CLEAN)
+-- =====================================================
+
+local SetHolder = CreateTabContainer(TabSettings)
+
+CreateSection(SetHolder, "SYSTEM")
+
+CreateButton(SetHolder, "Close UI", function()
+    if gui then gui:Destroy() end
+    _G.FishItWORK = false
+end)
+
+CreateButton(SetHolder, "Save Config", saveConfig)
+CreateButton(SetHolder, "Load Config", loadConfig)
+
+print("✅ PART 8 LOADED : SETTINGS CLEAN")
 
 
 -- =====================================================
