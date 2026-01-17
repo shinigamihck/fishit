@@ -17,6 +17,7 @@ local UIS = game:GetService("UserInputService")
 local Lighting = game:GetService("Lighting")
 local Stats = game:GetService("Stats")
 local VirtualUser = game:GetService("VirtualUser")
+local TeleportService = game:GetService("TeleportService")
 
 ------------------------------------------------------
 -- NET PACKAGE
@@ -495,6 +496,28 @@ task.spawn(function()
         end
     end
 end)
+
+------------------------------------------------------
+-- MISC TAB : REJOIN BUTTON
+------------------------------------------------------
+local RejoinBtn = Instance.new("TextButton", MiscPage)
+RejoinBtn.Size = UDim2.new(0,300,0,34)
+RejoinBtn.BackgroundColor3 = THEME.BUTTON
+RejoinBtn.BackgroundTransparency = 0.25
+RejoinBtn.TextColor3 = THEME.TEXT
+RejoinBtn.Font = Enum.Font.GothamBold
+RejoinBtn.TextSize = 12
+RejoinBtn.BorderSizePixel = 0
+RejoinBtn.Text = "Rejoin Server"
+
+Instance.new("UICorner", RejoinBtn).CornerRadius = UDim.new(0,8)
+
+RejoinBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        TeleportService:Teleport(game.PlaceId, LP)
+    end)
+end)
+
 
 print("✔ BATCH 3 Loaded | Toggles + Engine Active")
 
