@@ -306,40 +306,52 @@ stroke.Thickness = 1
 stroke.Transparency = 0.6
 
 -- =========================================================
--- TOP BAR
+-- CONTENT PANEL (BENAR)
 -- =========================================================
-local topBar = Instance.new("Frame", main)
-topBar.Size = UDim2.new(1, 0, 0, 34)
-topBar.BackgroundColor3 = Color3.fromRGB(25, 28, 35)
-topBar.BackgroundTransparency = 0.25
-topBar.ZIndex = 5
 
-local topCorner = Instance.new("UICorner", topBar)
-topCorner.CornerRadius = UDim.new(0, 10)
+local panel = Instance.new("Frame", main)
+panel.ZIndex = 50
+panel.Position = UDim2.new(0, 10, 0, 44)
+panel.Size = UDim2.new(1, -20, 1, -54)
+panel.BackgroundColor3 = Color3.fromRGB(28, 32, 40)
+panel.BackgroundTransparency = 0.30
+panel.ClipsDescendants = true
+
+Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 10)
+
+
+-- =========================================================
+-- TOP BAR (DI DALAM PANEL)
+-- =========================================================
+
+local topBar = Instance.new("Frame", panel)
+topBar.ZIndex = 60
+topBar.Position = UDim2.new(0, 0, 0, 0)
+topBar.Size = UDim2.new(1, 0, 0, 36)
+topBar.BackgroundColor3 = Color3.fromRGB(25, 28, 35)
+topBar.BackgroundTransparency = 0.1
+
+Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
 
 local list = Instance.new("UIListLayout", topBar)
 list.FillDirection = Enum.FillDirection.Horizontal
 list.SortOrder = Enum.SortOrder.LayoutOrder
 list.Padding = UDim.new(0, 6)
+local pad = Instance.new("UIPadding", topBar)
+pad.PaddingLeft = UDim.new(0, 8)
+pad.PaddingRight = UDim.new(0, 8)
+pad.PaddingTop = UDim.new(0, 4)
+pad.PaddingBottom = UDim.new(0, 4)
+
 
 -- =========================================================
--- CONTENT PANEL (FULL FIX)
+-- SCROLLING CONTENT (DI BAWAH TOPBAR)
 -- =========================================================
-local panel = Instance.new("Frame", main)
-panel.ZIndex = 1
-panel.Position = UDim2.new(0, 10, 0, 44)
-panel.Size = UDim2.new(1, -20, 1, -54)
-panel.BackgroundColor3 = Color3.fromRGB(28, 32, 40)
-panel.BackgroundTransparency = 0.30
-
-
-local pc = Instance.new("UICorner", panel)
-pc.CornerRadius = UDim.new(0, 10)
 
 local scroll = Instance.new("ScrollingFrame", panel)
-scroll.ZIndex = 2
-scroll.Position = UDim2.new(0, 10, 0, 10)
-scroll.Size = UDim2.new(1, -20, 1, -20)
+scroll.ZIndex = 61
+scroll.Position = UDim2.new(0, 10, 0, 42)   -- TURUN DI BAWAH TOPBAR
+scroll.Size = UDim2.new(1, -20, 1, -52)     -- SESUAI KETINGGIAN PANEL
 scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 scroll.ScrollBarThickness = 3
@@ -348,6 +360,7 @@ scroll.BackgroundTransparency = 1
 local layout = Instance.new("UIListLayout", scroll)
 layout.Padding = UDim.new(0, 6)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
+
 
 
 
@@ -475,7 +488,7 @@ local currentTab = ""
 
 local function newTab(name, callback)
     local btn = Instance.new("TextButton", topBar)
-    btn.Size = UDim2.new(0, 90, 1, 0)
+    btn.Size = UDim2.new(0, 80, 1, -8)
     btn.Text = name
     btn.TextSize = 11
     btn.Font = Enum.Font.GothamBold
@@ -497,50 +510,7 @@ local function newTab(name, callback)
     end)
 end
 
--- =====================================
--- AUTO CLICKER STATE
--- =====================================
-local AutoClickerUI = false
 
-local clickBtn
-local clicking = false
-
-local function toggleAutoClickerUI(state)
-    AutoClickerUI = state
-
-    if not state then
-        if clickBtn then
-            clickBtn:Destroy()
-            clickBtn = nil
-        end
-        clicking = false
-        return
-    end
-
-clickBtn = Instance.new("TextButton", gui)
-clickBtn.ZIndex = 999
-    clickBtn.Size = UDim2.new(0, 60, 0, 60)
-    clickBtn.Position = UDim2.new(0.03, 0, 0.6, 0)
-    clickBtn.AnchorPoint = Vector2.new(0, 0.5)
-    clickBtn.Text = "CLICK"
-    clickBtn.Font = Enum.Font.GothamBold
-    clickBtn.TextSize = 14
-    clickBtn.TextColor3 = Color3.new(1,1,1)
-    clickBtn.BackgroundColor3 = Color3.fromRGB(255,80,80)
-    clickBtn.Active = true
-    clickBtn.Draggable = true
-    clickBtn.AutoButtonColor = false
-
-    Instance.new("UICorner", clickBtn).CornerRadius = UDim.new(1,0)
-
-clickBtn.MouseButton1Click:Connect(function()
-    clicking = not clicking
-    clickBtn.BackgroundColor3 = clicking
-        and Color3.fromRGB(80,200,120)
-        or Color3.fromRGB(255,80,80)
-end)
-
-end
 
 
 -- =========================================================
@@ -573,15 +543,6 @@ newTab("Auto", function()
         btn.Text = "Auto Weather: " .. (autoWeather and "ON" or "OFF")
         notify("Auto Weather: " .. (autoWeather and "ON" or "OFF"))
     end)
-
-    local autoClickUI = false
-
-addButton("Auto Clicker UI: OFF", function(btn)
-    autoClickUI = not autoClickUI
-    toggleAutoClickerUI(autoClickUI)
-    btn.Text = "Auto Clicker UI: " .. (autoClickUI and "ON" or "OFF")
-    notify("Auto Clicker UI: " .. (autoClickUI and "ON" or "OFF"))
-end)
 end)
 
 
