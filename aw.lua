@@ -284,9 +284,9 @@ local main = Instance.new("Frame", gui)
 
 -- DETECT MOBILE ATAU PC
 if UIS.TouchEnabled then
-   main.Size = UDim2.new(0.55, 0, 0.38, 0)   -- ukuran mobile
+   main.Size = UDim2.new(0.55, 0, 0.32, 0) -- mobile lebih ringkas
 else
-    main.Size = UDim2.new(0.35, 0, 0.38, 0)   -- ukuran PC
+   main.Size = UDim2.new(0.35, 0, 0.30, 0) -- PC lebih compact
 end
 
 main.Position = UDim2.new(0.32, 0, 0.3, 0)
@@ -325,7 +325,8 @@ list.Padding = UDim.new(0, 6)
 -- =========================================================
 local panel = Instance.new("Frame", main)
 panel.Position = UDim2.new(0, 10, 0, 50)
-panel.Size = UDim2.new(1, -20, 1, -60)
+panel.AutomaticSize = Enum.AutomaticSize.Y
+panel.Size = UDim2.new(1, -20, 0, 0)
 panel.BackgroundColor3 = Color3.fromRGB(28, 32, 40)
 panel.BackgroundTransparency = 0.15
 
@@ -494,6 +495,44 @@ end
 -- =====================================
 local AutoClickerUI = false
 
+local clickBtn
+local clicking = false
+
+local function toggleAutoClickerUI(state)
+    AutoClickerUI = state
+
+    if not state then
+        if clickBtn then
+            clickBtn:Destroy()
+            clickBtn = nil
+        end
+        clicking = false
+        return
+    end
+
+clickBtn = Instance.new("TextButton", gui)
+clickBtn.ZIndex = 999
+    clickBtn.Size = UDim2.new(0, 60, 0, 60)
+    clickBtn.Position = UDim2.new(0.03, 0, 0.6, 0)
+    clickBtn.Text = "CLICK"
+    clickBtn.Font = Enum.Font.GothamBold
+    clickBtn.TextSize = 14
+    clickBtn.TextColor3 = Color3.new(1,1,1)
+    clickBtn.BackgroundColor3 = Color3.fromRGB(255,80,80)
+    clickBtn.Active = true
+    clickBtn.Draggable = true
+    clickBtn.AutoButtonColor = false
+
+    Instance.new("UICorner", clickBtn).CornerRadius = UDim.new(1,0)
+
+   clickBtn.MouseButton1Click:Connect(function()
+    clicking = not clicking
+    clickBtn.BackgroundColor3 = clicking
+        and Color3.fromRGB(80,200,120)
+        or Color3.fromRGB(255,80,80)
+end)
+
+
 -- =========================================================
 -- TAB: AUTO (dengan indikator ON/OFF)
 -- =========================================================
@@ -613,6 +652,64 @@ end)
 end)
 
 -- =========================================================
+-- TAB: MISC (PERFORMANCE)
+-- =========================================================
+local lowPerfEnabled = false
+
+local function ApplyLowPerformance(state)
+    lowPerfEnabled = state
+
+    if state then
+        -- LOW PERFORMANCE ON (JALAN SEKALI)
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+
+        local L = game:GetService("Lighting")
+        L.GlobalShadows = false
+
+        if L:FindFirstChildOfClass("BloomEffect") then
+            L:FindFirstChildOfClass("BloomEffect").Enabled = false
+        end
+        if L:FindFirstChildOfClass("BlurEffect") then
+            L:FindFirstChildOfClass("BlurEffect").Enabled = false
+        end
+        if L:FindFirstChildOfClass("SunRaysEffect") then
+            L:FindFirstChildOfClass("SunRaysEffect").Enabled = false
+        end
+
+        notify("Low Performance Mode: ON")
+    else
+        -- RESTORE (JUGA SEKALI)
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+
+        local L = game:GetService("Lighting")
+        L.GlobalShadows = true
+
+        if L:FindFirstChildOfClass("BloomEffect") then
+            L:FindFirstChildOfClass("BloomEffect").Enabled = true
+        end
+        if L:FindFirstChildOfClass("BlurEffect") then
+            L:FindFirstChildOfClass("BlurEffect").Enabled = true
+        end
+        if L:FindFirstChildOfClass("SunRaysEffect") then
+            L:FindFirstChildOfClass("SunRaysEffect").Enabled = true
+        end
+
+        notify("Low Performance Mode: OFF")
+    end
+end
+
+newTab("Misc", function()
+    addLabel("Performance & Utility")
+
+    addButton("Low Performance Mode: OFF", function(btn)
+        lowPerfEnabled = not lowPerfEnabled
+        ApplyLowPerformance(lowPerfEnabled)
+        btn.Text = "Low Performance Mode: " .. (lowPerfEnabled and "ON" or "OFF")
+    end)
+end)
+
+
+-- =========================================================
 -- TAB: SYSTEM
 -- =========================================================
 newTab("System", function()
@@ -680,58 +777,6 @@ floatBtn.MouseButton1Click:Connect(function()
 end)
 
 
-local VirtualUser = game:GetService("VirtualUser")
-
-local clickBtn
-local clicking = false
-
-local function toggleAutoClickerUI(state)
-    AutoClickerUI = state
-
-    if not state then
-        if clickBtn then
-            clickBtn:Destroy()
-            clickBtn = nil
-        end
-        clicking = false
-        return
-    end
-
-clickBtn = Instance.new("TextButton", gui)
-clickBtn.ZIndex = 999
-    clickBtn.Size = UDim2.new(0, 60, 0, 60)
-    clickBtn.Position = UDim2.new(0.03, 0, 0.6, 0)
-    clickBtn.Text = "CLICK"
-    clickBtn.Font = Enum.Font.GothamBold
-    clickBtn.TextSize = 14
-    clickBtn.TextColor3 = Color3.new(1,1,1)
-    clickBtn.BackgroundColor3 = Color3.fromRGB(255,80,80)
-    clickBtn.Active = true
-    clickBtn.Draggable = true
-    clickBtn.AutoButtonColor = false
-
-    Instance.new("UICorner", clickBtn).CornerRadius = UDim.new(1,0)
-
-   clickBtn.MouseButton1Click:Connect(function()
-    clicking = not clicking
-    clickBtn.BackgroundColor3 = clicking
-        and Color3.fromRGB(80,200,120)
-        or Color3.fromRGB(255,80,80)
-end)
-
-
-    -- CLICK LOOP
-    task.spawn(function()
-        while clickBtn and AutoClickerUI do
-            if clicking then
-                VirtualUser:Button1Down(Vector2.new())
-                task.wait()
-                VirtualUser:Button1Up(Vector2.new())
-            end
-            task.wait(0.5)
-        end
-    end)
-end
 
 
 
