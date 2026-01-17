@@ -389,33 +389,6 @@ createToggle(MainPage, "Auto Weather", function(v) _G.ApplyToggle("Auto Weather"
 createToggle(MainPage, "Auto Totem",   function(v) _G.ApplyToggle("Auto Totem", v) end)
 
 
-------------------------------------------------------
--- FULL TOTEM STATUS SYSTEM (SEPERTI UI LAMA)
-------------------------------------------------------
-task.spawn(function()
-    while _G.FishItHubLoaded do
-        task.wait(1)
-
-        -- Jika Auto Totem OFF → IDLE (UI lama style)
-        if not F.AutoTotem then
-            TotemStatus.Text = "Totem Status: Idle"
-            TotemStatus.TextColor3 = Color3.fromRGB(200,200,200)
-            continue
-        end
-
-        -- READY
-        if F.TotemCooldown <= 0 then
-            TotemStatus.Text = "Totem Status: READY"
-            TotemStatus.TextColor3 = Color3.fromRGB(0,255,120)
-        else
-            -- COOLDOWN
-            local m = math.floor(F.TotemCooldown / 60)
-            local s = F.TotemCooldown % 60
-            TotemStatus.Text = string.format("Totem Status: %02dm %02ds", m, s)
-            TotemStatus.TextColor3 = Color3.fromRGB(255,200,80)
-        end
-    end
-end)
 
 
 
@@ -431,8 +404,50 @@ TotemStatus.Font = Enum.Font.Gotham
 TotemStatus.TextSize = 12
 TotemStatus.TextXAlignment = Enum.TextXAlignment.Left
 TotemStatus.TextColor3 = THEME.TEXT
-TotemStatus.Text = "Totem Status: Idle"
+TotemStatus.Text = "Totem: --"
 
+
+------------------------------------------------------
+-- TOTEM STATUS SYSTEM (COMPLETE)
+------------------------------------------------------
+local function SetTotemStatus(text, color)
+    TotemStatus.Text = "Totem: " .. text
+    TotemStatus.TextColor3 = color or THEME.TEXT
+end
+
+local function EquipRodStatus()
+    SetTotemStatus("Equipping rod...", Color3.fromRGB(80,160,255))
+
+    task.delay(0.20, function()
+        local equipped = Data:Get("EquippedItems")
+
+        if equipped and equipped[1] then
+            pcall(function()
+                EquipToolFromHotbar:FireServer(1)
+            end)
+            SetTotemStatus("Rod equipped", Color3.fromRGB(0,255,120))
+            return
+        end
+
+        local found = false
+        for slot = 1,9 do
+            local ok = pcall(function()
+                EquipToolFromHotbar:FireServer(slot)
+            end)
+            if ok then
+                found = true
+                break
+            end
+            task.wait(0.05)
+        end
+
+        if found then
+            SetTotemStatus("Rod equipped", Color3.fromRGB(0,255,120))
+        else
+            SetTotemStatus("Rod not found", Color3.fromRGB(255,80,80))
+        end
+    end)
+end
 
 
 ------------------------------------------------------
@@ -569,7 +584,7 @@ print("✔ BATCH 3 Loaded | Toggles + Engine Active")
 --=========== AUTO TOTEM + TELEPORT SYSTEM ===========--
 --====================================================--
 
-local F = _G.FISH
+
 
 ------------------------------------------------------
 -- AUTO TOTEM : GET UUID
@@ -585,30 +600,15 @@ local function GetTotemUUID()
 end
 
 ------------------------------------------------------
--- TOTEM SPAWNED → EQUIP ROD (VERSI FINAL)
+-- TOTEM SPAWNED → STATUS + AUTO EQUIP ROD
 ------------------------------------------------------
 TotemSpawned.OnClientEvent:Connect(function()
     F.TotemCooldown = 3600
 
-    -- UI Lama: Status EQUIPPING ROD
-    TotemStatus.Text = "Totem Status: Equipping Rod..."
-    TotemStatus.TextColor3 = Color3.fromRGB(80,160,255)
+    SetTotemStatus("Totem placed! Cooldown started", Color3.fromRGB(255,200,0))
 
-    task.delay(0.25, function()
-        local equipped = Data:Get("EquippedItems")
-
-        if equipped and equipped[1] then
-            pcall(function() EquipToolFromHotbar:FireServer(1) end)
-        else
-            -- brute search slot 1–9
-            for slot = 1,9 do
-                pcall(function()
-                    EquipToolFromHotbar:FireServer(slot)
-                end)
-                task.wait(0.05)
-            end
-        end
-    end)
+    -- AUTO EQUIP ROD (WITH STATUS)
+    EquipRodStatus()
 end)
 
 
@@ -621,11 +621,14 @@ task.spawn(function()
 
         if not F.AutoTotem then continue end
 
-        -- cooldown berjalan
-        if F.TotemCooldown > 0 then
-            F.TotemCooldown -= 1
-            continue
-        end
+       if F.TotemCooldown > 0 then
+    local m = math.floor(F.TotemCooldown / 60)
+    local s = F.TotemCooldown % 60
+    SetTotemStatus(string.format("Cooldown %02dm %02ds", m, s), Color3.fromRGB(255,200,80))
+    F.TotemCooldown -= 1
+    continue
+end
+
 
         -- retry wait aktif
         if F.RetryWait then
@@ -637,11 +640,15 @@ task.spawn(function()
         end
 
         -- ambil UUID
-        local uuid = GetTotemUUID()
-        if not uuid then
-            task.wait(4)
-            continue
-        end
+       local uuid = GetTotemUUID()
+if not uuid then
+    SetTotemStatus("No totem found", Color3.fromRGB(255,80,80))
+    task.wait(4)
+    continue
+end
+
+SetTotemStatus("Placing totem...", Color3.fromRGB(80,160,255))
+
 
         -- try spawn
         local success = false
@@ -658,9 +665,10 @@ task.spawn(function()
         if conn then conn:Disconnect() end
 
         -- gagal → retry dalam 5 menit
-        if not success then
-            F.RetryWait = os.clock() + 300
-        end
+       if not success then
+    SetTotemStatus("Retry in 5 min...", Color3.fromRGB(255,150,0))
+end
+
     end
 end)
 
@@ -875,19 +883,21 @@ local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
 MerchantBtn.MouseButton1Click:Connect(function()
     if not merchantGui then return end
 
-    -- Buka merchant
+    -- buka merchant
     merchantGui.Enabled = true
 
-    -- Tutup panel utama kayak floatBtn
-    if main.Visible then
-        main.Visible = false
-    end
+    -- tutup panel utama + blur
+    main.Visible = false
+    if blur then blur.Enabled = false end
 
-    -- Auto close setelah 5 detik
+    -- auto close 5 detik
     task.delay(5, function()
         if merchantGui then
             merchantGui.Enabled = false
         end
+
+        -- restore blur
+        if blur then blur.Enabled = true end
     end)
 end)
 
@@ -1042,7 +1052,7 @@ print("✔ PATCH APPLIED | Player & Spot now scrollable")
 
 
 
-local F = _G.FISH
+
 
 ------------------------------------------------------
 -- CLEAN FISHING UI (KEEP ONLY "You got:")
