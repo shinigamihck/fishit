@@ -359,6 +359,7 @@ stroke.Transparency = 0.6
 ------------------------------------------------------------
 
 local sidebar = Instance.new("Frame", main)
+sidebar.ZIndex = 2
 sidebar.Size = UDim2.new(0,150,1,0)
 sidebar.BackgroundColor3 = THEME.BG_SIDE
 Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0,12)
@@ -377,6 +378,7 @@ Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,10)
 ------------------------------------------------------------
 
 local content = Instance.new("ScrollingFrame", main)
+content.ZIndex = 1
 content.Name = "Content"
 content.Position = UDim2.new(0,160,0,10)
 content.Size = UDim2.new(1,-170,1,-20)
@@ -426,6 +428,7 @@ end
 
 local function ContentButton(text, callback)
     local b = Instance.new("TextButton", content)
+    b.ZIndex = content.ZIndex + 1
     b.Size = UDim2.new(1, -20, 0, 30) -- 🔥 lebih slim
     b.Text = text
     b.Font = Enum.Font.GothamMedium
@@ -451,6 +454,7 @@ end
 
 local function SideButton(name, builder)
     local b = Instance.new("TextButton", sidebar)
+    b.ZIndex = sidebar.ZIndex + 1
     b.Size = UDim2.new(1,-14,0,28) -- 🔥 lebih kecil
     b.Text = name
     b.Font = Enum.Font.GothamMedium
@@ -853,37 +857,6 @@ task.spawn(function()
 end)
 
 -- =========================================================
--- CLEAN FISH UI (KEEP "You got:")
--- =========================================================
-
-local function shouldHide(label)
-    if not label:IsA("TextLabel") then return false end
-    if not label.Text then return false end
-    local t = label.Text:lower()
-
-    if t:match("^%s*you%s+got%s*:") then return false end
-    if t:match("^1%s+in%s+%d+") then return true end
-    if t:find("%(%s*[%d%.]+%s*kg") then return true end
-    if t:find("lvl") then return true end
-    if label.TextSize >= 26 then return true end
-
-    return false
-end
-
-task.spawn(function()
-    while _G.FishItWORK do
-        task.wait(2)
-        local fishUI = pg:FindFirstChild("FishingUI")
-        if not fishUI then continue end
-        for _,v in ipairs(fishUI:GetDescendants()) do
-            if shouldHide(v) then
-                v.Visible = false
-            end
-        end
-    end
-end)
-
--- =========================================================
 -- THEME APPLY (FIXED)
 -- =========================================================
 
@@ -921,6 +894,36 @@ for _,v in ipairs(main:GetDescendants()) do
     end
 end
 
+-- =========================================================
+-- CLEAN FISH UI (KEEP "You got:")
+-- =========================================================
+
+local function shouldHide(label)
+    if not label:IsA("TextLabel") then return false end
+    if not label.Text then return false end
+    local t = label.Text:lower()
+
+    if t:match("^%s*you%s+got%s*:") then return false end
+    if t:match("^1%s+in%s+%d+") then return true end
+    if t:find("%(%s*[%d%.]+%s*kg") then return true end
+    if t:find("lvl") then return true end
+    if label.TextSize >= 26 then return true end
+
+    return false
+end
+
+task.spawn(function()
+    while _G.FishItWORK do
+        task.wait(2)
+        local fishUI = pg:FindFirstChild("FishingUI")
+        if not fishUI then continue end
+        for _,v in ipairs(fishUI:GetDescendants()) do
+            if shouldHide(v) then
+                v.Visible = false
+            end
+        end
+    end
+end)
 
 
 print("FISH IT — FINAL UI MERGED SCRIPT LOADED")
