@@ -292,6 +292,7 @@ end)
 local gui = Instance.new("ScreenGui")
 gui.Name = "FishItUI"
 gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Global -- ⭐ WAJIB
 gui.Parent = pg
 
 ------------------------------------------------------------
@@ -341,13 +342,18 @@ local THEME = {
 -- MAIN FRAME
 ------------------------------------------------------------
 
+------------------------------------------------------------
+-- MAIN FRAME (FINAL FIXED)
+------------------------------------------------------------
+
 local main = Instance.new("Frame", gui)
+main.ZIndex = 1  -- ⭐ ZINDEX UTAMA
 main.Size = UDim2.fromOffset(640, 380)
-main.Position = UDim2.new(0.5,-320,0.5,-190)
+main.Position = UDim2.new(0.5, -320, 0.5, -190)
 main.BackgroundColor3 = THEME.BG_MAIN
 main.Active = true
 main.Draggable = true
-Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
 
 local stroke = Instance.new("UIStroke", main)
 stroke.Color = THEME.ACCENT
@@ -358,12 +364,16 @@ stroke.Transparency = 0.6
 -- SIDEBAR (KIRI)
 ------------------------------------------------------------
 
+------------------------------------------------------------
+-- SIDEBAR (KIRI) — FINAL FIX
+------------------------------------------------------------
+
 local sidebar = Instance.new("Frame", main)
-sidebar.ZIndex = 2
+sidebar.Name = "Sidebar"   -- ⭐ WAJIB
+sidebar.ZIndex = 3
 sidebar.Size = UDim2.new(0,150,1,0)
 sidebar.BackgroundColor3 = THEME.BG_SIDE
 Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0,12)
-
 
 local sideList = Instance.new("UIListLayout", sidebar)
 sideList.Padding = UDim.new(0,6)
@@ -373,23 +383,24 @@ sideList.SortOrder = Enum.SortOrder.LayoutOrder
 Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,10)
 
 
+
 ------------------------------------------------------------
 -- CONTENT PANEL
 ------------------------------------------------------------
 
 local content = Instance.new("ScrollingFrame", main)
-content.ZIndex = 1
+content.ZIndex = 2  -- ⭐ DI BAWAH SIDEBAR, DI ATAS MAIN
 content.Name = "Content"
-content.Position = UDim2.new(0,160,0,10)
-content.Size = UDim2.new(1,-170,1,-20)
-content.CanvasSize = UDim2.new(0,0,0,0)
+content.Position = UDim2.new(0, 160, 0, 10)
+content.Size = UDim2.new(1, -170, 1, -20)
+content.CanvasSize = UDim2.new(0, 0, 0, 0)
 content.AutomaticCanvasSize = Enum.AutomaticSize.Y
 content.ScrollBarThickness = 4
 content.ScrollBarImageTransparency = 0.2
 content.BackgroundColor3 = THEME.BG_PANEL
 content.ClipsDescendants = true
+Instance.new("UICorner", content).CornerRadius = UDim.new(0, 10)
 
-Instance.new("UICorner", content).CornerRadius = UDim.new(0,10)
 
 local contentList = Instance.new("UIListLayout", content)
 contentList.Padding = UDim.new(0,6)
@@ -857,21 +868,28 @@ task.spawn(function()
 end)
 
 -- =========================================================
--- THEME APPLY (FIXED)
+-- THEME APPLY (SAFE MODE)
 -- =========================================================
 
-
 for _,v in ipairs(main:GetDescendants()) do
+
+    -- JANGAN rubah warna sidebar & content panel
+    if v:IsA("Frame") then
+        if v.Name ~= "Sidebar" and v.Name ~= "Content" then
+            v.BackgroundColor3 = v.BackgroundColor3
+        end
+    end
+
+    -- TextButton: JANGAN rubah background-nya (biar tombol terlihat)
+    if v:IsA("TextButton") then
+        v.TextColor3 = THEME.TEXT
+        v.TextTransparency = 0
+    end
+
+    -- TextLabel aman
     if v:IsA("TextLabel") then
         v.TextColor3 = THEME.TEXT
-
-    elseif v:IsA("TextButton") then
-        -- BIARKAN warna original dari ContentButton/SideButton
-        v.TextColor3 = THEME.TEXT
-
-    elseif v:IsA("Frame") and v.Name ~= "Content" and v.Name ~= "Sidebar" then
-        -- hanya frame-frame kecil
-        v.BackgroundColor3 = THEME.PANEL
+        v.TextTransparency = 0
     end
 end
 
@@ -953,14 +971,15 @@ end)
 -- PART 7 — AUTO OPEN DEFAULT TAB (AUTO)
 -- =========================================================
 
-task.delay(0.1, function()
-    for _,btn in ipairs(_G.UI.Main.Sidebar:GetChildren()) do
-        if btn:IsA("TextButton") then
+task.delay(0.2, function()
+    for _,btn in ipairs(sidebar:GetChildren()) do
+        if btn:IsA("TextButton") and btn.Visible then
             btn.MouseButton1Click:Fire()
             break
         end
     end
 end)
+
 -- =========================================================
 -- PART 8 — SAFETY EXIT & CLEANUP
 -- =========================================================
