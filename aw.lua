@@ -284,10 +284,11 @@ local main = Instance.new("Frame", gui)
 
 -- DETECT MOBILE ATAU PC
 if UIS.TouchEnabled then
-   main.Size = UDim2.new(0.55, 0, 0.32, 0) -- mobile lebih ringkas
+    main.Size = UDim2.fromOffset(460, 300) -- mobile
 else
-   main.Size = UDim2.new(0.35, 0, 0.30, 0) -- PC lebih compact
+    main.Size = UDim2.fromOffset(420, 260) -- pc
 end
+
 
 main.Position = UDim2.new(0.32, 0, 0.3, 0)
 main.BackgroundColor3 = Color3.fromRGB(18, 20, 26)
@@ -311,6 +312,7 @@ local topBar = Instance.new("Frame", main)
 topBar.Size = UDim2.new(1, 0, 0, 34)
 topBar.BackgroundColor3 = Color3.fromRGB(25, 28, 35)
 topBar.BackgroundTransparency = 0.25
+topBar.ZIndex = 5
 
 local topCorner = Instance.new("UICorner", topBar)
 topCorner.CornerRadius = UDim.new(0, 10)
@@ -321,28 +323,33 @@ list.SortOrder = Enum.SortOrder.LayoutOrder
 list.Padding = UDim.new(0, 6)
 
 -- =========================================================
--- CONTENT PANEL
+-- CONTENT PANEL (FULL FIX)
 -- =========================================================
 local panel = Instance.new("Frame", main)
-panel.Position = UDim2.new(0, 10, 0, 50)
-panel.AutomaticSize = Enum.AutomaticSize.Y
-panel.Size = UDim2.new(1, -20, 0, 0)
+panel.ZIndex = 1
+panel.Position = UDim2.new(0, 10, 0, 44)
+panel.Size = UDim2.new(1, -20, 1, -54)
 panel.BackgroundColor3 = Color3.fromRGB(28, 32, 40)
 panel.BackgroundTransparency = 0.30
+
 
 local pc = Instance.new("UICorner", panel)
 pc.CornerRadius = UDim.new(0, 10)
 
 local scroll = Instance.new("ScrollingFrame", panel)
-scroll.Position = UDim2.new(0,10,0,10)
-scroll.Size = UDim2.new(1,-20,1,-20)
-scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.ZIndex = 2
+scroll.Position = UDim2.new(0, 10, 0, 10)
+scroll.Size = UDim2.new(1, -20, 1, -20)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 scroll.ScrollBarThickness = 3
 scroll.BackgroundTransparency = 1
 
 local layout = Instance.new("UIListLayout", scroll)
-layout.Padding = UDim.new(0,6)
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+layout.Padding = UDim.new(0, 6)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+
 
 -- PANEL UTILS
 local function clearPanel()
@@ -514,6 +521,7 @@ clickBtn = Instance.new("TextButton", gui)
 clickBtn.ZIndex = 999
     clickBtn.Size = UDim2.new(0, 60, 0, 60)
     clickBtn.Position = UDim2.new(0.03, 0, 0.6, 0)
+    clickBtn.AnchorPoint = Vector2.new(0, 0.5)
     clickBtn.Text = "CLICK"
     clickBtn.Font = Enum.Font.GothamBold
     clickBtn.TextSize = 14
@@ -791,7 +799,8 @@ local Stats = game:GetService("Stats")
 
 local pingLabel = Instance.new("TextLabel", mainFrame)
 pingLabel.Size = UDim2.new(0,140,0,18)
-pingLabel.Position = UDim2.new(1,-150,1,-24)
+pingLabel.AnchorPoint = Vector2.new(1,1)
+pingLabel.Position = UDim2.new(1,-10,1,-8)
 pingLabel.BackgroundTransparency = 1
 pingLabel.Font = Enum.Font.Gotham
 pingLabel.TextSize = 11
