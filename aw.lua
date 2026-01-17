@@ -555,6 +555,7 @@ function _G.ApplyToggle(name, state)
     end
 end
 
+
 ------------------------------------------------------
 -- SAFE EXIT
 ------------------------------------------------------
@@ -574,3 +575,296 @@ end
 
 print("✅ PART 5/5 Loaded | HUB FULLY WORKING")
 print("🔥 FishIt Hub FINAL loaded cleanly")
+
+----------------------------------------------------------------
+-- ADD-ON TELEPORT SYSTEM (PASTE DI PALING BAWAH)
+----------------------------------------------------------------
+
+print("🔧 Add-on Teleport Loaded")
+
+-- pastikan UI sudah ada
+local gui = LP.PlayerGui:FindFirstChild("FishItHubUI")
+if not gui then
+    warn("Teleport Add-on gagal: UI tidak ditemukan")
+    return
+end
+
+local main = gui:FindFirstChildWhichIsA("Frame")
+if not main then
+    warn("Teleport Add-on gagal: main frame tidak ditemukan")
+    return
+end
+
+local pages = main:FindFirstChildWhichIsA("Frame")
+if not pages then
+    warn("Teleport Add-on gagal: pages container tidak ditemukan")
+    return
+end
+
+-- ambil page Spots & Players
+local PlayerPage = pages:FindFirstChild("Players")
+local SpotPage   = pages:FindFirstChild("Spots")
+
+if not PlayerPage or not SpotPage then
+    warn("Teleport Add-on gagal: Page Players/Spots tidak ditemukan")
+    return
+end
+
+--------------------------------------------------------------
+-- PLAYERS PAGE (AUTO TELEPORT)
+--------------------------------------------------------------
+local pScroll = Instance.new("ScrollingFrame", PlayerPage)
+pScroll.Size = UDim2.new(1,-20,1,-10)
+pScroll.Position = UDim2.new(0,10,0,5)
+pScroll.ScrollBarThickness = 4
+pScroll.BackgroundTransparency = 1
+pScroll.CanvasSize = UDim2.new(0,0,0,0)
+
+local pLayout = Instance.new("UIListLayout", pScroll)
+pLayout.Padding = UDim.new(0,6)
+
+pLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    pScroll.CanvasSize = UDim2.new(0,0,0,pLayout.AbsoluteContentSize.Y + 10)
+end)
+
+local function RefreshPlayers()
+    for _,v in ipairs(pScroll:GetChildren()) do
+        if v:IsA("TextButton") then v:Destroy() end
+    end
+
+    for _,plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LP then
+            local b = Instance.new("TextButton", pScroll)
+            b.Size = UDim2.new(1,0,0,28)
+            b.Text = plr.Name
+            b.BackgroundColor3 = Color3.fromRGB(40,40,50)
+            b.TextColor3 = Color3.fromRGB(255,255,255)
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 12
+
+            Instance.new("UICorner", b)
+
+            b.MouseButton1Click:Connect(function()
+                local my = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+                local target = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+                if my and target then
+                    my.CFrame = target.CFrame * CFrame.new(0,0,-3)
+                end
+            end)
+        end
+    end
+end
+
+PlayerPage:GetPropertyChangedSignal("Visible"):Connect(function()
+    if PlayerPage.Visible then
+        RefreshPlayers()
+    end
+end)
+
+
+--------------------------------------------------------------
+-- SPOTS PAGE (TELEPORT LOKASI)
+--------------------------------------------------------------
+local sScroll = Instance.new("ScrollingFrame", SpotPage)
+sScroll.Size = UDim2.new(1,-20,1,-10)
+sScroll.Position = UDim2.new(0,10,0,5)
+sScroll.ScrollBarThickness = 4
+sScroll.BackgroundTransparency = 1
+sScroll.CanvasSize = UDim2.new(0,0,0,0)
+
+local sLayout = Instance.new("UIListLayout", sScroll)
+sLayout.Padding = UDim.new(0,6)
+
+sLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    sScroll.CanvasSize = UDim2.new(0,0,0,sLayout.AbsoluteContentSize.Y + 10)
+end)
+
+local function RefreshSpots()
+    for _,v in ipairs(sScroll:GetChildren()) do
+        if v:IsA("TextButton") then v:Destroy() end
+    end
+
+    for _,spot in ipairs(Locations) do
+        local b = Instance.new("TextButton", sScroll)
+        b.Size = UDim2.new(1,0,0,28)
+        b.Text = spot.Name
+        b.BackgroundColor3 = Color3.fromRGB(40,40,50)
+        b.TextColor3 = Color3.fromRGB(255,255,255)
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 12
+
+        Instance.new("UICorner", b)
+
+        b.MouseButton1Click:Connect(function()
+            local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.CFrame = spot.CFrame + Vector3.new(0,4,0)
+            end
+        end)
+    end
+end
+
+SpotPage:GetPropertyChangedSignal("Visible"):Connect(function()
+    if SpotPage.Visible then
+        RefreshSpots()
+    end
+end)
+
+print("✅ Add-on Teleport COMPLETED (Players + Spots) Loaded")
+
+------------------------------------------------------
+-- 🔧 FISHIT HUB ADD-ON (VISUAL + MISC)
+-- SAFE TO PLACE AT VERY BOTTOM
+------------------------------------------------------
+
+task.spawn(function()
+    -- tunggu UI siap
+    while not _G.FishItHubLoaded do
+        task.wait(0.2)
+    end
+    task.wait(0.5)
+
+    -- cari Pages
+    if not VisualPage or not MiscPage then
+        warn("Add-on failed: Pages not found")
+        return
+    end
+
+    local Lighting = game:GetService("Lighting")
+    local Players = game:GetService("Players")
+    local TeleportService = game:GetService("TeleportService")
+    local RunService = game:GetService("RunService")
+    local LP = Players.LocalPlayer
+
+    --------------------------------------------------
+    -- HELPER: BUTTON BUILDER
+    --------------------------------------------------
+    local function makeBtn(parent, text, callback)
+        local b = Instance.new("TextButton", parent)
+        b.Size = UDim2.new(0,260,0,32)
+        b.Text = text
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 12
+        b.TextColor3 = THEME.TEXT
+        b.BackgroundColor3 = THEME.BUTTON
+        b.BackgroundTransparency = 0.25
+        b.AutoButtonColor = false
+
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+
+        b.MouseButton1Click:Connect(function()
+            pcall(callback)
+            b.BackgroundColor3 = THEME.ACTIVE
+            task.delay(0.15, function()
+                if b then b.BackgroundColor3 = THEME.BUTTON end
+            end)
+        end)
+
+        return b
+    end
+
+    --------------------------------------------------
+    -- VISUAL PAGE
+    --------------------------------------------------
+
+    -- Remove Blur
+    makeBtn(VisualPage, "Remove Blur", function()
+        for _,v in ipairs(Lighting:GetChildren()) do
+            if v:IsA("BlurEffect") or v:IsA("DepthOfFieldEffect") then
+                v.Enabled = false
+            end
+        end
+    end)
+
+    -- Remove Fog
+    makeBtn(VisualPage, "Remove Fog", function()
+        Lighting.FogEnd = 1e6
+        Lighting.FogStart = 1e6
+    end)
+
+    -- Remove Waves
+    makeBtn(VisualPage, "Remove Waves", function()
+        for _,v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("WaveEffect") or v.Name:lower():find("wave") then
+                pcall(function() v:Destroy() end)
+            end
+        end
+    end)
+
+    -- Fullbright
+    makeBtn(VisualPage, "Fullbright", function()
+        Lighting.Brightness = 3
+        Lighting.ClockTime = 14
+        Lighting.GlobalShadows = false
+        Lighting.OutdoorAmbient = Color3.fromRGB(255,255,255)
+    end)
+
+    -- Disable Shadows
+    makeBtn(VisualPage, "Disable Shadows", function()
+        Lighting.GlobalShadows = false
+    end)
+
+    --------------------------------------------------
+    -- MISC PAGE
+    --------------------------------------------------
+
+    -- Open Merchant
+    makeBtn(MiscPage, "Open Merchant", function()
+        local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
+        if merchantGui then
+            merchantGui.Enabled = true
+        end
+    end)
+
+    -- Teleport Merchant
+    makeBtn(MiscPage, "Teleport Merchant", function()
+        local merchant = workspace:FindFirstChild("Merchant", true)
+        local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+        if merchant and hrp then
+            hrp.CFrame = merchant:GetPivot() + Vector3.new(0,3,0)
+        end
+    end)
+
+    -- Auto Rejoin
+    makeBtn(MiscPage, "Auto Rejoin (On Kick)", function()
+        LP.OnTeleport:Connect(function(state)
+            if state == Enum.TeleportState.Failed then
+                TeleportService:Teleport(game.PlaceId, LP)
+            end
+        end)
+    end)
+
+    -- Server Hop (Low Ping)
+    makeBtn(MiscPage, "Server Hop (Low Ping)", function()
+        TeleportService:Teleport(game.PlaceId, LP)
+    end)
+
+    -- Anti AFK Toggle
+    local antiAFK = false
+    makeBtn(MiscPage, "Anti AFK Toggle", function()
+        antiAFK = not antiAFK
+        if antiAFK then
+            LP.Idled:Connect(function()
+                local vu = game:GetService("VirtualUser")
+                vu:CaptureController()
+                vu:ClickButton2(Vector2.new())
+            end)
+        end
+    end)
+
+    -- FPS Booster
+    makeBtn(MiscPage, "FPS Booster", function()
+        for _,v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter")
+            or v:IsA("Trail")
+            or v:IsA("Smoke")
+            or v:IsA("Fire") then
+                v.Enabled = false
+            end
+        end
+        Lighting.GlobalShadows = false
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    end)
+
+    print("✅ ADD-ON VISUAL + MISC LOADED (BOTTOM SAFE)")
+end)
