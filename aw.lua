@@ -721,7 +721,7 @@ createToggle(MiscPage, "Walk on Water", function(state)
     end
 end)
 
-createToggle(MainPage, "Fly",          function(v) _G.ApplyToggle("Fly", v) end)
+createToggle(MiscPage, "Fly",          function(v) _G.ApplyToggle("Fly", v) end)
 
 print("✔ BATCH 3 Loaded | Toggles + Engine Active")
 
