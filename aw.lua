@@ -284,7 +284,7 @@ local main = Instance.new("Frame", gui)
 
 -- DETECT MOBILE ATAU PC
 if UIS.TouchEnabled then
-    main.Size = UDim2.new(0.55, 0, 0.48, 0)   -- ukuran mobile
+   main.Size = UDim2.new(0.55, 0, 0.38, 0)   -- ukuran mobile
 else
     main.Size = UDim2.new(0.35, 0, 0.38, 0)   -- ukuran PC
 end
@@ -308,7 +308,7 @@ stroke.Transparency = 0.6
 -- TOP BAR
 -- =========================================================
 local topBar = Instance.new("Frame", main)
-topBar.Size = UDim2.new(1, 0, 0, 42)
+topBar.Size = UDim2.new(1, 0, 0, 34)
 topBar.BackgroundColor3 = Color3.fromRGB(25, 28, 35)
 topBar.BackgroundTransparency = 0.1
 
@@ -407,7 +407,6 @@ local function notify(msg)
     end)
 end
 
-local UIS = game:GetService("UserInputService")
 
 
 
@@ -470,7 +469,7 @@ local function newTab(name, callback)
     local btn = Instance.new("TextButton", topBar)
     btn.Size = UDim2.new(0, 90, 1, 0)
     btn.Text = name
-    btn.TextSize = 13
+    btn.TextSize = 11
     btn.Font = Enum.Font.GothamBold
     btn.BackgroundTransparency = 1
     btn.TextColor3 = Color3.fromRGB(200,200,255)
@@ -489,6 +488,11 @@ local function newTab(name, callback)
         btn.TextColor3 = THEME.BORDER
     end)
 end
+
+-- =====================================
+-- AUTO CLICKER STATE
+-- =====================================
+local AutoClickerUI = false
 
 -- =========================================================
 -- TAB: AUTO (dengan indikator ON/OFF)
@@ -520,6 +524,15 @@ newTab("Auto", function()
         btn.Text = "Auto Weather: " .. (autoWeather and "ON" or "OFF")
         notify("Auto Weather: " .. (autoWeather and "ON" or "OFF"))
     end)
+
+    local autoClickUI = false
+
+addButton("Auto Clicker UI: OFF", function(btn)
+    autoClickUI = not autoClickUI
+    toggleAutoClickerUI(autoClickUI)
+    btn.Text = "Auto Clicker UI: " .. (autoClickUI and "ON" or "OFF")
+    notify("Auto Clicker UI: " .. (autoClickUI and "ON" or "OFF"))
+end)
 end)
 
 
@@ -667,6 +680,58 @@ floatBtn.MouseButton1Click:Connect(function()
 end)
 
 
+local VirtualUser = game:GetService("VirtualUser")
+
+local clickBtn
+local clicking = false
+
+local function toggleAutoClickerUI(state)
+    AutoClickerUI = state
+
+    if not state then
+        if clickBtn then
+            clickBtn:Destroy()
+            clickBtn = nil
+        end
+        clicking = false
+        return
+    end
+
+clickBtn = Instance.new("TextButton", gui)
+clickBtn.ZIndex = 999
+    clickBtn.Size = UDim2.new(0, 60, 0, 60)
+    clickBtn.Position = UDim2.new(0.03, 0, 0.6, 0)
+    clickBtn.Text = "CLICK"
+    clickBtn.Font = Enum.Font.GothamBold
+    clickBtn.TextSize = 14
+    clickBtn.TextColor3 = Color3.new(1,1,1)
+    clickBtn.BackgroundColor3 = Color3.fromRGB(255,80,80)
+    clickBtn.Active = true
+    clickBtn.Draggable = true
+    clickBtn.AutoButtonColor = false
+
+    Instance.new("UICorner", clickBtn).CornerRadius = UDim.new(1,0)
+
+   clickBtn.MouseButton1Click:Connect(function()
+    clicking = not clicking
+    clickBtn.BackgroundColor3 = clicking
+        and Color3.fromRGB(80,200,120)
+        or Color3.fromRGB(255,80,80)
+end)
+
+
+    -- CLICK LOOP
+    task.spawn(function()
+        while clickBtn and AutoClickerUI do
+            if clicking then
+                VirtualUser:Button1Down(Vector2.new())
+                task.wait()
+                VirtualUser:Button1Up(Vector2.new())
+            end
+            task.wait(0.5)
+        end
+    end)
+end
 
 
 
