@@ -254,7 +254,7 @@ local Locations = {
 }
 
 -- EXPORTED FOR UI
-return {
+_G.FishCore = {
     AutoFish = function(v) AutoFish = v end,
     AutoSell = function(v) AutoSell = v end,
     AutoWeather = function(v) AutoWeather = v end,
@@ -268,6 +268,7 @@ return {
     Spots = Locations,
 }
 
+
 -- =========================================================
 --  FISH IT | UI TOP BAR (MODERN CLEAN)
 --  Connects To: CoreSystem.lua
@@ -278,7 +279,7 @@ local LP = Players.LocalPlayer
 local pg = LP:WaitForChild("PlayerGui")
 
 -- Load Core System
-local Core = require(script.Parent.CoreSystem)
+local Core = _G.FishCore
 
 -- =========================================================
 -- CLEAN OLD UI
