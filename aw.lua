@@ -459,7 +459,7 @@ local function createToggle(parent, text, callback)
 
     callback(state)
 end)
-
+end
 
 
 ------------------------------------------------------
