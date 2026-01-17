@@ -24,8 +24,6 @@ local purchaseRF = Net:RemoteFunction("PurchaseWeatherEvent")
 local AutoFish = false
 local AutoSell = false
 local AutoWeather = false
-local FlyEnabled = false
-local FlySpeedValue = 50
 local AUTO_TOTEM = false
 local WeatherDelay = 5
 local SellInterval = 5
@@ -37,51 +35,7 @@ LP.Idled:Connect(function()
     VirtualUser:ClickButton2(Vector2.new())
 end)
 
--- FLY SYSTEM
-local bv, bg, flyConn
 
-local function stopFly()
-    FlyEnabled = false
-    if flyConn then flyConn:Disconnect() end
-    if bv then bv:Destroy() end
-    if bg then bg:Destroy() end
-end
-
-local function startFly()
-    local char = LP.Character
-    if not char then return end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    bg = Instance.new("BodyGyro", hrp)
-    bg.P = 9e4
-    bg.MaxTorque = Vector3.new(9e9,9e9,9e9)
-
-    bv = Instance.new("BodyVelocity", hrp)
-    bv.MaxForce = Vector3.new(9e9,9e9,9e9)
-
-    flyConn = RunService.RenderStepped:Connect(function()
-        if not FlyEnabled then return end
-
-        local cam = workspace.CurrentCamera
-        local move = Vector3.zero
-
-        if UIS:IsKeyDown(Enum.KeyCode.W) then move += cam.CFrame.LookVector end
-        if UIS:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
-        if UIS:IsKeyDown(Enum.KeyCode.A) then move -= cam.CFrame.RightVector end
-        if UIS:IsKeyDown(Enum.KeyCode.D) then move += cam.CFrame.RightVector end
-        if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
-        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.new(0,1,0) end
-
-        bv.Velocity = move.Magnitude > 0 and move.Unit * FlySpeedValue or Vector3.zero
-        bg.CFrame = cam.CFrame
-    end)
-end
-
-LP.CharacterAdded:Connect(function()
-    task.wait(0.3)
-    stopFly()
-end)
 
 -- PING READER
 local function getRealPing()
@@ -259,13 +213,6 @@ _G.FishCore = {
     AutoSell = function(v) AutoSell = v end,
     AutoWeather = function(v) AutoWeather = v end,
     AutoTotem = function(v) AUTO_TOTEM = v end,
-    Fly = function(v)
-        FlyEnabled = v
-        if v then startFly() else stopFly() end
-    end,
-FlySpeed = function(v)
-    FlySpeedValue = tonumber(v) or FlySpeedValue
-end,
     GetPing = getRealPing,
     Spots = Locations,
 }
@@ -370,11 +317,13 @@ local function addButton(text, callback)
     b.TextColor3 = Color3.fromRGB(230,230,255)
     b.BackgroundColor3 = Color3.fromRGB(40,45,60)
 
-    local c = Instance.new("UICorner", b)
-    c.CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
 
-    b.MouseButton1Click:Connect(callback)
+    b.MouseButton1Click:Connect(function()
+        callback(b)
+    end)
 end
+
 
 local function addLabel(text)
     local l = Instance.new("TextLabel", scroll)
@@ -422,7 +371,7 @@ local function newTab(name, callback)
 end
 
 -- =========================================================
--- TAB: AUTO
+-- TAB: AUTO (dengan indikator ON/OFF)
 -- =========================================================
 newTab("Auto", function()
     addLabel("Auto Features")
@@ -431,27 +380,32 @@ newTab("Auto", function()
     local autoSell = false
     local autoWeather = false
 
-    addButton("Auto Fish", function()
+    addButton("Auto Fish: OFF", function(btn)
         autoFish = not autoFish
         Core.AutoFish(autoFish)
+        btn.Text = "Auto Fish: " .. (autoFish and "ON" or "OFF")
     end)
 
-    addButton("Auto Sell", function()
+    addButton("Auto Sell: OFF", function(btn)
         autoSell = not autoSell
         Core.AutoSell(autoSell)
+        btn.Text = "Auto Sell: " .. (autoSell and "ON" or "OFF")
     end)
 
-    addButton("Auto Weather", function()
+    addButton("Auto Weather: OFF", function(btn)
         autoWeather = not autoWeather
         Core.AutoWeather(autoWeather)
+        btn.Text = "Auto Weather: " .. (autoWeather and "ON" or "OFF")
     end)
 end)
 
 
+
+
 -- =========================================================
--- TAB: TELEPORT
+-- TAB: TELEPORT SPOTS
 -- =========================================================
-newTab("Teleport", function()
+newTab("Spots", function()
     addLabel("Teleport Spots")
 
     for _,spot in ipairs(Core.Spots) do
@@ -463,52 +417,61 @@ newTab("Teleport", function()
     end
 end)
 
-
 -- =========================================================
--- TAB: FLY
+-- TAB: PLAYERS
 -- =========================================================
-newTab("Fly", function()
-    local flyToggle = false
+newTab("Players", function()
+    local function buildPlayerList()
+        clearPanel()
+        addLabel("Teleport to Player")
 
-    addButton("Toggle Fly", function()
-        flyToggle = not flyToggle
-        Core.Fly(flyToggle)
-        Core.FlySpeed(FlySpeedValue)
-    end)
+        -- tombol refresh
+        addButton("🔄  Refresh Player List", function()
+            buildPlayerList()
+        end)
 
-    addButton("Fly Speed +50", function()
-        FlySpeedValue += 50
-        Core.FlySpeed(FlySpeedValue)
-    end)
+        for _,plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LP then
+                addButton(plr.Name, function()
+                    local char = LP.Character or LP.CharacterAdded:Wait()
+                    local hrp = char:WaitForChild("HumanoidRootPart")
 
-    addButton("Fly Speed -50", function()
-        FlySpeedValue -= 50
-        if FlySpeedValue < 10 then FlySpeedValue = 10 end
-        Core.FlySpeed(FlySpeedValue)
-    end)
+                    local target = plr.Character
+                    if target and target:FindFirstChild("HumanoidRootPart") then
+                        hrp.CFrame = target.HumanoidRootPart.CFrame + Vector3.new(0,3,0)
+                    end
+                end)
+            end
+        end
+    end
+
+    buildPlayerList()
 end)
 
 
+
 -- =========================================================
--- TAB: SHOP
+-- TAB: SHOP (dengan indikator ON/OFF)
 -- =========================================================
 newTab("Shop", function()
     addLabel("Shop & Totem")
 
     local autoTotem = false
 
-    addButton("Auto Totem", function()
+    addButton("Auto Totem: OFF", function(btn)
         autoTotem = not autoTotem
         Core.AutoTotem(autoTotem)
+        btn.Text = "Auto Totem: " .. (autoTotem and "ON" or "OFF")
     end)
 
     local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
-    addButton("Toggle Merchant", function()
+    addButton("Toggle Merchant UI", function()
         if merchantGui then
             merchantGui.Enabled = not merchantGui.Enabled
         end
     end)
 end)
+
 
 -- =========================================================
 -- TAB: SYSTEM
