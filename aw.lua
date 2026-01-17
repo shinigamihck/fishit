@@ -386,6 +386,19 @@ createToggle(MainPage, "Auto Totem",   function(v) _G.ApplyToggle("Auto Totem", 
 createToggle(MainPage, "Fly",          function(v) _G.ApplyToggle("Fly", v) end)
 
 ------------------------------------------------------
+-- TOTEM STATUS LABEL (DI MAIN TAB)
+------------------------------------------------------
+local TotemStatus = Instance.new("TextLabel", MainPage)
+TotemStatus.Size = UDim2.new(0,300,0,20)
+TotemStatus.BackgroundTransparency = 1
+TotemStatus.Font = Enum.Font.Gotham
+TotemStatus.TextSize = 12
+TotemStatus.TextColor3 = THEME.TEXT
+TotemStatus.TextXAlignment = Enum.TextXAlignment.Left
+TotemStatus.Text = "Totem Status: --"
+
+
+------------------------------------------------------
 -- FLY ENGINE
 ------------------------------------------------------
 local flyConn, bv, bg
@@ -730,6 +743,28 @@ print("✔ BATCH 4 Loaded | Auto Totem + Teleport Ready")
 --================== BATCH 5 / 5 =====================--
 --========= CLEAN UI + FPS BOOST + FINALIZE ==========--
 --====================================================--
+
+------------------------------------------------------
+-- UPDATE TOTEM STATUS TEXT
+------------------------------------------------------
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        task.wait(1)
+
+        if F.TotemCooldown <= 0 then
+            TotemStatus.Text = "Totem Status: READY"
+            TotemStatus.TextColor3 = Color3.fromRGB(0,255,120)
+
+        else
+            local m = math.floor(F.TotemCooldown / 60)
+            local s = F.TotemCooldown % 60
+            TotemStatus.Text = string.format("Totem Status: %02dm %02ds", m, s)
+            TotemStatus.TextColor3 = Color3.fromRGB(255,200,80)
+        end
+    end
+end)
+
+
 
 ------------------------------------------------------
 -- REAL PING FUNCTION (PORT FROM FishItWORKUI)
