@@ -247,12 +247,11 @@ end
 ------------------------------------------------------
 -- CREATE PAGES
 ------------------------------------------------------
-local MainPage   = createPage("Main")
-local PlayerPage = createPage("Players")
-local SpotPage   = createPage("Spots")
-local VisualPage = createPage("Visual")
-local MiscPage   = createPage("Misc")
-
+_G.MainPage   = createPage("Main")
+_G.PlayerPage = createPage("Players")
+_G.SpotPage   = createPage("Spots")
+_G.VisualPage = createPage("Visual")
+_G.MiscPage   = createPage("Misc")
 switchPage("Main")
 
 ------------------------------------------------------
@@ -725,7 +724,10 @@ task.spawn(function()
     task.wait(0.5)
 
     -- cari Pages
-    if not VisualPage or not MiscPage then
+    local VisualPage = _G.VisualPage
+local MiscPage   = _G.MiscPage
+
+if not VisualPage or not MiscPage then
         warn("Add-on failed: Pages not found")
         return
     end
