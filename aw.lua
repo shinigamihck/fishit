@@ -1,549 +1,327 @@
--- =====================================================
--- PART 1 : UI HUB CORE (SIDEBAR + PAGE SYSTEM)
--- =====================================================
-
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 
--- Cleanup old UI
 pcall(function()
     LP.PlayerGui:FindFirstChild("FishItUI_HUB"):Destroy()
 end)
 
--- ScreenGui
 local gui = Instance.new("ScreenGui")
 gui.Name = "FishItUI_HUB"
 gui.ResetOnSpawn = false
 gui.Parent = LP:WaitForChild("PlayerGui")
 
--- Main Window
+-- MAIN WINDOW (Fluent)
 local Main = Instance.new("Frame", gui)
-Main.Size = UDim2.new(0, 640, 0, 380)
-Main.Position = UDim2.new(0.5, -320, 0.5, -190)
+Main.Size = UDim2.new(0, 650, 0, 420)
+Main.Position = UDim2.new(0.5, -325, 0.5, -210)
 Main.BackgroundColor3 = Color3.fromRGB(18, 20, 26)
-Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
 
 Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
 
--- =========================
 -- HEADER
--- =========================
-
 local Header = Instance.new("Frame", Main)
-Header.Size = UDim2.new(1, 0, 0, 36)
-Header.BackgroundColor3 = Color3.fromRGB(22, 24, 32)
+Header.Size = UDim2.new(1, 0, 0, 40)
+Header.BackgroundColor3 = Color3.fromRGB(25, 27, 34)
 Header.BorderSizePixel = 0
-
 Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 12)
 
 local Title = Instance.new("TextLabel", Header)
-Title.Size = UDim2.new(1, -90, 1, 0)
+Title.Size = UDim2.new(1, -20, 1, 0)
 Title.Position = UDim2.new(0, 12, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "Fish It | DEV HUB"
+Title.Text = "Fish It | Fluent Hub"
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.TextColor3 = Color3.fromRGB(200, 220, 255)
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 14
+Title.TextSize = 15
 
--- =========================
--- SIDEBAR
--- =========================
-
+-- SIDEBAR (Fluent)
 local Sidebar = Instance.new("Frame", Main)
-Sidebar.Position = UDim2.new(0, 0, 0, 36)
-Sidebar.Size = UDim2.new(0, 150, 1, -36)
-Sidebar.BackgroundColor3 = Color3.fromRGB(15, 17, 22)
-Sidebar.BorderSizePixel = 0
+Sidebar.Position = UDim2.new(0, 0, 0, 40)
+Sidebar.Size = UDim2.new(0, 160, 1, -40)
+Sidebar.BackgroundColor3 = Color3.fromRGB(23, 25, 32)
 
 local SidebarLayout = Instance.new("UIListLayout", Sidebar)
-SidebarLayout.Padding = UDim.new(0, 6)
+SidebarLayout.Padding = UDim.new(0, 8)
 SidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+SidebarLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local SidebarPad = Instance.new("UIPadding", Sidebar)
-SidebarPad.PaddingTop = UDim.new(0, 10)
+local SidebarPadding = Instance.new("UIPadding", Sidebar)
+SidebarPadding.PaddingTop = UDim.new(0, 12)
+SidebarPadding.PaddingLeft = UDim.new(0, 12)
+SidebarPadding.PaddingRight = UDim.new(0, 12)
 
--- =========================
--- CONTENT AREA
--- =========================
-
-local Content = Instance.new("Frame", Main)
-Content.Position = UDim2.new(0, 150, 0, 36)
-Content.Size = UDim2.new(1, -150, 1, -36)
-Content.BackgroundColor3 = Color3.fromRGB(24, 26, 34)
+-- CONTENT PANEL
+local Content = Instance.new("ScrollingFrame", Main)
+Content.Position = UDim2.new(0, 160, 0, 40)
+Content.Size = UDim2.new(1, -160, 1, -40)
+Content.BackgroundColor3 = Color3.fromRGB(30, 32, 40)
 Content.BorderSizePixel = 0
+Content.CanvasSize = UDim2.new(0, 0, 0, 0)
+Content.ScrollBarThickness = 6
 
--- =========================
--- TAB SYSTEM
--- =========================
+local ContentLayout = Instance.new("UIListLayout", Content)
+ContentLayout.Padding = UDim.new(0, 10)
+ContentLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local Tabs = {}
-local CurrentTab = nil
+local ContentPadding = Instance.new("UIPadding", Content)
+ContentPadding.PaddingTop = UDim.new(0, 12)
+ContentPadding.PaddingLeft = UDim.new(0, 12)
+ContentPadding.PaddingRight = UDim.new(0, 12)
+ContentPadding.PaddingBottom = UDim.new(0, 12)
+
+Tabs = {}
+local CurrentTab
 
 local function CreateTab(tabName)
-    -- Sidebar Button
     local Btn = Instance.new("TextButton", Sidebar)
-    Btn.Size = UDim2.new(1, -16, 0, 32)
+    Btn.Size = UDim2.new(1, 0, 0, 34)
     Btn.Text = tabName
     Btn.BackgroundColor3 = Color3.fromRGB(35, 38, 50)
-    Btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+    Btn.TextColor3 = Color3.fromRGB(230, 230, 230)
     Btn.Font = Enum.Font.Gotham
     Btn.TextSize = 13
     Btn.BorderSizePixel = 0
 
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
+    local c = Instance.new("UICorner", Btn)
+    c.CornerRadius = UDim.new(0, 6)
 
-    -- Page
+    -- page
     local Page = Instance.new("Frame", Content)
-    Page.Size = UDim2.new(1, -20, 1, -20)
-    Page.Position = UDim2.new(0, 10, 0, 10)
-    Page.Visible = false
+    Page.Size = UDim2.new(1, -10, 0, 0)
     Page.BackgroundTransparency = 1
+    Page.Visible = false
+
+    local layout = Instance.new("UIListLayout", Page)
+    layout.Padding = UDim.new(0, 8)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
 
     Tabs[tabName] = Page
 
-    Btn.MouseButton1Click:Connect(function()
-        for _,v in pairs(Tabs) do
-            v.Visible = false
+    Btn.MouseEnter:Connect(function()
+        Btn.BackgroundColor3 = Color3.fromRGB(45, 48, 62)
+    end)
+    Btn.MouseLeave:Connect(function()
+        if CurrentTab ~= tabName then
+            Btn.BackgroundColor3 = Color3.fromRGB(35, 38, 50)
         end
+    end)
+
+    Btn.MouseButton1Click:Connect(function()
+        for name, pg in pairs(Tabs) do
+            pg.Visible = false
+        end
+        for _, b in ipairs(Sidebar:GetChildren()) do
+            if b:IsA("TextButton") then
+                b.BackgroundColor3 = Color3.fromRGB(35, 38, 50)
+            end
+        end
+
+        Btn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
         Page.Visible = true
         CurrentTab = tabName
+
+        task.wait()
+        Content.CanvasSize = UDim2.new(0, 0, 0, ContentLayout.AbsoluteContentSize.Y + 40)
     end)
 
     return Page
 end
 
--- =========================
--- CREATE DEFAULT TABS
--- =========================
+-- create tabs
+TabAutomation = CreateTab("Automation")
+TabTeleport   = CreateTab("Teleport")
+TabShop       = CreateTab("Shop")
+TabFly        = CreateTab("Fly")
+TabSettings   = CreateTab("Settings")
 
-local TabAutomation = CreateTab("Automation")
-local TabTeleport   = CreateTab("Teleport")
-local TabShop       = CreateTab("Shop")
-local TabFly        = CreateTab("Fly")
-local TabSettings   = CreateTab("Settings")
-
--- Default tab
-TabAutomation.Visible = true
+Tabs["Automation"].Visible = true
 CurrentTab = "Automation"
 
-print("✅ PART 1 LOADED : UI HUB CORE")
-
-
 -- =====================================================
--- PART 2 : UI COMPONENTS (BUTTON / TOGGLE / SLIDER)
+-- PART 2 : FLUENT UI COMPONENTS
 -- =====================================================
 
--- pastikan PART 1 sudah ada
-assert(TabAutomation and TabFly and TabTeleport, "PART 1 belum diload!")
-
--- =========================
--- HELPER : SECTION
--- =========================
-
-local function CreateSection(parent, titleText)
-    local Section = Instance.new("Frame", parent)
-    Section.Size = UDim2.new(1, 0, 0, 40)
-    Section.BackgroundTransparency = 1
-
-    local Title = Instance.new("TextLabel", Section)
-    Title.Size = UDim2.new(1, 0, 0, 20)
-    Title.BackgroundTransparency = 1
-    Title.Text = titleText
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.TextColor3 = Color3.fromRGB(180, 200, 255)
-    Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 13
-
-    local Layout = Instance.new("UIListLayout", Section)
-    Layout.Padding = UDim.new(0, 6)
-    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
-    return Section
+local function AutoSize(frame)
+    local layout = frame:FindFirstChildOfClass("UIListLayout")
+    if layout then
+        frame.Size = UDim2.new(1, 0, 0, layout.AbsoluteContentSize.Y + 6)
+    end
 end
 
--- =========================
--- TOGGLE
--- =========================
+-- SECTION
+function CreateSection(parent, title)
+    local Sec = Instance.new("Frame", parent)
+    Sec.Size = UDim2.new(1, 0, 0, 40)
+    Sec.BackgroundTransparency = 1
 
-local function CreateToggle(parent, text, default, callback)
-    local Toggle = Instance.new("Frame", parent)
-    Toggle.Size = UDim2.new(1, 0, 0, 36)
-    Toggle.BackgroundColor3 = Color3.fromRGB(32, 35, 48)
-    Toggle.BorderSizePixel = 0
-
-    Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0, 6)
-
-    local Label = Instance.new("TextLabel", Toggle)
-    Label.Size = UDim2.new(1, -60, 1, 0)
-    Label.Position = UDim2.new(0, 10, 0, 0)
+    local Label = Instance.new("TextLabel", Sec)
+    Label.Size = UDim2.new(1, 0, 0, 20)
+    Label.Text = title
+    Label.TextXAlignment = Enum.TextXAlignment.Left
     Label.BackgroundTransparency = 1
+    Label.TextColor3 = Color3.fromRGB(180, 200, 255)
+    Label.Font = Enum.Font.GothamBold
+    Label.TextSize = 13
+
+    local Holder = Instance.new("Frame", Sec)
+    Holder.Position = UDim2.new(0, 0, 0, 24)
+    Holder.Size = UDim2.new(1, 0, 0, 0)
+    Holder.BackgroundTransparency = 1
+
+    local layout = Instance.new("UIListLayout", Holder)
+    layout.Padding = UDim.new(0, 8)
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Holder.Size = UDim2.new(1, 0, 0, layout.AbsoluteContentSize.Y)
+        Sec.Size = UDim2.new(1, 0, 0, Holder.AbsoluteSize.Y + 28)
+    end)
+
+    return Holder
+end
+
+-- TOGGLE
+function CreateToggle(parent, text, default, callback)
+    local Box = Instance.new("Frame", parent)
+    Box.Size = UDim2.new(1, 0, 0, 38)
+    Box.BackgroundColor3 = Color3.fromRGB(40, 43, 55)
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 8)
+
+    local Label = Instance.new("TextLabel", Box)
+    Label.Position = UDim2.new(0, 12, 0, 0)
+    Label.Size = UDim2.new(1, -70, 1, 0)
     Label.Text = text
     Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    Label.BackgroundTransparency = 1
+    Label.TextColor3 = Color3.fromRGB(235,235,235)
     Label.Font = Enum.Font.Gotham
     Label.TextSize = 12
 
-    local Btn = Instance.new("TextButton", Toggle)
-    Btn.Size = UDim2.new(0, 40, 0, 20)
-    Btn.Position = UDim2.new(1, -50, 0.5, -10)
+    local Btn = Instance.new("TextButton", Box)
+    Btn.Size = UDim2.new(0, 44, 0, 22)
+    Btn.Position = UDim2.new(1, -54, 0.5, -11)
     Btn.Text = default and "ON" or "OFF"
-    Btn.BackgroundColor3 = default and Color3.fromRGB(0, 170, 120) or Color3.fromRGB(120, 50, 50)
-    Btn.TextColor3 = Color3.new(1,1,1)
     Btn.Font = Enum.Font.GothamBold
     Btn.TextSize = 11
-    Btn.BorderSizePixel = 0
+    Btn.TextColor3 = Color3.new(1,1,1)
+    Btn.BackgroundColor3 = default and Color3.fromRGB(0,160,120) or Color3.fromRGB(120,60,60)
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(1,0)
 
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(1, 0)
-
-    local State = default
-
+    local state = default
     Btn.MouseButton1Click:Connect(function()
-        State = not State
-        Btn.Text = State and "ON" or "OFF"
-        Btn.BackgroundColor3 = State and Color3.fromRGB(0,170,120) or Color3.fromRGB(120,50,50)
-        if callback then
-            callback(State) -- ← TEMPAT HUBUNGKAN LOGIC
-        end
+        state = not state
+        Btn.Text = state and "ON" or "OFF"
+        Btn.BackgroundColor3 = state and Color3.fromRGB(0,160,120) or Color3.fromRGB(120,60,60)
+        if callback then callback(state) end
     end)
 
-    return Toggle
+    return Box
 end
 
--- =========================
 -- BUTTON
--- =========================
-
-local function CreateButton(parent, text, callback)
+function CreateButton(parent, text, callback)
     local Btn = Instance.new("TextButton", parent)
-    Btn.Size = UDim2.new(1, 0, 0, 34)
+    Btn.Size = UDim2.new(1, 0, 0, 36)
     Btn.Text = text
-    Btn.BackgroundColor3 = Color3.fromRGB(45, 50, 70)
-    Btn.TextColor3 = Color3.new(1,1,1)
     Btn.Font = Enum.Font.GothamBold
     Btn.TextSize = 12
+    Btn.TextColor3 = Color3.new(1,1,1)
+    Btn.BackgroundColor3 = Color3.fromRGB(50, 55, 75)
     Btn.BorderSizePixel = 0
-
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0,8)
 
     Btn.MouseButton1Click:Connect(function()
-        if callback then
-            callback() -- ← TEMPAT LOGIC
-        end
+        if callback then callback() end
     end)
 
     return Btn
 end
 
--- =========================
 -- SLIDER
--- =========================
-
-local function CreateSlider(parent, text, min, max, default, callback)
+function CreateSlider(parent, text, min, max, default, callback)
     local Holder = Instance.new("Frame", parent)
-    Holder.Size = UDim2.new(1, 0, 0, 44)
+    Holder.Size = UDim2.new(1, 0, 0, 48)
     Holder.BackgroundTransparency = 1
 
     local Label = Instance.new("TextLabel", Holder)
-    Label.Size = UDim2.new(1, 0, 0, 16)
+    Label.Size = UDim2.new(1, 0, 0, 18)
     Label.BackgroundTransparency = 1
-    Label.Text = text .. " : " .. default
     Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.TextColor3 = Color3.fromRGB(220,220,220)
+    Label.Text = text .. " : " .. default
+    Label.TextColor3 = Color3.fromRGB(230,230,230)
     Label.Font = Enum.Font.Gotham
     Label.TextSize = 12
 
     local Bar = Instance.new("Frame", Holder)
-    Bar.Position = UDim2.new(0, 0, 0, 22)
-    Bar.Size = UDim2.new(1, 0, 0, 10)
-    Bar.BackgroundColor3 = Color3.fromRGB(60,60,80)
-    Bar.BorderSizePixel = 0
-
+    Bar.Position = UDim2.new(0,0,0,24)
+    Bar.Size = UDim2.new(1,0,0,10)
+    Bar.BackgroundColor3 = Color3.fromRGB(70,70,90)
     Instance.new("UICorner", Bar).CornerRadius = UDim.new(1,0)
 
     local Fill = Instance.new("Frame", Bar)
-    Fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0)
-    Fill.BackgroundColor3 = Color3.fromRGB(0,170,200)
-    Fill.BorderSizePixel = 0
-
+    Fill.Size = UDim2.new((default-min)/(max-min),0,1,0)
+    Fill.BackgroundColor3 = Color3.fromRGB(0,140,255)
     Instance.new("UICorner", Fill).CornerRadius = UDim.new(1,0)
 
-    Bar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local x = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
-            local value = math.floor(min + (max - min) * x)
-            Fill.Size = UDim2.new(x, 0, 1, 0)
-            Label.Text = text .. " : " .. value
-            if callback then
-                callback(value) -- ← TEMPAT LOGIC
-            end
+    Bar.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            local x = math.clamp((i.Position.X - Bar.AbsolutePosition.X)/Bar.AbsoluteSize.X,0,1)
+            local val = math.floor(min + (max-min)*x)
+            Fill.Size = UDim2.new(x,0,1,0)
+            Label.Text = text .. " : " .. val
+            if callback then callback(val) end
         end
     end)
 
     return Holder
 end
 
-print("✅ PART 2 LOADED : UI COMPONENTS")
-
 
 -- =====================================================
--- PART 3 : CONNECT UI COMPONENTS TO YOUR LOGIC
+-- PART 3 : UI → LOGIC MAPPING
 -- =====================================================
 
--- pastikan variabel logic kamu SUDAH ADA sebelum part ini:
--- AutoFish, AutoSell, AutoWeather, FlyEnabled, FlySpeed, SellInterval, WeatherDelay
+-- AUTOMATION
+local AutoSec = CreateSection(TabAutomation, "AUTO FARM")
+CreateToggle(AutoSec, "Auto Fish", AutoFish, function(v) AutoFish = v end)
+CreateToggle(AutoSec, "Auto Sell", AutoSell, function(v) AutoSell = v end)
+CreateSlider(AutoSec, "Sell Interval", 1, 30, SellInterval, function(v) SellInterval = v end)
 
-assert(TabAutomation, "PART 1 belum terload!")
+local WeatherSec = CreateSection(TabAutomation, "WEATHER")
+CreateToggle(WeatherSec, "Auto Weather", AutoWeather, function(v) AutoWeather = v end)
+CreateSlider(WeatherSec, "Weather Delay", 1, 20, WeatherDelay, function(v) WeatherDelay = v end)
 
--- ======================================================
--- AUTOMATION TAB
--- ======================================================
-
-local SecAuto = CreateSection(TabAutomation, "AUTO FARM")
-
-CreateToggle(SecAuto, "Auto Fish", AutoFish, function(v)
-    AutoFish = v
+-- SHOP
+local ShopSec = CreateSection(TabShop, "SHOP")
+CreateToggle(ShopSec, "Auto Totem", AUTO_TOTEM, function(v) AUTO_TOTEM = v end)
+CreateButton(ShopSec, "Open Merchant", function()
+    local g = LP.PlayerGui:FindFirstChild("Merchant")
+    if g then g.Enabled = not g.Enabled end
 end)
 
-CreateToggle(SecAuto, "Auto Sell", AutoSell, function(v)
-    AutoSell = v
-end)
-
-CreateSlider(SecAuto, "Sell Interval (S)", 1, 30, SellInterval, function(v)
-    SellInterval = v
-end)
-
-local SecWeather = CreateSection(TabAutomation, "WEATHER")
-
-CreateToggle(SecWeather, "Auto Weather", AutoWeather, function(v)
-    AutoWeather = v
-end)
-
-CreateSlider(SecWeather, "Delay Weather (S)", 1, 15, WeatherDelay, function(v)
-    WeatherDelay = v
-end)
-
-
--- ======================================================
--- SHOP TAB
--- ======================================================
-
-local SecShop = CreateSection(TabShop, "TOTEM")
-
-CreateToggle(SecShop, "Auto Totem", AUTO_TOTEM, function(v)
-    AUTO_TOTEM = v
-end)
-
-local SecMerchant = CreateSection(TabShop, "MERCHANT")
-
-CreateButton(SecMerchant, "Open Merchant", function()
-    local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
-    if merchantGui then
-        merchantGui.Enabled = not merchantGui.Enabled
-    end
-end)
-
-
--- ======================================================
--- FLY TAB
--- ======================================================
-
-local SecFly = CreateSection(TabFly, "FLY MODE")
-
-CreateToggle(SecFly, "Fly Enabled", FlyEnabled, function(v)
+-- FLY
+local FlySec = CreateSection(TabFly, "FLY")
+CreateToggle(FlySec, "Fly Enabled", FlyEnabled, function(v)
     FlyEnabled = v
-    if FlyEnabled then
-        startFly()
-    else
-        stopFly()
-    end
+    if v then startFly() else stopFly() end
+end)
+CreateSlider(FlySec, "Fly Speed", 50, 800, FlySpeed, function(v) FlySpeed = v end)
+
+
+-- =====================================================
+-- PART 5 : SETTINGS
+-- =====================================================
+
+local TeleportService = game:GetService("TeleportService")
+
+local SetSec = CreateSection(TabSettings, "SYSTEM")
+
+CreateButton(SetSec, "Rejoin Server", function()
+    TeleportService:Teleport(game.PlaceId, LP)
 end)
 
-CreateSlider(SecFly, "Fly Speed", 50, 800, FlySpeed, function(v)
-    FlySpeed = v
-end)
-
-
--- ======================================================
--- TELEPORT TAB
--- ======================================================
-
-local SecTPPlayer = CreateSection(TabTeleport, "Teleport to Player")
-
--- Scroll list will be generated (same logic as old UI)
-local PlayerList = Instance.new("ScrollingFrame", TabTeleport)
-PlayerList.Position = UDim2.new(0, 0, 0, 60)
-PlayerList.Size = UDim2.new(1, -10, 1, -70)
-PlayerList.BackgroundTransparency = 1
-PlayerList.CanvasSize = UDim2.new(0, 0, 0, 0)
-PlayerList.ScrollBarThickness = 4
-
-local layout = Instance.new("UIListLayout", PlayerList)
-layout.Padding = UDim.new(0, 4)
-layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-
-local function RefreshPlayers()
-    for _,c in ipairs(PlayerList:GetChildren()) do
-        if c:IsA("TextButton") then
-            c:Destroy()
-        end
-    end
-
-    for _,plr in ipairs(Players:GetPlayers()) do
-        if plr ~= LP then
-            local B = CreateButton(PlayerList, plr.Name, function()
-                local hrp1 = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-                local hrp2 = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-                if hrp1 and hrp2 then
-                    hrp1.CFrame = hrp2.CFrame + Vector3.new(0,2,-3)
-                end
-            end)
-            B.Size = UDim2.new(1, -10, 0, 28)
-        end
-    end
-end
-
-RefreshPlayers()
-
-
--- ======================================================
--- OTHER / SETTINGS (optional slot)
--- ======================================================
-
-local SecOther = CreateSection(TabSettings, "OTHER")
-
-CreateButton(SecOther, "Refresh Player List", function()
-    RefreshPlayers()
-end)
-
-CreateButton(SecOther, "Close UI", function()
-    gui:Destroy()
+CreateButton(SetSec, "Close UI", function()
     _G.FishItWORK = false
+    gui:Destroy()
 end)
-
-print("✅ PART 3 LOADED : UI MAPPING COMPLETE")
-
--- =====================================================
--- PART 4 : LOGIC CONTAINER (NO UI, NO CHANGE)
--- =====================================================
-
--- ⚠️ ATURAN:
--- 1. JANGAN ubah logic
--- 2. JANGAN buat UI di sini
--- 3. HANYA pindahkan LOOP / EVENT dari script lama
--- 4. Variabel sudah dikontrol UI HUB
-
--- =====================================================
--- AUTO FISH LOOP
--- =====================================================
-
-task.spawn(function()
-    while _G.FishItWORK do
-        task.wait(FishDelay)
-        if AutoFish and FishingController then
-            local guid = FishingController:GetCurrentGUID()
-            if not guid then
-                pcall(function()
-                    FishingController:RequestChargeFishingRod(
-                        workspace.CurrentCamera.ViewportSize / 2,
-                        true
-                    )
-                end)
-            else
-                FishingController:FishingMinigameClick()
-            end
-        end
-    end
-end)
-
--- =====================================================
--- AUTO SELL LOOP
--- =====================================================
-
-task.spawn(function()
-    while _G.FishItWORK do
-        task.wait(SellInterval)
-        if AutoSell and sellRF then
-            pcall(function()
-                sellRF:InvokeServer()
-            end)
-        end
-    end
-end)
-
--- =====================================================
--- AUTO WEATHER LOOP
--- =====================================================
-
-task.spawn(function()
-    local purchaseRF = Net:RemoteFunction("PurchaseWeatherEvent")
-    local WeatherList = {"Storm", "Cloudy", "Wind"}
-
-    while _G.FishItWORK do
-        task.wait(WeatherDelay)
-        if AutoWeather and purchaseRF then
-            for _,weatherName in ipairs(WeatherList) do
-                pcall(function()
-                    purchaseRF:InvokeServer(weatherName)
-                end)
-                task.wait(1.5)
-            end
-        end
-    end
-end)
-
--- =====================================================
--- AUTO TOTEM LOOP
--- =====================================================
-
-task.spawn(function()
-    while _G.FishItWORK do
-        task.wait(1)
-
-        if not AUTO_TOTEM then
-            continue
-        end
-
-        -- COPY SELURUH AUTO TOTEM LOOP KAMU KE SINI
-        -- (tidak diubah)
-    end
-end)
-
--- =====================================================
--- FLY SAFETY LOOP (OPTIONAL)
--- =====================================================
-
-task.spawn(function()
-    while _G.FishItWORK do
-        task.wait(1)
-        if not FlyEnabled then
-            pcall(stopFly)
-        end
-    end
-end)
-
--- =====================================================
--- PING UPDATE LOOP
--- =====================================================
-
-task.spawn(function()
-    while _G.FishItWORK do
-        task.wait(1)
-        -- copy ping updater lama kamu ke sini
-    end
-end)
-
--- =====================================================
--- FISH UI CLEANER / FPS BOOSTER
--- =====================================================
-
-task.spawn(function()
-    while _G.FishItWORK do
-        task.wait(2)
-        -- copy CLEAN FISH UI + FPS BOOSTER kamu ke sini
-    end
-end)
-
-print("✅ PART 4 LOADED : LOGIC CONNECTED TO HUB UI")
