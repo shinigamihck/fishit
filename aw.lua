@@ -428,13 +428,6 @@ function _G.StartFly()
     end)
 end
 
-------------------------------------------------------
--- VISUAL TAB : SHOW PING PANEL TOGGLE
-------------------------------------------------------
-createToggle(VisualPage, "Show Ping Panel", function(state)
-    PingPanel.Visible = state
-end)
-
 
 ------------------------------------------------------
 -- AUTO FISH LOOP
@@ -758,21 +751,42 @@ local function GetRealPing()
 end
 
 ------------------------------------------------------
--- PING PANEL (HIDDEN BY DEFAULT)
+-- PING PANEL (FRAME, BUKAN TEXTLABEL)
 ------------------------------------------------------
-local PingPanel = Instance.new("TextLabel", gui)
+local PingPanel = Instance.new("Frame", gui)
 PingPanel.Name = "PingPanel"
-PingPanel.Size = UDim2.new(0,160,0,22)
-PingPanel.Position = UDim2.new(1,-170,1,-40)
-PingPanel.BackgroundTransparency = 0.2
+PingPanel.Size = UDim2.new(0,140,0,26)
 PingPanel.BackgroundColor3 = THEME.PANEL
-PingPanel.Font = Enum.Font.Gotham
-PingPanel.TextSize = 12
-PingPanel.TextColor3 = THEME.TEXT
-PingPanel.Text = "Ping: --"
+PingPanel.BackgroundTransparency = 0.15
 PingPanel.Visible = false
+PingPanel.BorderSizePixel = 0
 
 Instance.new("UICorner", PingPanel).CornerRadius = UDim.new(0,8)
+local ps = Instance.new("UIStroke", PingPanel)
+ps.Color = THEME.BORDER
+ps.Transparency = 0.6
+
+-- TEXT DI DALAM PANEL
+local PingText = Instance.new("TextLabel", PingPanel)
+PingText.Size = UDim2.new(1,0,1,0)
+PingText.BackgroundTransparency = 1
+PingText.Font = Enum.Font.Gotham
+PingText.TextSize = 12
+PingText.TextColor3 = THEME.TEXT
+PingText.Text = "Ping: --"
+
+
+Instance.new("UICorner", PingPanel).CornerRadius = UDim.new(0,8)
+
+
+------------------------------------------------------
+-- VISUAL TAB : SHOW PING PANEL TOGGLE
+------------------------------------------------------
+createToggle(VisualPage, "Show Ping Panel", function(state)
+    PingPanel.Visible = state
+end)
+
+
 
 ------------------------------------------------------
 -- PING UPDATE LOOP (SAFE & LIGHT)
@@ -787,13 +801,30 @@ task.spawn(function()
 
         local ping = GetRealPing()
         if not ping then
-            PingPanel.Text = "Ping: --"
+            PingText.Text = "Ping: --"
         else
-            PingPanel.Text = string.format("Ping: %.1f ms", ping)
+            PingText.Text = string.format("Ping: %.1f ms", ping)
         end
     end
 end)
 
+------------------------------------------------------
+-- AUTO FOLLOW FLOAT BUTTON (PING NEMPEL)
+------------------------------------------------------
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        task.wait()
+
+        if PingPanel.Visible then
+            PingPanel.Position = UDim2.new(
+                floatBtn.Position.X.Scale,
+                floatBtn.Position.X.Offset,
+                floatBtn.Position.Y.Scale,
+                floatBtn.Position.Y.Offset + floatBtn.Size.Y.Offset + 5
+            )
+        end
+    end
+end)
 
 
 --====================================================--
@@ -927,35 +958,7 @@ task.spawn(function()
 end)
 
 
-------------------------------------------------------
--- REAL PING MONITOR (SHIFT+F3 ACCURATE)
-------------------------------------------------------
-task.spawn(function()
-    local PingLabel = Instance.new("TextLabel", gui)
-    PingLabel.Size = UDim2.new(0,160,0,22)
-    PingLabel.Position = UDim2.new(1,-170,1,-40)
-    PingLabel.BackgroundTransparency = 1
-    PingLabel.Font = Enum.Font.Gotham
-    PingLabel.TextSize = 12
-    PingLabel.TextColor3 = THEME.TEXT
-    PingLabel.Text = "Ping: --"
 
-    local function getPing()
-        local net = Stats:FindFirstChild("Network")
-        if not net then return nil end
-        local server = net:FindFirstChild("ServerStatsItem")
-        if not server then return nil end
-        local ping = server:FindFirstChild("Data Ping")
-        if not ping then return nil end
-        return ping:GetValue()
-    end
-
-    while _G.FishItHubLoaded do
-        task.wait(1)
-        local p = getPing()
-        PingLabel.Text = p and string.format("Ping: %.1f ms", p) or "Ping: --"
-    end
-end)
 
 
 ------------------------------------------------------
