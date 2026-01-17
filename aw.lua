@@ -102,6 +102,19 @@ gui.Name = "FishItHubUI"
 gui.ResetOnSpawn = false
 gui.Parent = LP.PlayerGui
 
+
+------------------------------------------------------
+-- GLOBAL UI SCALE (CIUTKAN SELURUH HUB)
+------------------------------------------------------
+local UIScale = Instance.new("UIScale", gui)
+UIScale.Scale = 0.75   -- 🔥 Kecil bagus (0.75)
+-- Rekomendasi nilai:
+-- 0.90 = Sedikit kecil
+-- 0.80 = Pas untuk HP medium
+-- 0.75 = Kecil tapi nyaman
+-- 0.65 = Super mini (HP kecil)
+
+
 ------------------------------------------------------
 -- BLUR EFFECT (SAFE)
 ------------------------------------------------------
@@ -694,6 +707,74 @@ print("✔ BATCH 4 Loaded | Auto Totem + Teleport Ready")
 --================== BATCH 5 / 5 =====================--
 --========= CLEAN UI + FPS BOOST + FINALIZE ==========--
 --====================================================--
+
+
+--====================================================--
+--========== PATCH: SCROLL PLAYER & SPOT =============--
+--====================================================--
+
+local function makeScrollable(page)
+    -- simpan semua child lama
+    local children = {}
+    for _,v in ipairs(page:GetChildren()) do
+        table.insert(children, v)
+    end
+
+    -- hapus layout lama
+    for _,v in ipairs(children) do
+        v.Parent = nil
+    end
+
+    -- buat ScrollingFrame
+    local scroll = Instance.new("ScrollingFrame", page)
+    scroll.Size = UDim2.new(1,0,1,0)
+    scroll.CanvasSize = UDim2.new(0,0,0,0)
+    scroll.ScrollBarThickness = 4
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scroll.BackgroundTransparency = 1
+    scroll.BorderSizePixel = 0
+
+    local layout = Instance.new("UIListLayout", scroll)
+    layout.Padding = UDim.new(0,8)
+
+    -- masukin ulang child
+    for _,v in ipairs(children) do
+        v.Parent = scroll
+    end
+
+    return scroll
+end
+
+------------------------------------------------------
+-- APPLY TO PLAYER & SPOT PAGE
+------------------------------------------------------
+local PlayerScroll = makeScrollable(PlayerPage)
+local SpotScroll   = makeScrollable(SpotPage)
+
+------------------------------------------------------
+-- UPDATE REFRESH FUNCTIONS TARGET
+------------------------------------------------------
+-- override supaya isi masuk ke ScrollingFrame
+
+local _oldRefreshPlayer = _G.RefreshPlayerList
+_G.RefreshPlayerList = function()
+    _oldRefreshPlayer(PlayerScroll)
+end
+
+local _oldRefreshSpot = _G.RefreshSpotList
+_G.RefreshSpotList = function()
+    _oldRefreshSpot(SpotScroll)
+end
+
+-- initial refresh
+task.delay(0.5, function()
+    _G.RefreshPlayerList()
+    _G.RefreshSpotList()
+end)
+
+print("✔ PATCH APPLIED | Player & Spot now scrollable")
+
+
 
 local F = _G.FISH
 
