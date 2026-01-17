@@ -1,3 +1,51 @@
+------------------------------------------------------
+-- AUTO CLEAN FISHIT HUB (WAJIB)
+------------------------------------------------------
+
+-- Hentikan semua task lama
+for _,v in ipairs(getgc(true)) do
+    if type(v) == "function" and islclosure(v) then
+        local info = debug.getinfo(v)
+        if info.source and info.source:find("FishItHub") then
+            -- best effort to stop old loops
+            pcall(function()
+                hookfunction(v, function() return end)
+            end)
+        end
+    end
+end
+
+-- Reset global
+_G.FishItHubLoaded = false
+_G.AutoFish = false
+_G.AutoSell = false
+_G.AutoWeather = false
+_G.AUTO_TOTEM = false
+_G.FlyEnabled = false
+
+-- Cleanup old GUI
+pcall(function()
+    local pg = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+    if pg:FindFirstChild("FishItHubUI") then
+        pg.FishItHubUI:Destroy()
+    end
+end)
+
+-- Cleanup old blur
+pcall(function()
+    local Lighting = game:GetService("Lighting")
+    if Lighting:FindFirstChild("FishItHubBlur") then
+        Lighting.FishItHubBlur:Destroy()
+    end
+    if Lighting:FindFirstChild("TabHubBlur") then
+        Lighting.TabHubBlur:Destroy()
+    end
+end)
+
+print("✔ AUTO CLEAN DONE | Environment reset. Loading fresh FishIt Hub...")
+
+
+
 --====================================================
 -- FISHIT HUB — FULL FINAL CLEAN VERSION
 --====================================================
