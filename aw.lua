@@ -427,6 +427,13 @@ function _G.StartFly()
     end)
 end
 
+------------------------------------------------------
+-- VISUAL TAB : SHOW PING PANEL TOGGLE
+------------------------------------------------------
+createToggle(VisualPage, "Show Ping Panel", function(state)
+    PingPanel.Visible = state
+end)
+
 
 ------------------------------------------------------
 -- AUTO FISH LOOP
@@ -707,6 +714,63 @@ print("✔ BATCH 4 Loaded | Auto Totem + Teleport Ready")
 --================== BATCH 5 / 5 =====================--
 --========= CLEAN UI + FPS BOOST + FINALIZE ==========--
 --====================================================--
+
+------------------------------------------------------
+-- REAL PING FUNCTION (PORT FROM FishItWORKUI)
+------------------------------------------------------
+local function GetRealPing()
+    local network = Stats:FindFirstChild("Network")
+    if not network then return nil end
+
+    local serverStats = network:FindFirstChild("ServerStatsItem")
+    if not serverStats then return nil end
+
+    local pingStat = serverStats:FindFirstChild("Data Ping")
+    if not pingStat then return nil end
+
+    local value = pingStat:GetValue()
+    if type(value) ~= "number" then return nil end
+
+    return value
+end
+
+------------------------------------------------------
+-- PING PANEL (HIDDEN BY DEFAULT)
+------------------------------------------------------
+local PingPanel = Instance.new("TextLabel", gui)
+PingPanel.Name = "PingPanel"
+PingPanel.Size = UDim2.new(0,160,0,22)
+PingPanel.Position = UDim2.new(1,-170,1,-40)
+PingPanel.BackgroundTransparency = 0.2
+PingPanel.BackgroundColor3 = THEME.PANEL
+PingPanel.Font = Enum.Font.Gotham
+PingPanel.TextSize = 12
+PingPanel.TextColor3 = THEME.TEXT
+PingPanel.Text = "Ping: --"
+PingPanel.Visible = false
+
+Instance.new("UICorner", PingPanel).CornerRadius = UDim.new(0,8)
+
+------------------------------------------------------
+-- PING UPDATE LOOP (SAFE & LIGHT)
+------------------------------------------------------
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        task.wait(1)
+
+        if not PingPanel.Visible then
+            continue
+        end
+
+        local ping = GetRealPing()
+        if not ping then
+            PingPanel.Text = "Ping: --"
+        else
+            PingPanel.Text = string.format("Ping: %.1f ms", ping)
+        end
+    end
+end)
+
 
 
 --====================================================--
