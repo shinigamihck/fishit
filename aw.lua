@@ -291,7 +291,7 @@ end
 
 main.Position = UDim2.new(0.32, 0, 0.3, 0)
 main.BackgroundColor3 = Color3.fromRGB(18, 20, 26)
-main.BackgroundTransparency = 0.25
+main.BackgroundTransparency = 0.35
 main.Active = true
 main.Draggable = true
 
@@ -310,7 +310,7 @@ stroke.Transparency = 0.6
 local topBar = Instance.new("Frame", main)
 topBar.Size = UDim2.new(1, 0, 0, 34)
 topBar.BackgroundColor3 = Color3.fromRGB(25, 28, 35)
-topBar.BackgroundTransparency = 0.1
+topBar.BackgroundTransparency = 0.25
 
 local topCorner = Instance.new("UICorner", topBar)
 topCorner.CornerRadius = UDim.new(0, 10)
@@ -328,7 +328,7 @@ panel.Position = UDim2.new(0, 10, 0, 50)
 panel.AutomaticSize = Enum.AutomaticSize.Y
 panel.Size = UDim2.new(1, -20, 0, 0)
 panel.BackgroundColor3 = Color3.fromRGB(28, 32, 40)
-panel.BackgroundTransparency = 0.15
+panel.BackgroundTransparency = 0.30
 
 local pc = Instance.new("UICorner", panel)
 pc.CornerRadius = UDim.new(0, 10)
@@ -531,7 +531,7 @@ clickBtn.ZIndex = 999
         and Color3.fromRGB(80,200,120)
         or Color3.fromRGB(255,80,80)
 end)
-
+end
 
 -- =========================================================
 -- TAB: AUTO (dengan indikator ON/OFF)
