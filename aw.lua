@@ -451,31 +451,42 @@ end
 
 
 ------------------------------------------------------
--- FLY ENGINE (FINAL SMOOTH)
+-- FLY ENGINE (CONSTRAINT VERSION - FIX TOTAL)
 ------------------------------------------------------
-local flyConn, bv, bg
+local flyConn
+local lv, ao, attach
 
 function _G.StopFly()
     F.FlyEnabled = false
     if flyConn then flyConn:Disconnect() end
-    if bv then bv:Destroy() end
-    if bg then bg:Destroy() end
+    if lv then lv:Destroy() end
+    if ao then ao:Destroy() end
+    if attach then attach:Destroy() end
 end
 
 function _G.StartFly()
     local char = LP.Character or LP.CharacterAdded:Wait()
     local hrp = char:WaitForChild("HumanoidRootPart")
+    local hum = char:WaitForChild("Humanoid")
 
-    -- stabilizer
-    bg = Instance.new("BodyGyro", hrp)
-    bg.P = 9e4
-    bg.MaxTorque = Vector3.new(9e9,9e9,9e9)
-    bg.CFrame = hrp.CFrame
+    -- biar tidak ditarik physics game
+    hum.PlatformStand = true
 
-    -- pendorong
-    bv = Instance.new("BodyVelocity", hrp)
-    bv.MaxForce = Vector3.new(9e9,9e9,9e9)
-    bv.Velocity = Vector3.zero
+    -- attachment
+    attach = Instance.new("Attachment", hrp)
+
+    -- LINEAR VELOCITY (GERAK)
+    lv = Instance.new("LinearVelocity", hrp)
+    lv.Attachment0 = attach
+    lv.MaxForce = math.huge
+    lv.VectorVelocity = Vector3.zero
+    lv.RelativeTo = Enum.ActuatorRelativeTo.World
+
+    -- ALIGN ORIENTATION (ARAH)
+    ao = Instance.new("AlignOrientation", hrp)
+    ao.Attachment0 = attach
+    ao.MaxTorque = math.huge
+    ao.Responsiveness = 200
 
     flyConn = RS.RenderStepped:Connect(function()
         if not F.FlyEnabled then return end
@@ -483,25 +494,20 @@ function _G.StartFly()
         local cam = workspace.CurrentCamera
         local move = Vector3.zero
 
-        -- arah WASD
         if UIS:IsKeyDown(Enum.KeyCode.W) then move += cam.CFrame.LookVector end
         if UIS:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
         if UIS:IsKeyDown(Enum.KeyCode.A) then move -= cam.CFrame.RightVector end
         if UIS:IsKeyDown(Enum.KeyCode.D) then move += cam.CFrame.RightVector end
-
-        -- naik turun (lebih halus)
         if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
         if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.new(0,1,0) end
 
-        -- apply movement
         if move.Magnitude > 0 then
-            bv.Velocity = move.Unit * F.FlySpeed
+            lv.VectorVelocity = move.Unit * F.FlySpeed
         else
-            bv.Velocity = Vector3.zero
+            lv.VectorVelocity = Vector3.zero
         end
 
-        -- body menghadap ke kamera
-        bg.CFrame = cam.CFrame
+        ao.CFrame = cam.CFrame
     end)
 end
 
