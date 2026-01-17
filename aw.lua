@@ -196,15 +196,49 @@ end)
 
 -- TELEPORT SPOTS
 local Locations = {
-    { Name = "Ancient Jungle", CFrame = CFrame.new(1562.54028,6.6,-233.16) },
-    { Name = "Ancient Ruin", CFrame = CFrame.new(6076.29,-585.92,4625.92) },
-    { Name = "Coral Reefs", CFrame = CFrame.new(-2752.80,4.0,2165.78) },
-    { Name = "Crater Island", CFrame = CFrame.new(1027.12,2.89,5148.10) },
-    { Name = "Fisherman Island", CFrame = CFrame.new(73.35,9.53,2709.50) },
-    { Name = "Esoteric Depths", CFrame = CFrame.new(3249,-1301,1373) },
-    { Name = "Kohana", CFrame = CFrame.new(-595,19,429) },
-    { Name = "Weather Machine", CFrame = CFrame.new(-1527,2,1914) },
-    -- (List penuh bisa ditambah lagi)
+    { Name = "Ancient Jungle", CFrame = CFrame.new(1562.54028, 6.62499952, -233.164978) },
+    { Name = "Ancient Ruin", CFrame = CFrame.new(6076.29297, -585.924255, 4625.92578) },
+    { Name = "Captain Jones ( Quest )", CFrame = CFrame.new(
+        3312.1604, 9.09943581, 3681.58276,
+        -0.620493293, 3.23666143e-08, 0.784211755,
+        1.96114573e-08, 1, -2.57555914e-08,
+        -0.784211755, -6.01637129e-10, -0.620493293
+    ) },
+    { Name = "Coral Reefs", CFrame = CFrame.new(-2752.8064, 4.00034237, 2165.78516) },
+    { Name = "Crater Island", CFrame = CFrame.new(1027.12122, 2.89895344, 5148.10498) },
+    { Name = "Deadman Compas ( Quest )", CFrame = CFrame.new(
+        -3437.02661, -22.3605175, -1500.29492,
+        0.949759126, -0.000316226506, -0.312981725,
+        -0.00030944933, 0.999998033, -0.0019494053,
+        0.312981725, 0.0019483174, 0.949757159
+    ) },
+    { Name = "Esoteric Depths", CFrame = CFrame.new(3249.08862, -1301.52979, 1373.68054) },
+    { Name = "Fisherman Island", CFrame = CFrame.new(73.3565826, 9.53157043, 2709.50098) },
+    { Name = "Kohana", CFrame = CFrame.new(-595.69751, 19.2500706, 429.863037) },
+    { Name = "Kohana Volcano", CFrame = CFrame.new(-559.593994, 21.2289829, 153.752396) },
+    { Name = "Kuil Suci", CFrame = CFrame.new(1471.79675, -22.1250019, -607.50592) },
+    { Name = "Pirate Cove", CFrame = CFrame.new(
+        3398.70093, 10.3427305, 3491.1123,
+        0.350104898, -5.98848899e-08, -0.936710477,
+        4.57310989e-08, 1, -4.68386041e-08,
+        0.936710477, -2.64383768e-08, 0.350104898
+    ) },
+    { Name = "Pirate Treasure Room", CFrame = CFrame.new(
+        3340.80273, -301.512665, 3090.66382,
+        0.851593554, -5.62464919e-08, 0.524202645,
+        4.72129109e-08, 1, 3.05993844e-08,
+        -0.524202645, -1.30910449e-09, 0.851593554
+    ) },
+    { Name = "Sisyphus Statue", CFrame = CFrame.new(-3745.26025, -135.074417, -1008.6817) },
+    { Name = "Traveling Merchant", CFrame = CFrame.new(
+        -133.942184, 3.1812315, 2767.25952,
+        0.9507429, 1.0076019e-07, -0.309980601,
+        -8.28868707e-08, 1, 7.08305095e-08,
+        0.309980601, -4.16482813e-08, 0.9507429
+    ) },
+    { Name = "Treasure Room", CFrame = CFrame.new(-3597.20093, -280.117279, -1633.28735) },
+    { Name = "Tropical Grove", CFrame = CFrame.new(-2128.62183, 53.487011, 3637.66479) },
+    { Name = "Weather Machine", CFrame = CFrame.new(-1527.67334, 2.87499976, 1914.66492) }
 }
 
 -- EXPORTED FOR UI
@@ -247,12 +281,20 @@ gui.Parent = pg
 
 -- MAIN FRAME
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 480, 0, 320)
+
+-- DETECT MOBILE ATAU PC
+if UIS.TouchEnabled then
+    main.Size = UDim2.new(0.55, 0, 0.48, 0)   -- ukuran mobile
+else
+    main.Size = UDim2.new(0.35, 0, 0.38, 0)   -- ukuran PC
+end
+
 main.Position = UDim2.new(0.32, 0, 0.3, 0)
 main.BackgroundColor3 = Color3.fromRGB(18, 20, 26)
 main.BackgroundTransparency = 0.25
 main.Active = true
 main.Draggable = true
+
 
 local corner = Instance.new("UICorner", main)
 corner.CornerRadius = UDim.new(0, 10)
@@ -367,27 +409,7 @@ end
 
 local UIS = game:GetService("UserInputService")
 
-local function makeResizable(frame)
-    local minW, minH = 120, 60
 
-    local handle = Instance.new("Frame", frame)
-    handle.Size = UDim2.new(0,18,0,18)
-    handle.Position = UDim2.new(1,-18,1,-18)
-    handle.BackgroundColor3 = Color3.fromRGB(100,100,120)
-    handle.Active = true
-    handle.Draggable = true
-
-    Instance.new("UICorner", handle).CornerRadius = UDim.new(0,6)
-
-    handle.MouseMoved:Connect(function()
-        if UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-            local m = UIS:GetMouseLocation()
-            local x = math.max(minW, m.X - frame.AbsolutePosition.X)
-            local y = math.max(minH, m.Y - frame.AbsolutePosition.Y)
-            frame.Size = UDim2.new(0, x, 0, y)
-        end
-    end)
-end
 
 ---------------------------------------------------------
 -- 📊 PING PANEL TOGGLE (FINAL FIX)
@@ -429,8 +451,7 @@ local function togglePingPanel()
         end
     end)
 
-    -- allow resize
-    makeResizable(pingPanel)
+
 end
 
 
@@ -607,7 +628,7 @@ end
 
 print("UI TopBar Loaded | Clean | Modern | Working")
 
-makeResizable(main)
+
 -- =====================================
 -- FLOATING TOGGLE BUTTON (FULL FIXED)
 -- =====================================
