@@ -445,21 +445,24 @@ local function createToggle(parent, text, callback)
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
 
     local state = false
-   btn.MouseButton1Click:Connect(function()
-    state = not state
 
-    local stateText = state and "ON" or "OFF"
-    local col = state and Color3.fromRGB(0,255,120) or Color3.fromRGB(255,80,80)
+    btn.MouseButton1Click:Connect(function()
+        state = not state
 
-    btn.Text = text .. " : " .. stateText
-    btn.BackgroundColor3 = state and THEME.ACTIVE or THEME.BUTTON
+        local stateText = state and "ON" or "OFF"
+        local col = state and Color3.fromRGB(0,255,120) or Color3.fromRGB(255,80,80)
 
-    -- 🔔 NOTIFICATION
-    Notify(text .. " : " .. stateText, col)
+        btn.Text = text .. " : " .. stateText
+        btn.BackgroundColor3 = state and THEME.ACTIVE or THEME.BUTTON
 
-    callback(state)
-end)
-end
+        -- 🔔 NOTIFICATION
+        Notify(text .. " : " .. stateText, col)
+
+        callback(state)
+    end)
+
+end   -- ✔ PENUTUP FUNGSI YANG BENAR
+
 
 
 ------------------------------------------------------
