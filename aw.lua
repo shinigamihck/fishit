@@ -1,811 +1,549 @@
---========================================================--
--- FLUENT UI COMPACT FRAMEWORK (PART 1)
---========================================================--
-
-if _G.FishItWORK then return end
-_G.FishItWORK = true
+-- =====================================================
+-- PART 1 : UI HUB CORE (SIDEBAR + PAGE SYSTEM)
+-- =====================================================
 
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 
--- Destroy Old UI
+-- Cleanup old UI
 pcall(function()
-    LP.PlayerGui:FindFirstChild("FishItFluentUI"):Destroy()
+    LP.PlayerGui:FindFirstChild("FishItUI_HUB"):Destroy()
 end)
 
--- Main ScreenGui
+-- ScreenGui
 local gui = Instance.new("ScreenGui")
-gui.Name = "FishItFluentUI"
+gui.Name = "FishItUI_HUB"
 gui.ResetOnSpawn = false
 gui.Parent = LP:WaitForChild("PlayerGui")
 
--- Color Theme (Fluent Compact)
-local THEME = {
-    BG         = Color3.fromRGB(28, 30, 35),
-    PANEL      = Color3.fromRGB(35, 37, 43),
-    ACCENT     = Color3.fromRGB(76, 162, 255),
-    ACCENT2    = Color3.fromRGB(120, 170, 255),
-    TEXT       = Color3.fromRGB(235, 240, 255),
-    BUTTON     = Color3.fromRGB(48, 50, 58),
-    BUTTON_H   = Color3.fromRGB(60, 65, 75),
-    BORDER     = Color3.fromRGB(90, 100, 120)
-}
-
--- Create Main Window (Compact size)
+-- Main Window
 local Main = Instance.new("Frame", gui)
-Main.Size = UDim2.new(0, 450, 0, 330)   -- COMPACT SIZE
-Main.Position = UDim2.new(0.5, -225, 0.5, -165)
-Main.BackgroundColor3 = THEME.BG
+Main.Size = UDim2.new(0, 640, 0, 380)
+Main.Position = UDim2.new(0.5, -320, 0.5, -190)
+Main.BackgroundColor3 = Color3.fromRGB(18, 20, 26)
 Main.BorderSizePixel = 0
 Main.Active = true
 Main.Draggable = true
 
--- Rounded Corner
-local cr = Instance.new("UICorner", Main)
-cr.CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 12)
 
--- Border Stroke
-local stroke = Instance.new("UIStroke", Main)
-stroke.Color = THEME.BORDER
-stroke.Thickness = 1
-stroke.Transparency = 0.45
+-- =========================
+-- HEADER
+-- =========================
 
---============================================
--- HEADER BAR
---============================================
 local Header = Instance.new("Frame", Main)
-Header.Size = UDim2.new(1, 0, 0, 34)
-Header.BackgroundColor3 = THEME.PANEL
+Header.Size = UDim2.new(1, 0, 0, 36)
+Header.BackgroundColor3 = Color3.fromRGB(22, 24, 32)
 Header.BorderSizePixel = 0
 
-Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 12)
 
 local Title = Instance.new("TextLabel", Header)
+Title.Size = UDim2.new(1, -90, 1, 0)
 Title.Position = UDim2.new(0, 12, 0, 0)
-Title.Size = UDim2.new(1, -60, 1, 0)
 Title.BackgroundTransparency = 1
+Title.Text = "Fish It | DEV HUB"
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.TextColor3 = Color3.fromRGB(200, 220, 255)
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 14
-Title.TextColor3 = THEME.TEXT
-Title.Text = "Fish It • Fluent UI"
 
--- Close Button
-local Close = Instance.new("TextButton", Header)
-Close.Size = UDim2.new(0, 34, 0, 28)
-Close.Position = UDim2.new(1, -38, 0.5, -14)
-Close.BackgroundColor3 = THEME.BUTTON
-Close.Text = "X"
-Close.TextColor3 = Color3.fromRGB(255,120,120)
-Close.Font = Enum.Font.GothamBold
-Close.TextSize = 14
-Close.BorderSizePixel = 0
-local cc = Instance.new("UICorner", Close)
-cc.CornerRadius = UDim.new(0, 6)
-
-Close.MouseButton1Click:Connect(function()
-    gui:Destroy()
-    _G.FishItWORK = false
-end)
-
---============================================
+-- =========================
 -- SIDEBAR
---============================================
+-- =========================
+
 local Sidebar = Instance.new("Frame", Main)
-Sidebar.Size = UDim2.new(0, 110, 1, -34)
-Sidebar.Position = UDim2.new(0, 0, 0, 34)
-Sidebar.BackgroundColor3 = THEME.PANEL
+Sidebar.Position = UDim2.new(0, 0, 0, 36)
+Sidebar.Size = UDim2.new(0, 150, 1, -36)
+Sidebar.BackgroundColor3 = Color3.fromRGB(15, 17, 22)
 Sidebar.BorderSizePixel = 0
-Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 10)
 
-local sbLayout = Instance.new("UIListLayout", Sidebar)
-sbLayout.Padding = UDim.new(0, 6)
-sbLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-sbLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+local SidebarLayout = Instance.new("UIListLayout", Sidebar)
+SidebarLayout.Padding = UDim.new(0, 6)
+SidebarLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-local sbPad = Instance.new("UIPadding", Sidebar)
-sbPad.PaddingTop = UDim.new(0, 10)
+local SidebarPad = Instance.new("UIPadding", Sidebar)
+SidebarPad.PaddingTop = UDim.new(0, 10)
 
---============================================
+-- =========================
 -- CONTENT AREA
---============================================
+-- =========================
+
 local Content = Instance.new("Frame", Main)
-Content.Size = UDim2.new(1, -120, 1, -34)
-Content.Position = UDim2.new(0, 115, 0, 34)
-Content.BackgroundColor3 = THEME.BG
+Content.Position = UDim2.new(0, 150, 0, 36)
+Content.Size = UDim2.new(1, -150, 1, -36)
+Content.BackgroundColor3 = Color3.fromRGB(24, 26, 34)
 Content.BorderSizePixel = 0
+
+-- =========================
+-- TAB SYSTEM
+-- =========================
 
 local Tabs = {}
 local CurrentTab = nil
 
--- Create Tab Button + Page
-local function CreateTab(name)
+local function CreateTab(tabName)
+    -- Sidebar Button
     local Btn = Instance.new("TextButton", Sidebar)
-    Btn.Size = UDim2.new(1, -14, 0, 30)
-    Btn.BackgroundColor3 = THEME.BUTTON
-    Btn.Text = name
+    Btn.Size = UDim2.new(1, -16, 0, 32)
+    Btn.Text = tabName
+    Btn.BackgroundColor3 = Color3.fromRGB(35, 38, 50)
+    Btn.TextColor3 = Color3.fromRGB(220, 220, 220)
     Btn.Font = Enum.Font.Gotham
-    Btn.TextSize = 12
-    Btn.TextColor3 = THEME.TEXT
+    Btn.TextSize = 13
     Btn.BorderSizePixel = 0
 
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
 
-    Btn.MouseEnter:Connect(function() Btn.BackgroundColor3 = THEME.BUTTON_H end)
-    Btn.MouseLeave:Connect(function() Btn.BackgroundColor3 = THEME.BUTTON end)
-
-    local Page = Instance.new("ScrollingFrame", Content)
-    Page.BackgroundTransparency = 1
-    Page.Size = UDim2.new(1, 0, 1, 0)
+    -- Page
+    local Page = Instance.new("Frame", Content)
+    Page.Size = UDim2.new(1, -20, 1, -20)
+    Page.Position = UDim2.new(0, 10, 0, 10)
     Page.Visible = false
-    Page.BorderSizePixel = 0
-    Page.CanvasSize = UDim2.new(0,0,0,0)
-    Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    Page.ScrollBarThickness = 4
+    Page.BackgroundTransparency = 1
 
-    local layout = Instance.new("UIListLayout", Page)
-    layout.Padding = UDim.new(0, 10)
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-
-    Tabs[name] = Page
+    Tabs[tabName] = Page
 
     Btn.MouseButton1Click:Connect(function()
-        for _,pg in pairs(Tabs) do pg.Visible = false end
+        for _,v in pairs(Tabs) do
+            v.Visible = false
+        end
         Page.Visible = true
-        CurrentTab = name
+        CurrentTab = tabName
     end)
 
     return Page
 end
 
--- TAB LIST (Compact)
+-- =========================
+-- CREATE DEFAULT TABS
+-- =========================
+
 local TabAutomation = CreateTab("Automation")
 local TabTeleport   = CreateTab("Teleport")
 local TabShop       = CreateTab("Shop")
 local TabFly        = CreateTab("Fly")
 local TabSettings   = CreateTab("Settings")
 
+-- Default tab
 TabAutomation.Visible = true
 CurrentTab = "Automation"
 
-print("✔ PART 1 Loaded — Fluent UI Base Framework")
+print("✅ PART 1 LOADED : UI HUB CORE")
 
 
---========================================================--
--- PART 2 — FLUENT UI COMPONENTS + AUTOMATION TAB
---========================================================--
+-- =====================================================
+-- PART 2 : UI COMPONENTS (BUTTON / TOGGLE / SLIDER)
+-- =====================================================
 
--- THEME VAR (ambil dari Part 1)
-local THEME = {
-    BG         = Color3.fromRGB(28, 30, 35),
-    PANEL      = Color3.fromRGB(35, 37, 43),
-    ACCENT     = Color3.fromRGB(76, 162, 255),
-    ACCENT2    = Color3.fromRGB(120, 170, 255),
-    TEXT       = Color3.fromRGB(235, 240, 255),
-    BUTTON     = Color3.fromRGB(48, 50, 58),
-    BUTTON_H   = Color3.fromRGB(60, 65, 75),
-    BORDER     = Color3.fromRGB(90, 100, 120)
-}
+-- pastikan PART 1 sudah ada
+assert(TabAutomation and TabFly and TabTeleport, "PART 1 belum diload!")
 
---========================================================--
--- COMPONENT: SECTION TITLE
---========================================================--
-local function CreateSection(parent, text)
-    local S = Instance.new("TextLabel", parent)
-    S.Size = UDim2.new(1, -10, 0, 24)
-    S.Text = text
-    S.TextXAlignment = Enum.TextXAlignment.Left
-    S.Font = Enum.Font.GothamBold
-    S.TextSize = 13
-    S.TextColor3 = THEME.ACCENT
-    S.BackgroundTransparency = 1
-    return S
+-- =========================
+-- HELPER : SECTION
+-- =========================
+
+local function CreateSection(parent, titleText)
+    local Section = Instance.new("Frame", parent)
+    Section.Size = UDim2.new(1, 0, 0, 40)
+    Section.BackgroundTransparency = 1
+
+    local Title = Instance.new("TextLabel", Section)
+    Title.Size = UDim2.new(1, 0, 0, 20)
+    Title.BackgroundTransparency = 1
+    Title.Text = titleText
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.TextColor3 = Color3.fromRGB(180, 200, 255)
+    Title.Font = Enum.Font.GothamBold
+    Title.TextSize = 13
+
+    local Layout = Instance.new("UIListLayout", Section)
+    Layout.Padding = UDim.new(0, 6)
+    Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+    return Section
 end
 
---========================================================--
--- COMPONENT: BUTTON
---========================================================--
+-- =========================
+-- TOGGLE
+-- =========================
+
+local function CreateToggle(parent, text, default, callback)
+    local Toggle = Instance.new("Frame", parent)
+    Toggle.Size = UDim2.new(1, 0, 0, 36)
+    Toggle.BackgroundColor3 = Color3.fromRGB(32, 35, 48)
+    Toggle.BorderSizePixel = 0
+
+    Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0, 6)
+
+    local Label = Instance.new("TextLabel", Toggle)
+    Label.Size = UDim2.new(1, -60, 1, 0)
+    Label.Position = UDim2.new(0, 10, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = text
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    Label.Font = Enum.Font.Gotham
+    Label.TextSize = 12
+
+    local Btn = Instance.new("TextButton", Toggle)
+    Btn.Size = UDim2.new(0, 40, 0, 20)
+    Btn.Position = UDim2.new(1, -50, 0.5, -10)
+    Btn.Text = default and "ON" or "OFF"
+    Btn.BackgroundColor3 = default and Color3.fromRGB(0, 170, 120) or Color3.fromRGB(120, 50, 50)
+    Btn.TextColor3 = Color3.new(1,1,1)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 11
+    Btn.BorderSizePixel = 0
+
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(1, 0)
+
+    local State = default
+
+    Btn.MouseButton1Click:Connect(function()
+        State = not State
+        Btn.Text = State and "ON" or "OFF"
+        Btn.BackgroundColor3 = State and Color3.fromRGB(0,170,120) or Color3.fromRGB(120,50,50)
+        if callback then
+            callback(State) -- ← TEMPAT HUBUNGKAN LOGIC
+        end
+    end)
+
+    return Toggle
+end
+
+-- =========================
+-- BUTTON
+-- =========================
+
 local function CreateButton(parent, text, callback)
     local Btn = Instance.new("TextButton", parent)
-    Btn.Size = UDim2.new(1, -20, 0, 32)
+    Btn.Size = UDim2.new(1, 0, 0, 34)
     Btn.Text = text
-    Btn.Font = Enum.Font.Gotham
+    Btn.BackgroundColor3 = Color3.fromRGB(45, 50, 70)
+    Btn.TextColor3 = Color3.new(1,1,1)
+    Btn.Font = Enum.Font.GothamBold
     Btn.TextSize = 12
-    Btn.BackgroundColor3 = THEME.BUTTON
-    Btn.TextColor3 = THEME.TEXT
     Btn.BorderSizePixel = 0
 
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
 
-    Btn.MouseEnter:Connect(function()
-        Btn.BackgroundColor3 = THEME.BUTTON_H
-    end)
-    Btn.MouseLeave:Connect(function()
-        Btn.BackgroundColor3 = THEME.BUTTON
-    end)
-
     Btn.MouseButton1Click:Connect(function()
-        if callback then callback() end
+        if callback then
+            callback() -- ← TEMPAT LOGIC
+        end
     end)
 
     return Btn
 end
 
---========================================================--
--- COMPONENT: TOGGLE
---========================================================--
-local function CreateToggle(parent, text, default, callback)
-    local Hold = Instance.new("Frame", parent)
-    Hold.Size = UDim2.new(1, -20, 0, 35)
-    Hold.BackgroundColor3 = THEME.BUTTON
-    Hold.BorderSizePixel = 0
+-- =========================
+-- SLIDER
+-- =========================
 
-    Instance.new("UICorner", Hold).CornerRadius = UDim.new(0, 6)
-
-    local Label = Instance.new("TextLabel", Hold)
-    Label.Size = UDim2.new(1, -60, 1, 0)
-    Label.Position = UDim2.new(0, 8, 0, 0)
-    Label.BackgroundTransparency = 1
-    Label.Text = text
-    Label.Font = Enum.Font.Gotham
-    Label.TextSize = 12
-    Label.TextColor3 = THEME.TEXT
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-
-    local Btn = Instance.new("TextButton", Hold)
-    Btn.Size = UDim2.new(0, 45, 0, 22)
-    Btn.Position = UDim2.new(1, -50, 0.5, -11)
-    Btn.BackgroundColor3 = default and THEME.ACCENT or Color3.fromRGB(120, 60, 60)
-    Btn.Text = default and "ON" or "OFF"
-    Btn.TextColor3 = Color3.new(1,1,1)
-    Btn.Font = Enum.Font.GothamBold
-    Btn.TextSize = 11
-    Btn.BorderSizePixel = 0
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(1, 0)
-
-    local state = default
-
-    Btn.MouseButton1Click:Connect(function()
-        state = not state
-        Btn.Text = state and "ON" or "OFF"
-        Btn.BackgroundColor3 = state and THEME.ACCENT or Color3.fromRGB(120,60,60)
-        if callback then callback(state) end
-    end)
-
-    return Hold
-end
-
---========================================================--
--- COMPONENT: SLIDER
---========================================================--
 local function CreateSlider(parent, text, min, max, default, callback)
     local Holder = Instance.new("Frame", parent)
-    Holder.Size = UDim2.new(1, -20, 0, 45)
+    Holder.Size = UDim2.new(1, 0, 0, 44)
     Holder.BackgroundTransparency = 1
 
     local Label = Instance.new("TextLabel", Holder)
-    Label.Position = UDim2.new(0, 0, 0, 0)
-    Label.Size = UDim2.new(1, 0, 0, 18)
+    Label.Size = UDim2.new(1, 0, 0, 16)
     Label.BackgroundTransparency = 1
+    Label.Text = text .. " : " .. default
     Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.TextColor3 = Color3.fromRGB(220,220,220)
     Label.Font = Enum.Font.Gotham
     Label.TextSize = 12
-    Label.TextColor3 = THEME.TEXT
-    Label.Text = text .. " : " .. default
 
     local Bar = Instance.new("Frame", Holder)
     Bar.Position = UDim2.new(0, 0, 0, 22)
     Bar.Size = UDim2.new(1, 0, 0, 10)
-    Bar.BackgroundColor3 = THEME.BUTTON
+    Bar.BackgroundColor3 = Color3.fromRGB(60,60,80)
     Bar.BorderSizePixel = 0
-    Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
+
+    Instance.new("UICorner", Bar).CornerRadius = UDim.new(1,0)
 
     local Fill = Instance.new("Frame", Bar)
     Fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0)
-    Fill.BackgroundColor3 = THEME.ACCENT
+    Fill.BackgroundColor3 = Color3.fromRGB(0,170,200)
     Fill.BorderSizePixel = 0
-    Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+
+    Instance.new("UICorner", Fill).CornerRadius = UDim.new(1,0)
 
     Bar.InputBegan:Connect(function(input)
-        if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
-
-        local x = (input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X
-        x = math.clamp(x, 0, 1)
-
-        local value = math.floor(min + x * (max - min))
-
-        Fill.Size = UDim2.new(x, 0, 1, 0)
-        Label.Text = text .. " : " .. value
-
-        if callback then callback(value) end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local x = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+            local value = math.floor(min + (max - min) * x)
+            Fill.Size = UDim2.new(x, 0, 1, 0)
+            Label.Text = text .. " : " .. value
+            if callback then
+                callback(value) -- ← TEMPAT LOGIC
+            end
+        end
     end)
 
     return Holder
 end
 
---========================================================--
--- AUTOMATION TAB CONTENT
---========================================================--
+print("✅ PART 2 LOADED : UI COMPONENTS")
 
--- STATE (logic)
-AutoFish = AutoFish or false
-AutoSell = AutoSell or false
-AutoWeather = AutoWeather or false
 
-SellInterval = SellInterval or 5
-WeatherDelay = WeatherDelay or 5
+-- =====================================================
+-- PART 3 : CONNECT UI COMPONENTS TO YOUR LOGIC
+-- =====================================================
 
--- Build UI
-CreateSection(TabAutomation, "AUTO FARM")
+-- pastikan variabel logic kamu SUDAH ADA sebelum part ini:
+-- AutoFish, AutoSell, AutoWeather, FlyEnabled, FlySpeed, SellInterval, WeatherDelay
 
-CreateToggle(TabAutomation, "Auto Fish", AutoFish, function(v)
+assert(TabAutomation, "PART 1 belum terload!")
+
+-- ======================================================
+-- AUTOMATION TAB
+-- ======================================================
+
+local SecAuto = CreateSection(TabAutomation, "AUTO FARM")
+
+CreateToggle(SecAuto, "Auto Fish", AutoFish, function(v)
     AutoFish = v
 end)
 
-CreateToggle(TabAutomation, "Auto Sell", AutoSell, function(v)
+CreateToggle(SecAuto, "Auto Sell", AutoSell, function(v)
     AutoSell = v
 end)
 
-CreateSlider(TabAutomation, "Sell Interval (s)", 1, 30, SellInterval, function(v)
+CreateSlider(SecAuto, "Sell Interval (S)", 1, 30, SellInterval, function(v)
     SellInterval = v
 end)
 
-CreateSection(TabAutomation, "WEATHER")
+local SecWeather = CreateSection(TabAutomation, "WEATHER")
 
-CreateToggle(TabAutomation, "Auto Weather", AutoWeather, function(v)
+CreateToggle(SecWeather, "Auto Weather", AutoWeather, function(v)
     AutoWeather = v
 end)
 
-CreateSlider(TabAutomation, "Weather Delay (s)", 1, 20, WeatherDelay, function(v)
+CreateSlider(SecWeather, "Delay Weather (S)", 1, 15, WeatherDelay, function(v)
     WeatherDelay = v
 end)
 
-print("✔ PART 2 Loaded — Fluent UI Components + Automation Live")
+
+-- ======================================================
+-- SHOP TAB
+-- ======================================================
+
+local SecShop = CreateSection(TabShop, "TOTEM")
+
+CreateToggle(SecShop, "Auto Totem", AUTO_TOTEM, function(v)
+    AUTO_TOTEM = v
+end)
+
+local SecMerchant = CreateSection(TabShop, "MERCHANT")
+
+CreateButton(SecMerchant, "Open Merchant", function()
+    local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
+    if merchantGui then
+        merchantGui.Enabled = not merchantGui.Enabled
+    end
+end)
 
 
---========================================================--
--- PART 3 — FLUENT TELEPORT TAB (PLAYER + SPOT)
---========================================================--
+-- ======================================================
+-- FLY TAB
+-- ======================================================
 
-local THEME = {
-    BG         = Color3.fromRGB(28, 30, 35),
-    PANEL      = Color3.fromRGB(35, 37, 43),
-    ACCENT     = Color3.fromRGB(76, 162, 255),
-    ACCENT2    = Color3.fromRGB(120, 170, 255),
-    TEXT       = Color3.fromRGB(235, 240, 255),
-    BUTTON     = Color3.fromRGB(48, 50, 58),
-    BUTTON_H   = Color3.fromRGB(60, 65, 75),
-    BORDER     = Color3.fromRGB(90, 100, 120)
-}
+local SecFly = CreateSection(TabFly, "FLY MODE")
 
-local LP = game:GetService("Players").LocalPlayer
-local Players = game:GetService("Players")
+CreateToggle(SecFly, "Fly Enabled", FlyEnabled, function(v)
+    FlyEnabled = v
+    if FlyEnabled then
+        startFly()
+    else
+        stopFly()
+    end
+end)
 
----------------------------------------------------------------------
--- TELEPORT TAB CONTAINER
----------------------------------------------------------------------
-local TP = CreateTabContainer(TabTeleport)
+CreateSlider(SecFly, "Fly Speed", 50, 800, FlySpeed, function(v)
+    FlySpeed = v
+end)
 
----------------------------------------------------------------------
--- SECTION TITLE
----------------------------------------------------------------------
-CreateSection(TP, "TELEPORT MENU")
 
----------------------------------------------------------------------
--- TOP BUTTONS (PLAYER / SPOT)
----------------------------------------------------------------------
-local topBar = Instance.new("Frame", TP)
-topBar.Size = UDim2.new(1, -10, 0, 34)
-topBar.BackgroundTransparency = 1
+-- ======================================================
+-- TELEPORT TAB
+-- ======================================================
 
-local layoutH = Instance.new("UIListLayout", topBar)
-layoutH.FillDirection = Enum.FillDirection.Horizontal
-layoutH.Padding = UDim.new(0, 6)
+local SecTPPlayer = CreateSection(TabTeleport, "Teleport to Player")
 
-local function newTabBtn(text)
-    local b = Instance.new("TextButton")
-    b.Size = UDim2.new(0.5, -4, 1, 0)
-    b.Text = text
-    b.Font = Enum.Font.GothamBold
-    b.TextSize = 12
-    b.BackgroundColor3 = THEME.BUTTON
-    b.TextColor3 = THEME.TEXT
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-    return b
-end
+-- Scroll list will be generated (same logic as old UI)
+local PlayerList = Instance.new("ScrollingFrame", TabTeleport)
+PlayerList.Position = UDim2.new(0, 0, 0, 60)
+PlayerList.Size = UDim2.new(1, -10, 1, -70)
+PlayerList.BackgroundTransparency = 1
+PlayerList.CanvasSize = UDim2.new(0, 0, 0, 0)
+PlayerList.ScrollBarThickness = 4
 
-local btnPlayer = newTabBtn("Players")
-local btnSpot   = newTabBtn("Spots")
+local layout = Instance.new("UIListLayout", PlayerList)
+layout.Padding = UDim.new(0, 4)
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-btnPlayer.Parent = topBar
-btnSpot.Parent = topBar
-
----------------------------------------------------------------------
--- CONTENT SCROLL AREA
----------------------------------------------------------------------
-local scroll = Instance.new("ScrollingFrame", TP)
-scroll.Size = UDim2.new(1, -12, 1, -60)
-scroll.Position = UDim2.new(0, 6, 0, 50)
-scroll.BackgroundTransparency = 1
-scroll.ScrollBarThickness = 4
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-
-local list = Instance.new("UIListLayout", scroll)
-list.Padding = UDim.new(0, 6)
-
----------------------------------------------------------------------
--- CREATE FLUENT LIST BUTTON
----------------------------------------------------------------------
-local function CreateTPButton(text, callback)
-    local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(1, -4, 0, 32)
-    Btn.Text = text
-    Btn.Font = Enum.Font.Gotham
-    Btn.TextSize = 12
-    Btn.TextColor3 = THEME.TEXT
-    Btn.BackgroundColor3 = THEME.BUTTON
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 6)
-
-    Btn.MouseEnter:Connect(function()
-        Btn.BackgroundColor3 = THEME.BUTTON_H
-    end)
-    Btn.MouseLeave:Connect(function()
-        Btn.BackgroundColor3 = THEME.BUTTON
-    end)
-
-    Btn.MouseButton1Click:Connect(function()
-        if callback then callback() end
-    end)
-
-    return Btn
-end
-
----------------------------------------------------------------------
--- CLEAR LIST
----------------------------------------------------------------------
-local function ClearScroll()
-    for _,v in ipairs(scroll:GetChildren()) do
-        if v:IsA("TextButton") then
-            v:Destroy()
+local function RefreshPlayers()
+    for _,c in ipairs(PlayerList:GetChildren()) do
+        if c:IsA("TextButton") then
+            c:Destroy()
         end
     end
-end
-
----------------------------------------------------------------------
--- TELEPORT PLAYER LIST
----------------------------------------------------------------------
-local function LoadPlayerList()
-    ClearScroll()
 
     for _,plr in ipairs(Players:GetPlayers()) do
         if plr ~= LP then
-            local Btn = CreateTPButton(plr.Name, function()
-                local me = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-                local them = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-                if me and them then
-                    me.CFrame = them.CFrame + Vector3.new(0, 3, -3)
+            local B = CreateButton(PlayerList, plr.Name, function()
+                local hrp1 = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+                local hrp2 = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+                if hrp1 and hrp2 then
+                    hrp1.CFrame = hrp2.CFrame + Vector3.new(0,2,-3)
                 end
             end)
-            Btn.Parent = scroll
+            B.Size = UDim2.new(1, -10, 0, 28)
         end
     end
 end
 
----------------------------------------------------------------------
--- TELEPORT SPOT LIST
----------------------------------------------------------------------
-local Locations = {
-    {Name="Kohana", CFrame=CFrame.new(-595,19,429)},
-    {Name="Fisherman Island", CFrame=CFrame.new(73,9,2709)},
-    {Name="Coral Reefs", CFrame=CFrame.new(-2752,4,2165)},
-    {Name="Weather Machine", CFrame=CFrame.new(-1527,2,1914)},
-    {Name="Tropical Grove", CFrame=CFrame.new(-2128,53,3637)},
-}
+RefreshPlayers()
 
-local function LoadSpotList()
-    ClearScroll()
 
-    for _,spot in ipairs(Locations) do
-        local Btn = CreateTPButton(spot.Name, function()
-            local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                hrp.CFrame = spot.CFrame + Vector3.new(0, 4, 0)
+-- ======================================================
+-- OTHER / SETTINGS (optional slot)
+-- ======================================================
+
+local SecOther = CreateSection(TabSettings, "OTHER")
+
+CreateButton(SecOther, "Refresh Player List", function()
+    RefreshPlayers()
+end)
+
+CreateButton(SecOther, "Close UI", function()
+    gui:Destroy()
+    _G.FishItWORK = false
+end)
+
+print("✅ PART 3 LOADED : UI MAPPING COMPLETE")
+
+-- =====================================================
+-- PART 4 : LOGIC CONTAINER (NO UI, NO CHANGE)
+-- =====================================================
+
+-- ⚠️ ATURAN:
+-- 1. JANGAN ubah logic
+-- 2. JANGAN buat UI di sini
+-- 3. HANYA pindahkan LOOP / EVENT dari script lama
+-- 4. Variabel sudah dikontrol UI HUB
+
+-- =====================================================
+-- AUTO FISH LOOP
+-- =====================================================
+
+task.spawn(function()
+    while _G.FishItWORK do
+        task.wait(FishDelay)
+        if AutoFish and FishingController then
+            local guid = FishingController:GetCurrentGUID()
+            if not guid then
+                pcall(function()
+                    FishingController:RequestChargeFishingRod(
+                        workspace.CurrentCamera.ViewportSize / 2,
+                        true
+                    )
+                end)
+            else
+                FishingController:FishingMinigameClick()
             end
-        end)
-        Btn.Parent = scroll
-    end
-end
-
----------------------------------------------------------------------
--- TAB TOGGLE LOGIC
----------------------------------------------------------------------
-local currentTab = "Players"
-
-local function SetTab(name)
-    currentTab = name
-
-    if name == "Players" then
-        btnPlayer.BackgroundColor3 = THEME.ACCENT
-        btnPlayer.TextColor3 = Color3.new(1,1,1)
-
-        btnSpot.BackgroundColor3 = THEME.BUTTON
-        btnSpot.TextColor3 = THEME.TEXT
-
-        LoadPlayerList()
-
-    else
-        btnSpot.BackgroundColor3 = THEME.ACCENT
-        btnSpot.TextColor3 = Color3.new(1,1,1)
-
-        btnPlayer.BackgroundColor3 = THEME.BUTTON
-        btnPlayer.TextColor3 = THEME.TEXT
-
-        LoadSpotList()
-    end
-end
-
-btnPlayer.MouseButton1Click:Connect(function()
-    SetTab("Players")
-end)
-
-btnSpot.MouseButton1Click:Connect(function()
-    SetTab("Spots")
-end)
-
----------------------------------------------------------------------
--- AUTO REFRESH PLAYER LIST
----------------------------------------------------------------------
-task.spawn(function()
-    while _G.FishItWORK do
-        task.wait(4)
-        if currentTab == "Players" then
-            LoadPlayerList()
         end
     end
 end)
 
----------------------------------------------------------------------
--- INIT DEFAULT
----------------------------------------------------------------------
-SetTab("Players")
+-- =====================================================
+-- AUTO SELL LOOP
+-- =====================================================
 
-print("✔ PART 3 Loaded — Fluent Teleport System Active")
---========================================================--
--- PART 4 — FLUENT SHOP TAB (AUTO TOTEM + MERCHANT + REJOIN)
---========================================================--
-
-local LP = game:GetService("Players").LocalPlayer
-local TeleportService = game:GetService("TeleportService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local THEME = {
-    BG         = Color3.fromRGB(28, 30, 35),
-    PANEL      = Color3.fromRGB(35, 37, 43),
-    ACCENT     = Color3.fromRGB(76, 162, 255),
-    TEXT       = Color3.fromRGB(235, 240, 255),
-    BUTTON     = Color3.fromRGB(48, 50, 58),
-    BUTTON_H   = Color3.fromRGB(60, 65, 75),
-}
-
----------------------------------------------------------------------
--- SHOP TAB CONTAINER
----------------------------------------------------------------------
-local ShopTab = CreateTabContainer(TabShop)
-
-CreateSection(ShopTab, "SHOP & SYSTEM")
-
----------------------------------------------------------------------
--- AUTO TOTEM CORE DATA
----------------------------------------------------------------------
-local AUTO_TOTEM = false
-local COOLDOWN = 0
-local retryWait = false
-local TRY_INTERVAL = 300
-
-local Net = require(ReplicatedStorage.Packages.Net)
-local Replion = require(ReplicatedStorage.Packages.Replion)
-
-local Data = Replion.Client:WaitReplion("Data")
-local SpawnTotem = Net:RemoteEvent("SpawnTotem")
-local TotemSpawned = Net:RemoteEvent("TotemSpawned")
-local EquipToolHB = Net:RemoteEvent("EquipToolFromHotbar")
-
----------------------------------------------------------------------
--- GET UUID
----------------------------------------------------------------------
-local function GetTotemUUID()
-    local inv = Data:Get({"Inventory","Totems"})
-    if inv then
-        for _,item in ipairs(inv) do
-            return item.UUID
-        end
-    end
-end
-
----------------------------------------------------------------------
--- GUI TEXT FEEDBACK
----------------------------------------------------------------------
-local Status = Instance.new("TextLabel", ShopTab)
-Status.Size = UDim2.new(1, -10, 0, 24)
-Status.Text = "Totem: Idle"
-Status.TextColor3 = THEME.TEXT
-Status.Font = Enum.Font.Gotham
-Status.TextXAlignment = Enum.TextXAlignment.Left
-Status.BackgroundTransparency = 1
-
----------------------------------------------------------------------
--- AUTO TOTEM TOGGLE (FLUENT)
----------------------------------------------------------------------
-CreateToggle(ShopTab, "Auto Totem", false, function(v)
-    AUTO_TOTEM = v
-    Status.Text = v and "Totem: Activated" or "Totem: Idle"
-end)
-
----------------------------------------------------------------------
--- MERCHANT BUTTON
----------------------------------------------------------------------
-CreateButton(ShopTab, "Open Merchant", function()
-    local m = LP.PlayerGui:FindFirstChild("Merchant")
-    if m then
-        m.Enabled = not m.Enabled
-    end
-end)
-
----------------------------------------------------------------------
--- REJOIN BUTTON (FLUENT STYLE)
----------------------------------------------------------------------
-CreateButton(ShopTab, "Rejoin Server", function()
-    TeleportService:Teleport(game.PlaceId, LP)
-end)
-
----------------------------------------------------------------------
--- EVENT: TOTEM SUCCESS
----------------------------------------------------------------------
-TotemSpawned.OnClientEvent:Connect(function()
-    COOLDOWN = 3600
-    Status.Text = "Totem active (Cooldown: 3600s)"
-    task.delay(0.2, function()
-        EquipToolHB:FireServer(1)
-    end)
-end)
-
----------------------------------------------------------------------
--- AUTO EQUIP LOOP
----------------------------------------------------------------------
 task.spawn(function()
     while _G.FishItWORK do
-        task.wait(2.5)
-        if AUTO_TOTEM then
+        task.wait(SellInterval)
+        if AutoSell and sellRF then
             pcall(function()
-                EquipToolHB:FireServer(1)
+                sellRF:InvokeServer()
             end)
         end
     end
 end)
 
----------------------------------------------------------------------
+-- =====================================================
+-- AUTO WEATHER LOOP
+-- =====================================================
+
+task.spawn(function()
+    local purchaseRF = Net:RemoteFunction("PurchaseWeatherEvent")
+    local WeatherList = {"Storm", "Cloudy", "Wind"}
+
+    while _G.FishItWORK do
+        task.wait(WeatherDelay)
+        if AutoWeather and purchaseRF then
+            for _,weatherName in ipairs(WeatherList) do
+                pcall(function()
+                    purchaseRF:InvokeServer(weatherName)
+                end)
+                task.wait(1.5)
+            end
+        end
+    end
+end)
+
+-- =====================================================
 -- AUTO TOTEM LOOP
----------------------------------------------------------------------
+-- =====================================================
+
 task.spawn(function()
     while _G.FishItWORK do
         task.wait(1)
 
         if not AUTO_TOTEM then
-            Status.Text = "Totem: Idle"
             continue
         end
 
-        -- COOLDOWN berjalan
-        if COOLDOWN > 0 then
-            Status.Text = "Cooldown: " .. COOLDOWN .. "s"
-            COOLDOWN -= 1
-            continue
-        end
+        -- COPY SELURUH AUTO TOTEM LOOP KAMU KE SINI
+        -- (tidak diubah)
+    end
+end)
 
-        -- retry block
-        if retryWait then
-            local left = math.floor(retryWait - os.clock())
-            Status.Text = "Retry in: "..left.."s"
+-- =====================================================
+-- FLY SAFETY LOOP (OPTIONAL)
+-- =====================================================
 
-            if os.clock() >= retryWait then
-                retryWait = false
-            else
-                continue
-            end
-        end
-
-        -- pasang totem
-        local uuid = GetTotemUUID()
-        if uuid then
-            Status.Text = "Placing Totem..."
-
-            local success = false
-            local conn
-            conn = TotemSpawned.OnClientEvent:Connect(function()
-                success = true
-                conn:Disconnect()
-            end)
-
-            SpawnTotem:FireServer(uuid)
-            task.wait(0.4)
-
-            if conn then conn:Disconnect() end
-
-            if success then
-                Status.Text = "Totem Placed!"
-            else
-                Status.Text = "Failed! Retry 5 min"
-                retryWait = os.clock() + TRY_INTERVAL
-            end
-
-        else
-            Status.Text = "No Totem Found"
+task.spawn(function()
+    while _G.FishItWORK do
+        task.wait(1)
+        if not FlyEnabled then
+            pcall(stopFly)
         end
     end
 end)
 
-print("✔ PART 4 Loaded — Shop Tab + Auto Totem + Rejoin Button Active")
+-- =====================================================
+-- PING UPDATE LOOP
+-- =====================================================
 
---========================================================--
--- PART 5 — FLUENT FLY TAB
---========================================================--
-
-local Players = game:GetService("Players")
-local LP = Players.LocalPlayer
-
----------------------------------------------------------------------
--- FLY TAB CONTAINER
----------------------------------------------------------------------
-local FlyTab = CreateTabContainer(TabFly)
-
-CreateSection(FlyTab, "FLY CONTROLS")
-
----------------------------------------------------------------------
--- STATE (pakai variable global logic kamu)
----------------------------------------------------------------------
-FlyEnabled = FlyEnabled or false
-FlySpeed   = FlySpeed or 150
-
----------------------------------------------------------------------
--- FLY TOGGLE
----------------------------------------------------------------------
-CreateToggle(FlyTab, "Fly Enabled", FlyEnabled, function(v)
-    FlyEnabled = v
-    if v then
-        pcall(startFly)
-    else
-        pcall(stopFly)
+task.spawn(function()
+    while _G.FishItWORK do
+        task.wait(1)
+        -- copy ping updater lama kamu ke sini
     end
 end)
 
----------------------------------------------------------------------
--- FLY SPEED SLIDER
----------------------------------------------------------------------
-CreateSlider(FlyTab, "Fly Speed", 50, 800, FlySpeed, function(v)
-    FlySpeed = v
-end)
+-- =====================================================
+-- FISH UI CLEANER / FPS BOOSTER
+-- =====================================================
 
----------------------------------------------------------------------
--- INFO TEXT
----------------------------------------------------------------------
-local info = Instance.new("TextLabel", FlyTab)
-info.Size = UDim2.new(1, -10, 0, 22)
-info.BackgroundTransparency = 1
-info.TextXAlignment = Enum.TextXAlignment.Left
-info.Font = Enum.Font.Gotham
-info.TextSize = 11
-info.TextColor3 = Color3.fromRGB(200, 210, 230)
-info.Text = "WASD + Space / Ctrl to move"
-
----------------------------------------------------------------------
--- SAFETY: STOP FLY ON CHARACTER RESET
----------------------------------------------------------------------
-LP.CharacterAdded:Connect(function(char)
-    task.wait(0.25)
-    pcall(stopFly)
-    if FlyEnabled then
-        task.wait(0.2)
-        pcall(startFly)
+task.spawn(function()
+    while _G.FishItWORK do
+        task.wait(2)
+        -- copy CLEAN FISH UI + FPS BOOSTER kamu ke sini
     end
 end)
 
-print("✔ PART 5 Loaded — Fluent Fly Tab Active")
+print("✅ PART 4 LOADED : LOGIC CONNECTED TO HUB UI")
