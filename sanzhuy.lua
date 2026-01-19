@@ -1,6 +1,6 @@
---====================================================--
---=========== FISHIT HUB — FINAL FULL MERGE ==========--
---================== BATCH 1 / 5 =====================--
+--====================================================-- 
+--=========== FISHIT HUB — FINAL FULL MERGE ==========-- 
+--================== BATCH 1 / 5 =====================-- 
 --====================================================--
 
 if _G.FishItHubLoaded then return end
@@ -9,6 +9,7 @@ _G.FishItHubLoaded = true
 ------------------------------------------------------
 -- SERVICES
 ------------------------------------------------------
+
 local Players = game:GetService("Players")
 local LP = Players.LocalPlayer
 local RS = game:GetService("RunService")
@@ -22,6 +23,7 @@ local TeleportService = game:GetService("TeleportService")
 ------------------------------------------------------
 -- NET PACKAGE
 ------------------------------------------------------
+
 local Net = require(ReplicatedStorage.Packages.Net)
 local Replion = require(ReplicatedStorage.Packages.Replion)
 
@@ -40,26 +42,26 @@ local Data = Replion.Client:WaitReplion("Data")
 ------------------------------------------------------
 -- GLOBAL FEATURES STATE
 ------------------------------------------------------
+
 _G.FISH = {
-    AutoFish      = false,
-    AutoSell      = false,
-    AutoWeather   = false,
-    AutoTotem     = false,
-    AutoEquipRod  = false,
-    FlyEnabled    = false,
-
-    FlySpeed      = 80,
-    FishDelay     = 0.13,
-    SellInterval  = 60,
-    WeatherDelay  = 5,
-
+    AutoFish = false,
+    AutoSell = false,
+    AutoWeather = false,
+    AutoTotem = false,
+    AutoEquipRod = false,
+    FlyEnabled = false,
+    FlySpeed = 80,
+    FishDelay = 0.13,
+    SellInterval = 60,
+    WeatherDelay = 5,
     TotemCooldown = 0,
-    RetryWait     = false
+    RetryWait = false
 }
 
 ------------------------------------------------------
 -- ANTI AFK
 ------------------------------------------------------
+
 LP.Idled:Connect(function()
     VirtualUser:CaptureController()
     VirtualUser:ClickButton2(Vector2.new())
@@ -68,7 +70,9 @@ end)
 ------------------------------------------------------
 -- FISHING CONTROLLER (WAJIB ADA)
 ------------------------------------------------------
+
 local FishingController = nil
+
 task.spawn(function()
     repeat
         task.wait(0.25)
@@ -86,6 +90,7 @@ print("✔ BATCH 1 Loaded | Core Systems Ready")
 ------------------------------------------------------
 -- VISUAL FISHING FX MASTER SWITCH
 ------------------------------------------------------
+
 _G.DisableFishingFX = false
 
 -- === ROD VFX ===
@@ -126,16 +131,15 @@ task.spawn(function()
         end
     end
 end)
-
-
 --====================================================--
---================== BATCH 2 / 5 =====================--
---============= GLASS UI + PAGE SYSTEM ===============--
+--================== BATCH 2 / 5 =====================
+--============= GLASS UI + PAGE SYSTEM ===============
 --====================================================--
 
 ------------------------------------------------------
 -- REMOVE OLD UI (SAFE)
 ------------------------------------------------------
+
 pcall(function()
     LP.PlayerGui:FindFirstChild("FishItHubUI"):Destroy()
 end)
@@ -143,27 +147,28 @@ end)
 ------------------------------------------------------
 -- SCREEN GUI
 ------------------------------------------------------
+
 local gui = Instance.new("ScreenGui")
 gui.Name = "FishItHubUI"
 gui.ResetOnSpawn = false
 gui.Parent = LP.PlayerGui
 
-
 ------------------------------------------------------
 -- GLOBAL UI SCALE (CIUTKAN SELURUH HUB)
 ------------------------------------------------------
+
 local UIScale = Instance.new("UIScale", gui)
-UIScale.Scale = 0.75   -- 🔥 Kecil bagus (0.75)
+UIScale.Scale = 0.75 -- 🔥 Kecil bagus (0.75)
 -- Rekomendasi nilai:
 -- 0.90 = Sedikit kecil
 -- 0.80 = Pas untuk HP medium
 -- 0.75 = Kecil tapi nyaman
 -- 0.65 = Super mini (HP kecil)
 
-
 ------------------------------------------------------
 -- BLUR EFFECT (SAFE)
 ------------------------------------------------------
+
 local blur = Instance.new("BlurEffect")
 blur.Name = "FishItHubBlur"
 blur.Size = 4
@@ -172,29 +177,32 @@ blur.Parent = Lighting
 ------------------------------------------------------
 -- THEME (GLASS MINIMAL)
 ------------------------------------------------------
+
 local THEME = {
-    BG      = Color3.fromRGB(18,18,22),
-    PANEL   = Color3.fromRGB(25,25,30),
-    BUTTON  = Color3.fromRGB(35,35,40),
-    ACTIVE  = Color3.fromRGB(80,160,255),
-    TEXT    = Color3.fromRGB(235,235,245),
-    DIM     = Color3.fromRGB(160,160,170),
-    BORDER  = Color3.fromRGB(255,255,255)
+    BG = Color3.fromRGB(18,18,22),
+    PANEL = Color3.fromRGB(25,25,30),
+    BUTTON = Color3.fromRGB(35,35,40),
+    ACTIVE = Color3.fromRGB(80,160,255),
+    TEXT = Color3.fromRGB(235,235,245),
+    DIM = Color3.fromRGB(160,160,170),
+    BORDER = Color3.fromRGB(255,255,255)
 }
 
 ------------------------------------------------------
 -- MAIN WINDOW
 ------------------------------------------------------
+
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0, 620, 0, 380)
 main.Position = UDim2.new(0.5,-310,0.45,-190)
 main.BackgroundColor3 = THEME.BG
-main.BackgroundTransparency = 0.03
+main.BackgroundTransparency = 0.05
 main.Active = true
 main.Draggable = true
 main.BorderSizePixel = 0
 
 Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
+
 local mainStroke = Instance.new("UIStroke", main)
 mainStroke.Color = THEME.BORDER
 mainStroke.Transparency = 0.75
@@ -202,6 +210,7 @@ mainStroke.Transparency = 0.75
 ------------------------------------------------------
 -- TITLE BAR
 ------------------------------------------------------
+
 local titleBar = Instance.new("Frame", main)
 titleBar.Size = UDim2.new(1,0,0,38)
 titleBar.BackgroundTransparency = 1
@@ -234,11 +243,12 @@ end)
 ------------------------------------------------------
 -- SIDEBAR
 ------------------------------------------------------
+
 local sidebar = Instance.new("Frame", main)
 sidebar.Size = UDim2.new(0,150,1,-42)
 sidebar.Position = UDim2.new(0,0,0,42)
 sidebar.BackgroundColor3 = THEME.PANEL
-sidebar.BackgroundTransparency = 0.04
+sidebar.BackgroundTransparency = 0.08
 sidebar.BorderSizePixel = 0
 
 Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0,10)
@@ -250,15 +260,17 @@ sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 ------------------------------------------------------
 -- PAGE CONTAINER
 ------------------------------------------------------
+
 local pages = Instance.new("Frame", main)
 pages.Size = UDim2.new(1,-150,1,-42)
 pages.Position = UDim2.new(0,150,0,42)
-pages.BackgroundTransparency = 0.04
+pages.BackgroundTransparency = 0.08
 pages.BackgroundColor3 = THEME.PANEL
 
 ------------------------------------------------------
 -- PAGE SYSTEM
 ------------------------------------------------------
+
 local Pages = {}
 
 local function createPage(name)
@@ -269,7 +281,7 @@ local function createPage(name)
 
     local layout = Instance.new("UIListLayout", f)
     layout.Padding = UDim.new(0,10)
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 
     Pages[name] = f
     return f
@@ -284,17 +296,19 @@ end
 ------------------------------------------------------
 -- CREATE PAGES
 ------------------------------------------------------
-local MainPage   = createPage("Main")
+
+local MainPage = createPage("Main")
 local PlayerPage = createPage("Players")
-local SpotPage   = createPage("Spots")
+local SpotPage = createPage("Spots")
 local VisualPage = createPage("Visual")
-local MiscPage   = createPage("Misc")
+local MiscPage = createPage("Misc")
 
 switchPage("Main")
 
 ------------------------------------------------------
 -- TAB BUTTON BUILDER
 ------------------------------------------------------
+
 local function createTab(name)
     local b = Instance.new("TextButton", sidebar)
     b.Size = UDim2.new(1,-24,0,34)
@@ -307,6 +321,7 @@ local function createTab(name)
     b.BorderSizePixel = 0
 
     Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+
     local s = Instance.new("UIStroke", b)
     s.Color = THEME.BORDER
     s.Transparency = 0.85
@@ -328,6 +343,7 @@ end
 ------------------------------------------------------
 -- CREATE TABS
 ------------------------------------------------------
+
 createTab("Main")
 createTab("Players")
 createTab("Spots")
@@ -337,6 +353,7 @@ createTab("Misc")
 ------------------------------------------------------
 -- FLOATING TOGGLE BUTTON
 ------------------------------------------------------
+
 local floatBtn = Instance.new("ImageButton", gui)
 floatBtn.Size = UDim2.new(0,48,0,48)
 floatBtn.Position = UDim2.new(0.03,0,0.4,0)
@@ -348,31 +365,28 @@ floatBtn.Draggable = true
 floatBtn.BorderSizePixel = 0
 
 Instance.new("UICorner", floatBtn).CornerRadius = UDim.new(0,14)
+
 local fs = Instance.new("UIStroke", floatBtn)
 fs.Color = THEME.BORDER
 fs.Transparency = 0.6
 
 local visible = true
+
 floatBtn.MouseButton1Click:Connect(function()
     visible = not visible
     main.Visible = visible
-
-    if blur then
-        blur.Enabled = visible
-    end
+    if blur then blur.Enabled = visible end
 end)
 
 ------------------------------------------------------
 -- NOTIFICATION SYSTEM (KANAN BAWAH) - FIX FINAL
 ------------------------------------------------------
+
 local NotificationFrame = Instance.new("Frame", gui)
 NotificationFrame.Size = UDim2.new(0, 320, 0, 0)
 NotificationFrame.AutomaticSize = Enum.AutomaticSize.Y
-
--- 🔥 Kunci utama (agar tidak muncul panel bening)
 NotificationFrame.AnchorPoint = Vector2.new(1,1)
 NotificationFrame.Position = UDim2.new(1, -15, 1, -15)
-
 NotificationFrame.BackgroundTransparency = 1
 NotificationFrame.BorderSizePixel = 0
 
@@ -380,7 +394,6 @@ local NotiLayout = Instance.new("UIListLayout", NotificationFrame)
 NotiLayout.SortOrder = Enum.SortOrder.LayoutOrder
 NotiLayout.Padding = UDim.new(0, 6)
 NotiLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-
 
 function Notify(msg, color)
     color = color or Color3.fromRGB(80,160,255)
@@ -421,12 +434,11 @@ function Notify(msg, color)
     end)
 end
 
-
 print("✔ BATCH 2 Loaded | Glass UI Ready")
 
---====================================================--
---================== BATCH 3 / 5 =====================--
---============= TOGGLES + FEATURES ENGINE ============--
+--====================================================
+--================== BATCH 3 / 5 =====================
+--============= TOGGLES + FEATURES ENGINE ============
 --====================================================--
 
 local F = _G.FISH
@@ -434,6 +446,7 @@ local F = _G.FISH
 ------------------------------------------------------
 -- WALK ON WATER ENGINE (FOR MISC TAB)
 ------------------------------------------------------
+
 _G.WalkWaterEnabled = false
 local waterLoop
 local waterTargetY
@@ -452,8 +465,7 @@ local function StartWalkOnWater()
 
         -- tahan humanoid supaya ga jatuh
         hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
-hum.PlatformStand = false
-
+        hum.PlatformStand = false
 
         -- lock posisi Y (jalan di air)
         hrp.CFrame = CFrame.new(
@@ -480,15 +492,15 @@ local function StopWalkOnWater()
     end
 end
 
-
 ------------------------------------------------------
 -- TOGGLE BUILDER (MASTER)
 ------------------------------------------------------
+
 local function createToggle(parent, text, callback)
     local btn = Instance.new("TextButton", parent)
-    btn.Size = UDim2.new(1,-20,0,34)
+    btn.Size = UDim2.new(0,300,0,34)
     btn.BackgroundColor3 = THEME.BUTTON
-    btn.BackgroundTransparency = 0.04
+    btn.BackgroundTransparency = 0.1
     btn.TextColor3 = THEME.TEXT
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 12
@@ -501,7 +513,6 @@ local function createToggle(parent, text, callback)
 
     btn.MouseButton1Click:Connect(function()
         state = not state
-
         local stateText = state and "ON" or "OFF"
         local col = state and Color3.fromRGB(0,255,120) or Color3.fromRGB(255,80,80)
 
@@ -513,23 +524,19 @@ local function createToggle(parent, text, callback)
 
         callback(state)
     end)
+end
 
-end   -- ✔ PENUTUP FUNGSI YANG BENAR
-
-
-
+-- ✔ PENUTUP FUNGSI YANG BENAR
 ------------------------------------------------------
 -- UI → ENGINE TOGGLE MAP
 ------------------------------------------------------
-local ToggleMap = {
-    ["Auto Fish"] = function(v)  F.AutoFish = v end,
-    ["Auto Sell"] = function(v)  F.AutoSell = v end,
-    ["Auto Weather"] = function(v)  F.AutoWeather = v end,
-    ["Auto Totem"] = function(v)  F.AutoTotem = v end,
-    ["Auto Equip Rod"] = function(v)
-    F.AutoEquipRod = v
-end,
 
+local ToggleMap = {
+    ["Auto Fish"] = function(v) F.AutoFish = v end,
+    ["Auto Sell"] = function(v) F.AutoSell = v end,
+    ["Auto Weather"] = function(v) F.AutoWeather = v end,
+    ["Auto Totem"] = function(v) F.AutoTotem = v end,
+    ["Auto Equip Rod"] = function(v) F.AutoEquipRod = v end,
     ["Fly"] = function(v)
         F.FlyEnabled = v
         if v then
@@ -543,6 +550,7 @@ end,
 ------------------------------------------------------
 -- APPLYTOGGLE WRAPPER
 ------------------------------------------------------
+
 function _G.ApplyToggle(name, state)
     if ToggleMap[name] then
         ToggleMap[name](state)
@@ -552,20 +560,31 @@ end
 ------------------------------------------------------
 -- MAIN PAGE BUTTONS
 ------------------------------------------------------
-createToggle(MainPage, "Auto Fish",    function(v) _G.ApplyToggle("Auto Fish", v) end)
-createToggle(MainPage, "Auto Sell",    function(v) _G.ApplyToggle("Auto Sell", v) end)
-createToggle(MainPage, "Auto Weather", function(v) _G.ApplyToggle("Auto Weather", v) end)
-createToggle(MainPage, "Auto Equip Rod", function(v) _G.ApplyToggle("Auto Equip Rod", v) end)
-createToggle(MainPage, "Auto Totem",   function(v) _G.ApplyToggle("Auto Totem", v) end)
 
+createToggle(MainPage, "Auto Fish", function(v)
+    _G.ApplyToggle("Auto Fish", v)
+end)
 
+createToggle(MainPage, "Auto Sell", function(v)
+    _G.ApplyToggle("Auto Sell", v)
+end)
 
+createToggle(MainPage, "Auto Weather", function(v)
+    _G.ApplyToggle("Auto Weather", v)
+end)
 
+createToggle(MainPage, "Auto Equip Rod", function(v)
+    _G.ApplyToggle("Auto Equip Rod", v)
+end)
 
+createToggle(MainPage, "Auto Totem", function(v)
+    _G.ApplyToggle("Auto Totem", v)
+end)
 
 ------------------------------------------------------
 -- TOTEM STATUS LABEL (DI MAIN TAB)
 ------------------------------------------------------
+
 local TotemStatus = Instance.new("TextLabel", MainPage)
 TotemStatus.Size = UDim2.new(0,300,0,20)
 TotemStatus.BackgroundTransparency = 1
@@ -574,7 +593,6 @@ TotemStatus.TextSize = 12
 TotemStatus.TextXAlignment = Enum.TextXAlignment.Left
 TotemStatus.TextColor3 = THEME.TEXT
 TotemStatus.Text = "Totem: --"
-
 
 function SetTotemStatus(text, color)
     TotemStatus.Text = "Totem: " .. text
@@ -588,8 +606,9 @@ end
 ------------------------------------------------------
 -- REFRESH TOTEM BUTTON (MAIN TAB)
 ------------------------------------------------------
+
 local RefreshTotemBtn = Instance.new("TextButton", MainPage)
-RefreshTotemBtn.Size = UDim2.new(1,-20,0,34)
+RefreshTotemBtn.Size = UDim2.new(0,300,0,34)
 RefreshTotemBtn.BackgroundColor3 = THEME.BUTTON
 RefreshTotemBtn.BackgroundTransparency = 0.25
 RefreshTotemBtn.TextColor3 = THEME.TEXT
@@ -603,16 +622,14 @@ Instance.new("UICorner", RefreshTotemBtn).CornerRadius = UDim.new(0,8)
 RefreshTotemBtn.MouseButton1Click:Connect(function()
     F.TotemCooldown = 0
     F.RetryWait = false
-
     SetTotemStatus("Idle", Color3.fromRGB(0,255,120))
     Notify("Totem status refreshed", Color3.fromRGB(0,255,120))
 end)
 
-
-
 ------------------------------------------------------
 -- FLY ENGINE (CONSTRAINT VERSION - FIX TOTAL)
 ------------------------------------------------------
+
 local flyConn
 local lv, ao, attach
 
@@ -626,7 +643,6 @@ function _G.StopFly()
     local hum = LP.Character and LP.Character:FindFirstChild("Humanoid")
     if hum then hum.PlatformStand = false end
 end
-
 
 function _G.StartFly()
     local char = LP.Character or LP.CharacterAdded:Wait()
@@ -675,12 +691,10 @@ function _G.StartFly()
     end)
 end
 
-
-
-
 ------------------------------------------------------
 -- AUTO FISH LOOP
 ------------------------------------------------------
+
 task.spawn(function()
     while _G.FishItHubLoaded do
         task.wait(F.FishDelay)
@@ -691,7 +705,8 @@ task.spawn(function()
             if not guid then
                 pcall(function()
                     FishingController:RequestChargeFishingRod(
-                        workspace.CurrentCamera.ViewportSize / 2, true
+                        workspace.CurrentCamera.ViewportSize / 2,
+                        true
                     )
                 end)
             else
@@ -703,10 +718,10 @@ task.spawn(function()
     end
 end)
 
-
 ------------------------------------------------------
 -- AUTO SELL LOOP
 ------------------------------------------------------
+
 task.spawn(function()
     while _G.FishItHubLoaded do
         task.wait(F.SellInterval)
@@ -718,10 +733,10 @@ task.spawn(function()
     end
 end)
 
-
 ------------------------------------------------------
 -- AUTO WEATHER LOOP
 ------------------------------------------------------
+
 local WeatherList = {"Storm", "Cloudy", "Wind"}
 
 task.spawn(function()
@@ -742,8 +757,9 @@ end)
 ------------------------------------------------------
 -- MISC TAB : REJOIN BUTTON
 ------------------------------------------------------
+
 local RejoinBtn = Instance.new("TextButton", MiscPage)
-Rejoinbtn.Size = UDim2.new(1,-20,0,34)
+RejoinBtn.Size = UDim2.new(0,300,0,34)
 RejoinBtn.BackgroundColor3 = THEME.BUTTON
 RejoinBtn.BackgroundTransparency = 0.25
 RejoinBtn.TextColor3 = THEME.TEXT
@@ -755,12 +771,11 @@ RejoinBtn.Text = "Rejoin Server"
 Instance.new("UICorner", RejoinBtn).CornerRadius = UDim.new(0,8)
 
 RejoinBtn.MouseButton1Click:Connect(function()
-    Notify("Rejoining server...", Color3.fromRGB(80,160,255)) -- ⬅ Tambah DI SINI
+    Notify("Rejoining server...", Color3.fromRGB(80,160,255))
     pcall(function()
         TeleportService:Teleport(game.PlaceId, LP)
     end)
 end)
-
 
 createToggle(MiscPage, "Walk on Water", function(state)
     if state then
@@ -774,7 +789,6 @@ createToggle(MiscPage, "Fly", function(v)
     _G.ApplyToggle("Fly", v)
 end)
 
-
 print("✔ BATCH 3 Loaded | Toggles + Engine Active")
 
 --====================================================--
@@ -782,11 +796,10 @@ print("✔ BATCH 3 Loaded | Toggles + Engine Active")
 --=========== AUTO TOTEM + TELEPORT SYSTEM ===========--
 --====================================================--
 
-
-
 ------------------------------------------------------
 -- AUTO TOTEM : GET UUID (SCRIPT 1 ORIGINAL)
 ------------------------------------------------------
+
 local function GetTotemUUID()
     local inv = Data:Get({"Inventory","Totems"})
     if inv then
@@ -794,25 +807,24 @@ local function GetTotemUUID()
             return item.UUID
         end
     end
-    return nil   
+    return nil
 end
 
 ------------------------------------------------------
 -- AUTO ROD (SCRIPT 1)
 ------------------------------------------------------
+
 local function EquipRod()
     EquipToolFromHotbar:FireServer(1)
 end
 
-
-
 ------------------------------------------------------
 -- AUTO EQUIP ROD LOOP (MANUAL TOGGLE, 1x / DETIK)
 ------------------------------------------------------
+
 task.spawn(function()
     while _G.FishItHubLoaded do
         task.wait(1) -- ✅ 1x per detik
-
         if F.AutoEquipRod then
             local char = LP.Character
             if char then
@@ -825,11 +837,10 @@ task.spawn(function()
     end
 end)
 
-
-
 ------------------------------------------------------
 -- SERVER CONFIRM TOTEM (SET COOLDOWN + EQUIP ROD)
 ------------------------------------------------------
+
 TotemSpawned.OnClientEvent:Connect(function()
     Notify("Totem placed!", Color3.fromRGB(0,255,120))
     F.TotemCooldown = 3600
@@ -843,6 +854,7 @@ end)
 ------------------------------------------------------
 -- AUTO TOTEM LOOP (SCRIPT 1 LOGIC 100%)
 ------------------------------------------------------
+
 local TRY_INTERVAL = 300 -- 5 menit retry
 
 task.spawn(function()
@@ -862,15 +874,14 @@ task.spawn(function()
         end
 
         -- AUTO EQUIP ROD jika tidak sedang memegang rod
-local char = LP.Character
-if char then
-    local tool = char:FindFirstChildOfClass("Tool")
-    if not tool or not tool.Name:lower():find("rod") then
-        EquipRod()
-        task.wait(0.2)
-    end
-end
-
+        local char = LP.Character
+        if char then
+            local tool = char:FindFirstChildOfClass("Tool")
+            if not tool or not tool.Name:lower():find("rod") then
+                EquipRod()
+                task.wait(0.2)
+            end
+        end
 
         -- RETRY WAIT
         if F.RetryWait then
@@ -906,8 +917,6 @@ end
     end
 end)
 
-
-
 --====================================================
 -- TELEPORT MENU — MODE 1 (Players Tab + Spots Tab)
 --====================================================
@@ -915,17 +924,20 @@ end)
 ------------------------------------------------------
 -- REFRESH PLAYER LIST
 ------------------------------------------------------
+
 function _G.RefreshPlayerList(parent)
     -- clear old
     for _,v in ipairs(parent:GetChildren()) do
-        if v:IsA("TextButton") then v:Destroy() end
+        if v:IsA("TextButton") then
+            v:Destroy()
+        end
     end
 
     -- spawn new buttons
     for _,plr in ipairs(Players:GetPlayers()) do
         if plr ~= LP then
             local b = Instance.new("TextButton", parent)
-            b.Size = UDim2.new(1, -20, 0, 34)
+            b.Size = UDim2.new(0,300,0,32)
             b.BackgroundColor3 = THEME.BUTTON
             b.TextColor3 = THEME.TEXT
             b.Font = Enum.Font.Gotham
@@ -938,6 +950,7 @@ function _G.RefreshPlayerList(parent)
             b.MouseButton1Click:Connect(function()
                 local me = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
                 local target = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+
                 if me and target then
                     me.CFrame = target.CFrame * CFrame.new(0,0,-3)
                 end
@@ -949,6 +962,7 @@ end
 ------------------------------------------------------
 -- PLAYER PAGE LIST POPULATE
 ------------------------------------------------------
+
 task.spawn(function()
     task.wait(1)
     _G.RefreshPlayerList(PlayerPage)
@@ -966,45 +980,47 @@ Players.PlayerRemoving:Connect(function()
     end)
 end)
 
-
 --====================================================
 -- TELEPORT SPOTS (FULL A–Z)
 --====================================================
 
 local SpotList = {
-    { Name = "Ancient Jungle",      CFrame = CFrame.new(1562.54, 6.62, -233.16) },
-    { Name = "Ancient Ruin",        CFrame = CFrame.new(6076.29, -585.92, 4625.92) },
+    { Name = "Ancient Jungle", CFrame = CFrame.new(1562.54, 6.62, -233.16) },
+    { Name = "Ancient Ruin", CFrame = CFrame.new(6076.29, -585.92, 4625.92) },
     { Name = "Captain Jones (Quest)", CFrame = CFrame.new(3312.16, 9.09, 3681.58) },
-    { Name = "Coral Reefs",         CFrame = CFrame.new(-2752.8, 4.0, 2165.78) },
-    { Name = "Crater Island",       CFrame = CFrame.new(1027.12, 2.89, 5148.10) },
+    { Name = "Coral Reefs", CFrame = CFrame.new(-2752.8, 4.0, 2165.78) },
+    { Name = "Crater Island", CFrame = CFrame.new(1027.12, 2.89, 5148.10) },
     { Name = "Deadman Compass (Quest)", CFrame = CFrame.new(-3437.02, -22.36, -1500.29) },
-    { Name = "Esoteric Depths",     CFrame = CFrame.new(3249.08, -1301.52, 1373.68) },
-    { Name = "Fisherman Island",    CFrame = CFrame.new(73.35, 9.53, 2709.50) },
-    { Name = "Kohana",              CFrame = CFrame.new(-595.69, 19.25, 429.86) },
-    { Name = "Kohana Volcano",      CFrame = CFrame.new(-559.59, 21.22, 153.75) },
-    { Name = "Kuil Suci",           CFrame = CFrame.new(1471.79, -22.12, -607.50) },
-    { Name = "Pirate Cove",         CFrame = CFrame.new(3398.70, 10.34, 3491.11) },
-    { Name = "Pirate Treasure Room",CFrame = CFrame.new(3340.80, -301.51, 3090.66) },
-    { Name = "Sisyphus Statue",     CFrame = CFrame.new(-3745.26, -135.07, -1008.68) },
-    { Name = "Traveling Merchant",  CFrame = CFrame.new(-133.94, 3.18, 2767.25) },
-    { Name = "Treasure Room",       CFrame = CFrame.new(-3597.20, -280.11, -1633.28) },
-    { Name = "Tropical Grove",      CFrame = CFrame.new(-2128.62, 53.48, 3637.66) },
-    { Name = "Weather Machine",     CFrame = CFrame.new(-1527.67, 2.87, 1914.66) },
+    { Name = "Esoteric Depths", CFrame = CFrame.new(3249.08, -1301.52, 1373.68) },
+    { Name = "Fisherman Island", CFrame = CFrame.new(73.35, 9.53, 2709.50) },
+    { Name = "Kohana", CFrame = CFrame.new(-595.69, 19.25, 429.86) },
+    { Name = "Kohana Volcano", CFrame = CFrame.new(-559.59, 21.22, 153.75) },
+    { Name = "Kuil Suci", CFrame = CFrame.new(1471.79, -22.12, -607.50) },
+    { Name = "Pirate Cove", CFrame = CFrame.new(3398.70, 10.34, 3491.11) },
+    { Name = "Pirate Treasure Room", CFrame = CFrame.new(3340.80, -301.51, 3090.66) },
+    { Name = "Sisyphus Statue", CFrame = CFrame.new(-3745.26, -135.07, -1008.68) },
+    { Name = "Traveling Merchant", CFrame = CFrame.new(-133.94, 3.18, 2767.25) },
+    { Name = "Treasure Room", CFrame = CFrame.new(-3597.20, -280.11, -1633.28) },
+    { Name = "Tropical Grove", CFrame = CFrame.new(-2128.62, 53.48, 3637.66) },
+    { Name = "Weather Machine", CFrame = CFrame.new(-1527.67, 2.87, 1914.66) },
 }
 
 ------------------------------------------------------
 -- REFRESH SPOT LIST
 ------------------------------------------------------
+
 function _G.RefreshSpotList(parent)
     -- clear
     for _,v in ipairs(parent:GetChildren()) do
-        if v:IsA("TextButton") then v:Destroy() end
+        if v:IsA("TextButton") then
+            v:Destroy()
+        end
     end
 
     -- create
     for _,spot in ipairs(SpotList) do
         local b = Instance.new("TextButton", parent)
-        b.Size = UDim2.new(1, -20, 0, 34)
+        b.Size = UDim2.new(0,300,0,32)
         b.BackgroundColor3 = THEME.BUTTON
         b.TextColor3 = THEME.TEXT
         b.Font = Enum.Font.Gotham
@@ -1026,6 +1042,7 @@ end
 ------------------------------------------------------
 -- INITIALIZE SPOT PAGE
 ------------------------------------------------------
+
 task.spawn(function()
     task.wait(1)
     _G.RefreshSpotList(SpotPage)
@@ -1038,12 +1055,10 @@ print("✔ BATCH 4 Loaded | Auto Totem + Teleport Ready")
 --========= CLEAN UI + FPS BOOST + FINALIZE ==========--
 --====================================================--
 
-
-
-
 ------------------------------------------------------
 -- REAL PING FUNCTION (PORT FROM FishItWORKUI)
 ------------------------------------------------------
+
 local function GetRealPing()
     local network = Stats:FindFirstChild("Network")
     if not network then return nil end
@@ -1063,6 +1078,7 @@ end
 ------------------------------------------------------
 -- PING PANEL (FRAME, BUKAN TEXTLABEL)
 ------------------------------------------------------
+
 local PingPanel = Instance.new("Frame", gui)
 PingPanel.Name = "PingPanel"
 PingPanel.Size = UDim2.new(0,140,0,26)
@@ -1072,6 +1088,7 @@ PingPanel.Visible = false
 PingPanel.BorderSizePixel = 0
 
 Instance.new("UICorner", PingPanel).CornerRadius = UDim.new(0,8)
+
 local ps = Instance.new("UIStroke", PingPanel)
 ps.Color = THEME.BORDER
 ps.Transparency = 0.6
@@ -1085,16 +1102,19 @@ PingText.TextSize = 12
 PingText.TextColor3 = THEME.TEXT
 PingText.Text = "Ping: --"
 
-
 Instance.new("UICorner", PingPanel).CornerRadius = UDim.new(0,8)
-
 
 ------------------------------------------------------
 -- VISUAL TAB : SHOW PING PANEL TOGGLE
 ------------------------------------------------------
+
 createToggle(VisualPage, "Show Ping Panel", function(state)
     PingPanel.Visible = state
 end)
+
+------------------------------------------------------
+-- REDUCE MAP
+------------------------------------------------------
 
 createToggle(VisualPage, "Reduce Map", function(state)
     if state then
@@ -1110,7 +1130,7 @@ createToggle(VisualPage, "Reduce Map", function(state)
         Lighting.ExposureCompensation = -1
         Lighting.EnvironmentDiffuseScale = 0
         Lighting.EnvironmentSpecularScale = 0
-        
+
         pcall(function()
             local t = workspace.Terrain
             t.WaterWaveSize = 0
@@ -1125,6 +1145,9 @@ createToggle(VisualPage, "Reduce Map", function(state)
     end
 end)
 
+------------------------------------------------------
+-- PERFORMANCE MODE
+------------------------------------------------------
 
 createToggle(VisualPage, "Performance Mode", function(state)
     if state then
@@ -1161,6 +1184,10 @@ createToggle(VisualPage, "Performance Mode", function(state)
     end
 end)
 
+------------------------------------------------------
+-- EXTREME POTATO MODE
+------------------------------------------------------
+
 createToggle(VisualPage, "Extreme Potato Mode", function(state)
     if not state then
         Notify("Extreme Potato Mode OFF (cannot restore fully)", Color3.fromRGB(255,80,80))
@@ -1168,7 +1195,7 @@ createToggle(VisualPage, "Extreme Potato Mode", function(state)
     end
 
     Notify("Extreme Potato Mode: ACTIVATED ⚡", Color3.fromRGB(255,200,50))
-    
+
     -- 🔥 QUALITY LEVEL
     pcall(function()
         settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
@@ -1206,18 +1233,18 @@ createToggle(VisualPage, "Extreme Potato Mode", function(state)
     -- 🔥 DELETE PARTICLES
     task.spawn(function()
         for _,obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("ParticleEmitter")
-            or obj:IsA("Trail")
-            or obj:IsA("Beam")
-            or obj:IsA("Fire")
-            or obj:IsA("Smoke")
-            or obj:IsA("Sparkles") then
+            if obj:IsA("ParticleEmitter") or
+               obj:IsA("Trail") or
+               obj:IsA("Beam") or
+               obj:IsA("Fire") or
+               obj:IsA("Smoke") or
+               obj:IsA("Sparkles") then
                 obj.Enabled = false
             end
         end
     end)
 
-    -- 🔥 DELETE DECALS & TEXTURES (SUPER FPS BOOST)
+    -- 🔥 DELETE DECALS & TEXTURES
     task.spawn(function()
         for _,obj in ipairs(workspace:GetDescendants()) do
             if obj:IsA("Decal") or obj:IsA("Texture") then
@@ -1239,6 +1266,10 @@ createToggle(VisualPage, "Extreme Potato Mode", function(state)
     Notify("🔥 Extreme Potato Mode Applied — MAX FPS!", Color3.fromRGB(0,255,120))
 end)
 
+------------------------------------------------------
+-- DISABLE FISHING FX (ALL-IN-ONE)
+------------------------------------------------------
+
 createToggle(VisualPage, "Disable Fishing FX (All-in-One)", function(state)
     _G.DisableFishingFX = state
 
@@ -1249,13 +1280,12 @@ createToggle(VisualPage, "Disable Fishing FX (All-in-One)", function(state)
     end
 end)
 
-
 ------------------------------------------------------
--- VISUAL TAB : MERCHANT BUTTON (AUTO CLOSE 5s)
+-- MERCHANT BUTTON (AUTO CLOSE 5s)
 ------------------------------------------------------
 
 local MerchantBtn = Instance.new("TextButton", VisualPage)
-MerchantBtn.Size = UDim2.new(1,-20,0,34)
+MerchantBtn.Size = UDim2.new(0,300,0,34)
 MerchantBtn.BackgroundColor3 = THEME.BUTTON
 MerchantBtn.BackgroundTransparency = 0.25
 MerchantBtn.TextColor3 = THEME.TEXT
@@ -1272,8 +1302,8 @@ MerchantBtn.MouseButton1Click:Connect(function()
     Notify("Merchant opened", Color3.fromRGB(80,160,255)) -- ⬅ Tambah DI SINI
 
     if not merchantGui then return end
-    merchantGui.Enabled = true
 
+    merchantGui.Enabled = true
     main.Visible = false
     if blur then blur.Enabled = false end
 
@@ -1285,19 +1315,15 @@ MerchantBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
-
-
-
 ------------------------------------------------------
 -- PING UPDATE LOOP (COLOR SYSTEM + SAFE)
 ------------------------------------------------------
+
 task.spawn(function()
     while _G.FishItHubLoaded do
         task.wait(1)
 
-        if not PingPanel.Visible then
-            continue
-        end
+        if not PingPanel.Visible then continue end
 
         local ping = GetRealPing()
 
@@ -1309,28 +1335,25 @@ task.spawn(function()
 
             -- ⚡ WARNA PING
             if ping < 60 then
-                PingText.TextColor3 = Color3.fromRGB(0,255,120)   -- hijau
+                PingText.TextColor3 = Color3.fromRGB(0,255,120)
             elseif ping < 120 then
-                PingText.TextColor3 = Color3.fromRGB(255,255,0)   -- kuning
+                PingText.TextColor3 = Color3.fromRGB(255,255,0)
             elseif ping < 200 then
-                PingText.TextColor3 = Color3.fromRGB(255,150,0)   -- oranye
+                PingText.TextColor3 = Color3.fromRGB(255,150,0)
             else
-                PingText.TextColor3 = Color3.fromRGB(255,70,70)   -- merah
+                PingText.TextColor3 = Color3.fromRGB(255,70,70)
             end
         end
     end
 end)
 
-
-
-
 ------------------------------------------------------
--- AUTO FOLLOW FLOAT BUTTON (PING NEMPEL)
+-- AUTO FOLLOW FLOAT BUTTON
 ------------------------------------------------------
+
 task.spawn(function()
     while _G.FishItHubLoaded do
         task.wait()
-
         if PingPanel.Visible then
             PingPanel.Position = UDim2.new(
                 floatBtn.Position.X.Scale,
@@ -1345,14 +1368,17 @@ end)
 ------------------------------------------------------
 -- MAKE PING PANEL DRAGGABLE
 ------------------------------------------------------
+
 local dragging = false
 local dragPos = Vector2.new()
 
 PingPanel.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
-        dragPos = Vector2.new(input.Position.X - PingPanel.AbsolutePosition.X,
-                              input.Position.Y - PingPanel.AbsolutePosition.Y)
+        dragPos = Vector2.new(
+            input.Position.X - PingPanel.AbsolutePosition.X,
+            input.Position.Y - PingPanel.AbsolutePosition.Y
+        )
     end
 end)
 
@@ -1371,59 +1397,52 @@ UIS.InputChanged:Connect(function(input)
     end
 end)
 
-
---====================================================--
---========== PATCH: SCROLL PLAYER & SPOT =============--
---====================================================--
+------------------------------------------------------
+-- PATCH: SCROLL PLAYER & SPOT
+------------------------------------------------------
 
 local function makeScrollable(page)
-    -- Simpan layout lama
-    local oldLayout = page:FindFirstChildOfClass("UIListLayout")
-
-    -- Buat frame scroll
-    local scroll = Instance.new("ScrollingFrame")
-    scroll.Size = UDim2.new(1, 0, 1, 0)
-    scroll.BackgroundTransparency = 1
-    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    scroll.ScrollBarThickness = 4
-    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-    scroll.Parent = page
-
-    -- Layout baru
-    local layout = Instance.new("UIListLayout")
-    layout.Padding = UDim.new(0, 10)
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Parent = scroll
-
-    -- Pindahin semua child KECUALI scroll & UIListLayout
+    -- simpan semua child lama
+    local children = {}
     for _,v in ipairs(page:GetChildren()) do
-        if v ~= scroll and not v:IsA("UIListLayout") then
-            v.Parent = scroll
-        end
+        table.insert(children, v)
     end
 
-    -- Hapus layout lama
-    if oldLayout then oldLayout:Destroy() end
+    -- hapus layout lama
+    for _,v in ipairs(children) do
+        v.Parent = nil
+    end
+
+    -- buat ScrollingFrame
+    local scroll = Instance.new("ScrollingFrame", page)
+    scroll.Size = UDim2.new(1,0,1,0)
+    scroll.CanvasSize = UDim2.new(0,0,0,0)
+    scroll.ScrollBarThickness = 4
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scroll.BackgroundTransparency = 1
+    scroll.BorderSizePixel = 0
+
+    local layout = Instance.new("UIListLayout", scroll)
+    layout.Padding = UDim.new(0,8)
+
+    -- masukin ulang child
+    for _,v in ipairs(children) do
+        v.Parent = scroll
+    end
 
     return scroll
 end
 
-
-
-
-
 ------------------------------------------------------
 -- APPLY TO PLAYER & SPOT PAGE
 ------------------------------------------------------
-local PlayerScroll = makeScrollable(PlayerPage)
-local SpotScroll   = makeScrollable(SpotPage)
 
+local PlayerScroll = makeScrollable(PlayerPage)
+local SpotScroll = makeScrollable(SpotPage)
 
 ------------------------------------------------------
 -- UPDATE REFRESH FUNCTIONS TARGET
 ------------------------------------------------------
--- override supaya isi masuk ke ScrollingFrame
 
 local _oldRefreshPlayer = _G.RefreshPlayerList
 _G.RefreshPlayerList = function()
@@ -1443,13 +1462,10 @@ end)
 
 print("✔ PATCH APPLIED | Player & Spot now scrollable")
 
-
-
-
-
 ------------------------------------------------------
 -- CLEAN FISHING UI (KEEP ONLY "You got:")
 ------------------------------------------------------
+
 local function shouldHideFishLabel(lb)
     if not lb:IsA("TextLabel") then return false end
     if not lb.Text or lb.Text == "" then return false end
@@ -1461,7 +1477,6 @@ local function shouldHideFishLabel(lb)
     if t:find("kg") then return true end
     if t:find("lvl") then return true end
 
-    -- remove big banners
     if lb.TextSize >= 26 then
         local scrY = workspace.CurrentCamera.ViewportSize.Y
         local pos = lb.AbsolutePosition.Y
@@ -1475,8 +1490,10 @@ end
 
 task.spawn(function()
     local pg = LP:WaitForChild("PlayerGui")
+
     while _G.FishItHubLoaded do
         task.wait(2)
+
         local fishUI = pg:FindFirstChild("FishingUI")
         if not fishUI then continue end
 
@@ -1488,10 +1505,10 @@ task.spawn(function()
     end
 end)
 
-
 ------------------------------------------------------
 -- LOW GFX MODE (ULTRA LIGHT)
 ------------------------------------------------------
+
 task.spawn(function()
     Lighting.GlobalShadows = false
     Lighting.EnvironmentDiffuseScale = 0
@@ -1503,18 +1520,16 @@ task.spawn(function()
         if fx:IsA("SunRaysEffect")
         or fx:IsA("DepthOfFieldEffect")
         or fx:IsA("BloomEffect")
-        or fx:IsA("ColorCorrectionEffect")
-        then fx.Enabled = false end
+        or fx:IsA("ColorCorrectionEffect") then
+            fx.Enabled = false
+        end
     end
 end)
-
-
-
-
 
 ------------------------------------------------------
 -- FINAL STYLE PASS (GLASS MINIMAL)
 ------------------------------------------------------
+
 local function applyStyle(obj)
     if obj:IsA("Frame") then
         obj.BackgroundTransparency = obj.BackgroundTransparency
@@ -1542,24 +1557,31 @@ local function applyStyle(obj)
     end
 end
 
--- for _,v in ipairs(gui:GetDescendants()) do
---     applyStyle(v)
--- end
-
-
+for _,v in ipairs(gui:GetDescendants()) do
+    applyStyle(v)
+end
 
 ------------------------------------------------------
 -- SAFE EXIT HANDLER
 ------------------------------------------------------
+
 function _G.CloseHub()
     _G.FishItHubLoaded = false
     F.FlyEnabled = false
 
-    pcall(function() _G.StopFly() end)
-    pcall(function() gui:Destroy() end)
-    pcall(function() if Lighting:FindFirstChild("FishItHubBlur") then
-        Lighting.FishItHubBlur:Destroy()
-    end end)
+    pcall(function()
+        _G.StopFly()
+    end)
+
+    pcall(function()
+        gui:Destroy()
+    end)
+
+    pcall(function()
+        if Lighting:FindFirstChild("FishItHubBlur") then
+            Lighting.FishItHubBlur:Destroy()
+        end
+    end)
 end
 
 print("====================================================")
