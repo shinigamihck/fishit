@@ -362,17 +362,24 @@ floatBtn.MouseButton1Click:Connect(function()
 end)
 
 ------------------------------------------------------
--- NOTIFICATION SYSTEM (KANAN BAWAH)
+-- NOTIFICATION SYSTEM (KANAN BAWAH) - FIX FINAL
 ------------------------------------------------------
 local NotificationFrame = Instance.new("Frame", gui)
-NotificationFrame.Size = UDim2.new(0, 320, 1, -40)
-NotificationFrame.Position = UDim2.new(1, -330, 0, 20)
+NotificationFrame.Size = UDim2.new(0, 320, 0, 0)
+NotificationFrame.AutomaticSize = Enum.AutomaticSize.Y
+
+-- 🔥 Kunci utama (agar tidak muncul panel bening)
+NotificationFrame.AnchorPoint = Vector2.new(1,1)
+NotificationFrame.Position = UDim2.new(1, -15, 1, -15)
+
 NotificationFrame.BackgroundTransparency = 1
+NotificationFrame.BorderSizePixel = 0
 
 local NotiLayout = Instance.new("UIListLayout", NotificationFrame)
 NotiLayout.SortOrder = Enum.SortOrder.LayoutOrder
 NotiLayout.Padding = UDim.new(0, 6)
 NotiLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+
 
 function Notify(msg, color)
     color = color or Color3.fromRGB(80,160,255)
