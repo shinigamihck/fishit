@@ -83,6 +83,50 @@ end)
 
 print("✔ BATCH 1 Loaded | Core Systems Ready")
 
+------------------------------------------------------
+-- VISUAL FISHING FX MASTER SWITCH
+------------------------------------------------------
+_G.DisableFishingFX = false
+
+-- === ROD VFX ===
+task.spawn(function()
+    repeat task.wait() until ReplicatedStorage:FindFirstChild("Controllers")
+
+    local ok, VFXController = pcall(function()
+        return require(ReplicatedStorage.Controllers.VFXController)
+    end)
+
+    if ok and VFXController and VFXController.PlayVFX then
+        local oldPlayVFX = VFXController.PlayVFX
+
+        VFXController.PlayVFX = function(effect, data)
+            if _G.DisableFishingFX then
+                return -- ❌ block all rod / water VFX
+            end
+            return oldPlayVFX(effect, data)
+        end
+    end
+end)
+
+-- === UI KILL LOOP (SAFE) ===
+task.spawn(function()
+    local pg = LP:WaitForChild("PlayerGui")
+
+    while _G.FishItHubLoaded do
+        task.wait()
+
+        if _G.DisableFishingFX then
+            -- Charge Bar
+            local charge = pg:FindFirstChild("Charge")
+            if charge then charge.Enabled = false end
+
+            -- Minigame UI
+            local fishingUI = pg:FindFirstChild("Fishing")
+            if fishingUI then fishingUI.Enabled = false end
+        end
+    end
+end)
+
 
 --====================================================--
 --================== BATCH 2 / 5 =====================--
@@ -1185,6 +1229,16 @@ createToggle(VisualPage, "Extreme Potato Mode", function(state)
     end)
 
     Notify("🔥 Extreme Potato Mode Applied — MAX FPS!", Color3.fromRGB(0,255,120))
+end)
+
+createToggle(VisualPage, "Disable Fishing FX (All-in-One)", function(state)
+    _G.DisableFishingFX = state
+
+    if state then
+        Notify("Fishing FX OFF (VFX + Charge + Minigame UI)", Color3.fromRGB(0,255,120))
+    else
+        Notify("Fishing FX ON (Restored)", Color3.fromRGB(255,200,80))
+    end
 end)
 
 
