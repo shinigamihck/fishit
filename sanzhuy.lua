@@ -151,6 +151,46 @@ task.spawn(function()
     end
 end)
 
+------------------------------------------------------
+-- MASTER SWITCH: DISABLE ALL SKIN FX / BLAR FX
+------------------------------------------------------
+
+_G.DisableSkinFX = false
+
+task.spawn(function()
+    repeat task.wait() until ReplicatedStorage:FindFirstChild("Controllers")
+
+    local ok, VFX = pcall(function()
+        return require(ReplicatedStorage.Controllers.VFXController)
+    end)
+
+    if not ok or type(VFX) ~= "table" then return end
+
+    -- simpan fungsi ori
+    local old_RenderAtPoint = VFX.RenderAtPoint
+    local old_RenderInstance = VFX.RenderInstance
+    local old_Handle = VFX.Handle
+
+    -- ganti fungsi dengan blocker
+    VFX.RenderAtPoint = function(...)
+        if _G.DisableSkinFX then return end
+        return old_RenderAtPoint(...)
+    end
+
+    VFX.RenderInstance = function(...)
+        if _G.DisableSkinFX then return end
+        return old_RenderInstance(...)
+    end
+
+    VFX.Handle = function(...)
+        if _G.DisableSkinFX then return end
+        return old_Handle(...)
+    end
+
+    print("✔ Skin FX Patch Loaded — can block VFXController")
+end)
+
+
 --=========================================================
 -- PATCH UNIVERSAL: BLOCK ALL CAMERA SCRIPTABLE / CFRAME
 --=========================================================
@@ -1263,6 +1303,7 @@ Instance.new("UICorner", PingPanel).CornerRadius = UDim.new(0,8)
 -- VISUAL TAB : SHOW PING PANEL TOGGLE
 ------------------------------------------------------
 
+
 createToggle(VisualPage, "Show Ping Panel", function(state)
     PingPanel.Visible = state
 end)
@@ -1278,6 +1319,17 @@ createToggle(VisualPage, "Full OFF Animations", function(state)
         Notify("Full Animations Restored", Color3.fromRGB(0,255,120))
     end
 end)
+
+createToggle(VisualPage, "Disable Skin FX", function(state)
+    _G.DisableSkinFX = state
+
+    if state then
+        Notify("Skin FX OFF — All blar effects disabled", Color3.fromRGB(0,255,120))
+    else
+        Notify("Skin FX ON — Effects restored", Color3.fromRGB(255,200,80))
+    end
+end)
+
 
 ------------------------------------------------------
 -- REDUCE MAP
@@ -1482,6 +1534,8 @@ MerchantBtn.MouseButton1Click:Connect(function()
     end)
 end)
 
+
+
 ------------------------------------------------------
 -- PING UPDATE LOOP (COLOR SYSTEM + SAFE)
 ------------------------------------------------------
@@ -1606,7 +1660,7 @@ end
 
 local PlayerScroll = makeScrollable(PlayerPage)
 local SpotScroll = makeScrollable(SpotPage)
-
+local VisualScroll = makeScrollable(VisualPage)
 ------------------------------------------------------
 -- UPDATE REFRESH FUNCTIONS TARGET
 ------------------------------------------------------
