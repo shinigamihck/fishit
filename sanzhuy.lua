@@ -45,6 +45,7 @@ _G.FISH = {
     AutoSell      = false,
     AutoWeather   = false,
     AutoTotem     = false,
+    AutoEquipRod  = false,
     FlyEnabled    = false,
 
     FlySpeed      = 80,
@@ -473,6 +474,10 @@ local ToggleMap = {
     ["Auto Sell"] = function(v)  F.AutoSell = v end,
     ["Auto Weather"] = function(v)  F.AutoWeather = v end,
     ["Auto Totem"] = function(v)  F.AutoTotem = v end,
+    ["Auto Equip Rod"] = function(v)
+    F.AutoEquipRod = v
+end,
+
     ["Fly"] = function(v)
         F.FlyEnabled = v
         if v then
@@ -498,6 +503,7 @@ end
 createToggle(MainPage, "Auto Fish",    function(v) _G.ApplyToggle("Auto Fish", v) end)
 createToggle(MainPage, "Auto Sell",    function(v) _G.ApplyToggle("Auto Sell", v) end)
 createToggle(MainPage, "Auto Weather", function(v) _G.ApplyToggle("Auto Weather", v) end)
+createToggle(MainPage, "Auto Equip Rod", function(v) _G.ApplyToggle("Auto Equip Rod", v) end)
 createToggle(MainPage, "Auto Totem",   function(v) _G.ApplyToggle("Auto Totem", v) end)
 
 
@@ -745,6 +751,29 @@ end
 local function EquipRod()
     EquipToolFromHotbar:FireServer(1)
 end
+
+
+
+------------------------------------------------------
+-- AUTO EQUIP ROD LOOP (MANUAL TOGGLE, 1x / DETIK)
+------------------------------------------------------
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        task.wait(1) -- ✅ 1x per detik
+
+        if F.AutoEquipRod then
+            local char = LP.Character
+            if char then
+                local tool = char:FindFirstChildOfClass("Tool")
+                if not tool or not tool.Name:lower():find("rod") then
+                    EquipRod()
+                end
+            end
+        end
+    end
+end)
+
+
 
 ------------------------------------------------------
 -- SERVER CONFIRM TOTEM (SET COOLDOWN + EQUIP ROD)
