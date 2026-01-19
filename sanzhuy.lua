@@ -55,7 +55,8 @@ _G.FISH = {
     SellInterval = 60,
     WeatherDelay = 5,
     TotemCooldown = 0,
-    RetryWait = false
+    RetryWait = false,
+    CameraLocked = false,
 }
 
 ------------------------------------------------------
@@ -87,6 +88,43 @@ end)
 
 print("✔ BATCH 1 Loaded | Core Systems Ready")
 
+--====================================================
+-- HARD PATCH: FORCE DISABLE ALL FISH POPUPS
+-- (SMALL + BIG) — KEEP TEXT NOTIFICATION
+--====================================================
+
+task.spawn(function()
+    local RS = game:GetService("ReplicatedStorage")
+
+    repeat task.wait() until RS:FindFirstChild("Controllers")
+
+    local Controllers = RS.Controllers
+
+    for _,mod in ipairs(Controllers:GetChildren()) do
+        if mod:IsA("ModuleScript") then
+            local ok, m = pcall(function()
+                return require(mod)
+            end)
+
+            if ok and type(m) == "table" then
+                -- kill popup kecil
+                if type(m.PlaySmallItemObtained) == "function" then
+                    m.PlaySmallItemObtained = function() end
+                end
+
+                -- kill popup besar
+                if type(m.PlayLargeItemObtained) == "function" then
+                    m.PlayLargeItemObtained = function() end
+                end
+            end
+        end
+    end
+
+    print("✔ HARD PATCH applied: all fish popups disabled")
+end)
+
+
+
 ------------------------------------------------------
 -- VISUAL FISHING FX MASTER SWITCH
 ------------------------------------------------------
@@ -113,8 +151,59 @@ task.spawn(function()
     end
 end)
 
+--=========================================================
+-- PATCH UNIVERSAL: BLOCK ALL CAMERA SCRIPTABLE / CFRAME
+--=========================================================
+
+task.spawn(function()
+    local cam = workspace.CurrentCamera
+
+    -- force camera always Custom (tidak bisa di-zoom oleh script lain)
+    cam:GetPropertyChangedSignal("CameraType"):Connect(function()
+        if cam.CameraType ~= Enum.CameraType.Custom then
+            cam.CameraType = Enum.CameraType.Custom
+        end
+    end)
+
+    -- block perubahan CFrame kamera yang menyebabkan zoom cinematic
+    local lastCF = cam.CFrame
+    task.spawn(function()
+        while task.wait() do
+            if (cam.CFrame.Position - lastCF.Position).Magnitude > 0.05 then
+                cam.CFrame = lastCF -- restore posisi sebelum diubah script
+            else
+                lastCF = cam.CFrame
+            end
+        end
+    end)
+
+    -- optional: block FOV ulang
+    cam:GetPropertyChangedSignal("FieldOfView"):Connect(function()
+        cam.FieldOfView = 65
+    end)
+
+    print("✔ UNIVERSAL CAMERA PATCH ACTIVE")
+end)
 
 
+--======================================================
+-- PATCH: BLOCK GAME FROM HIDING HUD (INVENTORY FIX)
+--======================================================
+
+task.spawn(function()
+    local ok, GuiControl = pcall(function()
+        return require(ReplicatedStorage.Modules.GuiControl)
+    end)
+
+    if ok and GuiControl then
+        -- Patch: force HUD always visible
+        GuiControl.SetHUDVisibility = function()
+            -- override → do nothing
+        end
+
+        print("✔ HUD PATCH ACTIVE — Inventory will NOT hide anymore")
+    end
+end)
 
 
 -- === UI KILL LOOP (SAFE) ===
