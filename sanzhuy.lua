@@ -166,7 +166,7 @@ UIScale.Scale = 0.75   -- 🔥 Kecil bagus (0.75)
 ------------------------------------------------------
 local blur = Instance.new("BlurEffect")
 blur.Name = "FishItHubBlur"
-blur.Size = 6
+blur.Size = 4
 blur.Parent = Lighting
 
 ------------------------------------------------------
@@ -251,9 +251,10 @@ sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 -- PAGE CONTAINER
 ------------------------------------------------------
 local pages = Instance.new("Frame", main)
-pages.Size = UDim2.new(1,-170,1,-42)
-pages.Position = UDim2.new(0,170,0,42)
-pages.BackgroundTransparency = 1
+pages.Size = UDim2.new(1,-150,1,-42)
+pages.Position = UDim2.new(0,150,0,42)
+pages.BackgroundTransparency = 0.08
+pages.BackgroundColor3 = THEME.PANEL
 
 ------------------------------------------------------
 -- PAGE SYSTEM
