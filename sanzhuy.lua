@@ -51,7 +51,7 @@ _G.FISH = {
     AutoEquipRod = false,
     FlyEnabled = false,
     FlySpeed = 80,
-    FishDelay = 0.13,
+    FishDelay = 0.01,
     SellInterval = 60,
     WeatherDelay = 5,
     TotemCooldown = 0,
@@ -113,6 +113,10 @@ task.spawn(function()
     end
 end)
 
+
+
+
+
 -- === UI KILL LOOP (SAFE) ===
 task.spawn(function()
     local pg = LP:WaitForChild("PlayerGui")
@@ -131,6 +135,74 @@ task.spawn(function()
         end
     end
 end)
+
+----------------------------------------------------
+-- FULL OFF ANIMATIONS FUNCTIONS (NO UI)
+----------------------------------------------------
+
+_G.FullOffAnimEnabled = false
+
+local ORIGINAL_ANIM_STATE = {}
+
+local function BackupAnimationData()
+    local Animations = require(ReplicatedStorage.Modules.Animations)
+    for name, data in pairs(Animations) do
+        if typeof(data) == "table" then
+            ORIGINAL_ANIM_STATE[name] = data.Disabled
+        end
+    end
+end
+
+BackupAnimationData()
+
+local function DisableModuleAnimations()
+    local Animations = require(ReplicatedStorage.Modules.Animations)
+    for _, data in pairs(Animations) do
+        if typeof(data) == "table" then
+            data.Disabled = true
+        end
+    end
+end
+
+local function RestoreModuleAnimations()
+    local Animations = require(ReplicatedStorage.Modules.Animations)
+    for name, data in pairs(Animations) do
+        if typeof(data) == "table" then
+            data.Disabled = ORIGINAL_ANIM_STATE[name]
+        end
+    end
+end
+
+local function DisableRobloxAnimate()
+    local char = LP.Character
+    if not char then return end
+    local animate = char:FindFirstChild("Animate")
+    if animate then animate.Disabled = true end
+end
+
+local function HardStopAnimations()
+    local char = LP.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    local animator = hum:FindFirstChildOfClass("Animator")
+    if not animator then return end
+
+    for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+        track:Stop(0)
+    end
+end
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if _G.FullOffAnimEnabled then
+            DisableRobloxAnimate()
+            HardStopAnimations()
+        end
+    end
+end)
+
+
 --====================================================--
 --================== BATCH 2 / 5 =====================
 --============= GLASS UI + PAGE SYSTEM ===============
@@ -1110,6 +1182,18 @@ Instance.new("UICorner", PingPanel).CornerRadius = UDim.new(0,8)
 
 createToggle(VisualPage, "Show Ping Panel", function(state)
     PingPanel.Visible = state
+end)
+
+createToggle(VisualPage, "Full OFF Animations", function(state)
+    _G.FullOffAnimEnabled = state
+
+    if state then
+        DisableModuleAnimations()
+        Notify("Full Animations OFF", Color3.fromRGB(255,80,80))
+    else
+        RestoreModuleAnimations()
+        Notify("Full Animations Restored", Color3.fromRGB(0,255,120))
+    end
 end)
 
 ------------------------------------------------------
