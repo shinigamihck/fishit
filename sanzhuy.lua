@@ -189,7 +189,7 @@ local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0, 620, 0, 380)
 main.Position = UDim2.new(0.5,-310,0.45,-190)
 main.BackgroundColor3 = THEME.BG
-main.BackgroundTransparency = 0.05
+main.BackgroundTransparency = 0.03
 main.Active = true
 main.Draggable = true
 main.BorderSizePixel = 0
@@ -238,7 +238,7 @@ local sidebar = Instance.new("Frame", main)
 sidebar.Size = UDim2.new(0,150,1,-42)
 sidebar.Position = UDim2.new(0,0,0,42)
 sidebar.BackgroundColor3 = THEME.PANEL
-sidebar.BackgroundTransparency = 0.08
+sidebar.BackgroundTransparency = 0.04
 sidebar.BorderSizePixel = 0
 
 Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0,10)
@@ -251,9 +251,9 @@ sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 -- PAGE CONTAINER
 ------------------------------------------------------
 local pages = Instance.new("Frame", main)
-pages.Size = UDim2.new(1,-150,1,-42)
+pages.Size = UDim2.new(1,-230,1,-42)
 pages.Position = UDim2.new(0,150,0,42)
-pages.BackgroundTransparency = 0.08
+pages.BackgroundTransparency = 0.04
 pages.BackgroundColor3 = THEME.PANEL
 
 ------------------------------------------------------
@@ -269,7 +269,7 @@ local function createPage(name)
 
     local layout = Instance.new("UIListLayout", f)
     layout.Padding = UDim.new(0,10)
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
     Pages[name] = f
     return f
@@ -486,9 +486,9 @@ end
 ------------------------------------------------------
 local function createToggle(parent, text, callback)
     local btn = Instance.new("TextButton", parent)
-    btn.Size = UDim2.new(0,300,0,34)
+    btn.Size = UDim2.new(1,-20,0,34)
     btn.BackgroundColor3 = THEME.BUTTON
-    btn.BackgroundTransparency = 0.1
+    btn.BackgroundTransparency = 0.04
     btn.TextColor3 = THEME.TEXT
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 12
