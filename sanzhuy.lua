@@ -589,7 +589,7 @@ end
 -- REFRESH TOTEM BUTTON (MAIN TAB)
 ------------------------------------------------------
 local RefreshTotemBtn = Instance.new("TextButton", MainPage)
-RefreshTotemBtn.Size = UDim2.new(0,300,0,34)
+RefreshTotembtn.Size = UDim2.new(1,-20,0,34)
 RefreshTotemBtn.BackgroundColor3 = THEME.BUTTON
 RefreshTotemBtn.BackgroundTransparency = 0.25
 RefreshTotemBtn.TextColor3 = THEME.TEXT
@@ -743,7 +743,7 @@ end)
 -- MISC TAB : REJOIN BUTTON
 ------------------------------------------------------
 local RejoinBtn = Instance.new("TextButton", MiscPage)
-RejoinBtn.Size = UDim2.new(0,300,0,34)
+Rejoinbtn.Size = UDim2.new(1,-20,0,34)
 RejoinBtn.BackgroundColor3 = THEME.BUTTON
 RejoinBtn.BackgroundTransparency = 0.25
 RejoinBtn.TextColor3 = THEME.TEXT
@@ -1255,7 +1255,7 @@ end)
 ------------------------------------------------------
 
 local MerchantBtn = Instance.new("TextButton", VisualPage)
-MerchantBtn.Size = UDim2.new(0,300,0,34)
+Merchantbtn.Size = UDim2.new(1,-20,0,34)
 MerchantBtn.BackgroundColor3 = THEME.BUTTON
 MerchantBtn.BackgroundTransparency = 0.25
 MerchantBtn.TextColor3 = THEME.TEXT
