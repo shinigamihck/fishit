@@ -251,7 +251,7 @@ sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 -- PAGE CONTAINER
 ------------------------------------------------------
 local pages = Instance.new("Frame", main)
-pages.Size = UDim2.new(1,-230,1,-42)
+pages.Size = UDim2.new(1,-150,1,-42)
 pages.Position = UDim2.new(0,150,0,42)
 pages.BackgroundTransparency = 0.04
 pages.BackgroundColor3 = THEME.PANEL
@@ -589,7 +589,7 @@ end
 -- REFRESH TOTEM BUTTON (MAIN TAB)
 ------------------------------------------------------
 local RefreshTotemBtn = Instance.new("TextButton", MainPage)
-RefreshTotembtn.Size = UDim2.new(1,-20,0,34)
+RefreshTotemBtn.Size = UDim2.new(1,-20,0,34)
 RefreshTotemBtn.BackgroundColor3 = THEME.BUTTON
 RefreshTotemBtn.BackgroundTransparency = 0.25
 RefreshTotemBtn.TextColor3 = THEME.TEXT
@@ -925,7 +925,7 @@ function _G.RefreshPlayerList(parent)
     for _,plr in ipairs(Players:GetPlayers()) do
         if plr ~= LP then
             local b = Instance.new("TextButton", parent)
-            b.Size = UDim2.new(0,300,0,32)
+            b.Size = UDim2.new(1, -20, 0, 34)
             b.BackgroundColor3 = THEME.BUTTON
             b.TextColor3 = THEME.TEXT
             b.Font = Enum.Font.Gotham
@@ -1004,7 +1004,7 @@ function _G.RefreshSpotList(parent)
     -- create
     for _,spot in ipairs(SpotList) do
         local b = Instance.new("TextButton", parent)
-        b.Size = UDim2.new(0,300,0,32)
+        b.Size = UDim2.new(1, -20, 0, 34)
         b.BackgroundColor3 = THEME.BUTTON
         b.TextColor3 = THEME.TEXT
         b.Font = Enum.Font.Gotham
@@ -1255,7 +1255,7 @@ end)
 ------------------------------------------------------
 
 local MerchantBtn = Instance.new("TextButton", VisualPage)
-Merchantbtn.Size = UDim2.new(1,-20,0,34)
+MerchantBtn.Size = UDim2.new(1,-20,0,34)
 MerchantBtn.BackgroundColor3 = THEME.BUTTON
 MerchantBtn.BackgroundTransparency = 0.25
 MerchantBtn.TextColor3 = THEME.TEXT
@@ -1377,42 +1377,48 @@ end)
 --====================================================--
 
 local function makeScrollable(page)
-    -- simpan semua child lama
-    local children = {}
-    for _,v in ipairs(page:GetChildren()) do
-        table.insert(children, v)
-    end
+    -- Simpan layout lama
+    local oldLayout = page:FindFirstChildOfClass("UIListLayout")
 
-    -- hapus layout lama
-    for _,v in ipairs(children) do
-        v.Parent = nil
-    end
-
-    -- buat ScrollingFrame
-    local scroll = Instance.new("ScrollingFrame", page)
-    scroll.Size = UDim2.new(1,0,1,0)
-    scroll.CanvasSize = UDim2.new(0,0,0,0)
-    scroll.ScrollBarThickness = 4
-    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    -- Buat frame scroll
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Size = UDim2.new(1, 0, 1, 0)
     scroll.BackgroundTransparency = 1
-    scroll.BorderSizePixel = 0
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scroll.ScrollBarThickness = 4
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.Parent = page
 
-    local layout = Instance.new("UIListLayout", scroll)
-    layout.Padding = UDim.new(0,8)
+    -- Layout baru
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 10)
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = scroll
 
-    -- masukin ulang child
-    for _,v in ipairs(children) do
-        v.Parent = scroll
+    -- Pindahin semua child KECUALI scroll & UIListLayout
+    for _,v in ipairs(page:GetChildren()) do
+        if v ~= scroll and not v:IsA("UIListLayout") then
+            v.Parent = scroll
+        end
     end
+
+    -- Hapus layout lama
+    if oldLayout then oldLayout:Destroy() end
 
     return scroll
 end
+
+
+
+
 
 ------------------------------------------------------
 -- APPLY TO PLAYER & SPOT PAGE
 ------------------------------------------------------
 local PlayerScroll = makeScrollable(PlayerPage)
 local SpotScroll   = makeScrollable(SpotPage)
+
 
 ------------------------------------------------------
 -- UPDATE REFRESH FUNCTIONS TARGET
@@ -1536,9 +1542,10 @@ local function applyStyle(obj)
     end
 end
 
-for _,v in ipairs(gui:GetDescendants()) do
-    applyStyle(v)
-end
+-- for _,v in ipairs(gui:GetDescendants()) do
+--     applyStyle(v)
+-- end
+
 
 
 ------------------------------------------------------
