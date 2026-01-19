@@ -158,24 +158,18 @@ end)
 task.spawn(function()
     local cam = workspace.CurrentCamera
 
-    -- force camera always Custom (tidak bisa di-zoom oleh script lain)
-    cam:GetPropertyChangedSignal("CameraType"):Connect(function()
-        if cam.CameraType ~= Enum.CameraType.Custom then
-            cam.CameraType = Enum.CameraType.Custom
-        end
-    end)
+task.spawn(function()
+    local cam = workspace.CurrentCamera
+    local LOCK_FOV = 65 -- ubah sesuai selera (60–75 aman)
 
-    -- block perubahan CFrame kamera yang menyebabkan zoom cinematic
-    local lastCF = cam.CFrame
-    task.spawn(function()
-        while task.wait() do
-            if (cam.CFrame.Position - lastCF.Position).Magnitude > 0.05 then
-                cam.CFrame = lastCF -- restore posisi sebelum diubah script
-            else
-                lastCF = cam.CFrame
-            end
+    cam.FieldOfView = LOCK_FOV
+
+    cam:GetPropertyChangedSignal("FieldOfView"):Connect(function()
+        if math.abs(cam.FieldOfView - LOCK_FOV) > 0.1 then
+            cam.FieldOfView = LOCK_FOV
         end
     end)
+end)
 
     -- optional: block FOV ulang
     cam:GetPropertyChangedSignal("FieldOfView"):Connect(function()
