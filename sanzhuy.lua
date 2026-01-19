@@ -166,7 +166,7 @@ UIScale.Scale = 0.75   -- 🔥 Kecil bagus (0.75)
 ------------------------------------------------------
 local blur = Instance.new("BlurEffect")
 blur.Name = "FishItHubBlur"
-blur.Size = 14
+blur.Size = 6
 blur.Parent = Lighting
 
 ------------------------------------------------------
@@ -189,7 +189,7 @@ local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0, 620, 0, 380)
 main.Position = UDim2.new(0.5,-310,0.45,-190)
 main.BackgroundColor3 = THEME.BG
-main.BackgroundTransparency = 0.15
+main.BackgroundTransparency = 0.05
 main.Active = true
 main.Draggable = true
 main.BorderSizePixel = 0
@@ -238,7 +238,7 @@ local sidebar = Instance.new("Frame", main)
 sidebar.Size = UDim2.new(0,150,1,-42)
 sidebar.Position = UDim2.new(0,0,0,42)
 sidebar.BackgroundColor3 = THEME.PANEL
-sidebar.BackgroundTransparency = 0.2
+sidebar.BackgroundTransparency = 0.08
 sidebar.BorderSizePixel = 0
 
 Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0,10)
@@ -487,7 +487,7 @@ local function createToggle(parent, text, callback)
     local btn = Instance.new("TextButton", parent)
     btn.Size = UDim2.new(0,300,0,34)
     btn.BackgroundColor3 = THEME.BUTTON
-    btn.BackgroundTransparency = 0.25
+    btn.BackgroundTransparency = 0.1
     btn.TextColor3 = THEME.TEXT
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 12
