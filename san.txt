@@ -1,0 +1,1988 @@
+--====================================================-- 
+--=========== FISHIT HUB — FINAL FULL MERGE ==========-- 
+--================== BATCH 1 / 5 =====================-- 
+--====================================================--
+
+if _G.FishItHubLoaded then return end
+_G.FishItHubLoaded = true
+
+------------------------------------------------------
+-- SERVICES
+------------------------------------------------------
+
+local Players = game:GetService("Players")
+local LP = Players.LocalPlayer
+local RS = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UIS = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local Stats = game:GetService("Stats")
+local VirtualUser = game:GetService("VirtualUser")
+local TeleportService = game:GetService("TeleportService")
+
+------------------------------------------------------
+-- NET PACKAGE
+------------------------------------------------------
+
+local Net = require(ReplicatedStorage.Packages.Net)
+local Replion = require(ReplicatedStorage.Packages.Replion)
+
+-- Remote Functions
+local sellRF = Net:RemoteFunction("SellAllItems")
+local purchaseRF = Net:RemoteFunction("PurchaseWeatherEvent")
+
+-- Remote Events
+local SpawnTotem = Net:RemoteEvent("SpawnTotem")
+local TotemSpawned = Net:RemoteEvent("TotemSpawned")
+local EquipToolFromHotbar = Net:RemoteEvent("EquipToolFromHotbar")
+
+-- Player Data (Replion)
+local Data = Replion.Client:WaitReplion("Data")
+
+------------------------------------------------------
+-- GLOBAL FEATURES STATE
+------------------------------------------------------
+
+_G.FISH = {
+    AutoFish = false,
+    AutoSell = false,
+    AutoWeather = false,
+    AutoTotem = false,
+    AutoEquipRod = false,
+    FlyEnabled = false,
+    FlySpeed = 80,
+    FishDelay = 0,
+    SellInterval = 60,
+    WeatherDelay = 5,
+    TotemCooldown = 0,
+    RetryWait = false,
+    CameraLocked = false,
+}
+
+------------------------------------------------------
+-- ANTI AFK
+------------------------------------------------------
+
+LP.Idled:Connect(function()
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
+end)
+
+------------------------------------------------------
+-- FISHING CONTROLLER (WAJIB ADA)
+------------------------------------------------------
+
+local FishingController = nil
+
+task.spawn(function()
+    repeat
+        task.wait(0.25)
+        local ok, result = pcall(function()
+            return require(ReplicatedStorage.Controllers.FishingController)
+        end)
+        if ok and result then
+            FishingController = result
+        end
+    until FishingController
+end)
+
+print("✔ BATCH 1 Loaded | Core Systems Ready")
+
+--====================================================
+-- HARD PATCH: FORCE DISABLE ALL FISH POPUPS
+-- (SMALL + BIG) — KEEP TEXT NOTIFICATION
+--====================================================
+
+task.spawn(function()
+    local RS = game:GetService("ReplicatedStorage")
+
+    repeat task.wait() until RS:FindFirstChild("Controllers")
+
+    local Controllers = RS.Controllers
+
+    for _,mod in ipairs(Controllers:GetChildren()) do
+        if mod:IsA("ModuleScript") then
+            local ok, m = pcall(function()
+                return require(mod)
+            end)
+
+            if ok and type(m) == "table" then
+                -- kill popup kecil
+                if type(m.PlaySmallItemObtained) == "function" then
+                    m.PlaySmallItemObtained = function() end
+                end
+
+                -- kill popup besar
+                if type(m.PlayLargeItemObtained) == "function" then
+                    m.PlayLargeItemObtained = function() end
+                end
+            end
+        end
+    end
+
+    print("✔ HARD PATCH applied: all fish popups disabled")
+end)
+
+
+
+------------------------------------------------------
+-- VISUAL FISHING FX MASTER SWITCH
+------------------------------------------------------
+
+_G.DisableFishingFX = false
+
+-- === ROD VFX ===
+task.spawn(function()
+    repeat task.wait() until ReplicatedStorage:FindFirstChild("Controllers")
+
+    local ok, VFXController = pcall(function()
+        return require(ReplicatedStorage.Controllers.VFXController)
+    end)
+
+    if ok and VFXController and VFXController.PlayVFX then
+        local oldPlayVFX = VFXController.PlayVFX
+
+        VFXController.PlayVFX = function(effect, data)
+            if _G.DisableFishingFX then
+                return -- ❌ block all rod / water VFX
+            end
+            return oldPlayVFX(effect, data)
+        end
+    end
+end)
+
+------------------------------------------------------
+-- MASTER SWITCH: DISABLE ALL SKIN FX / BLAR FX
+------------------------------------------------------
+
+_G.DisableSkinFX = false
+
+task.spawn(function()
+    repeat task.wait() until ReplicatedStorage:FindFirstChild("Controllers")
+
+    local ok, VFX = pcall(function()
+        return require(ReplicatedStorage.Controllers.VFXController)
+    end)
+
+    if not ok or type(VFX) ~= "table" then return end
+
+    -- simpan fungsi ori
+    local old_RenderAtPoint = VFX.RenderAtPoint
+    local old_RenderInstance = VFX.RenderInstance
+    local old_Handle = VFX.Handle
+
+    -- ganti fungsi dengan blocker
+    VFX.RenderAtPoint = function(...)
+        if _G.DisableSkinFX then return end
+        return old_RenderAtPoint(...)
+    end
+
+    VFX.RenderInstance = function(...)
+        if _G.DisableSkinFX then return end
+        return old_RenderInstance(...)
+    end
+
+    VFX.Handle = function(...)
+        if _G.DisableSkinFX then return end
+        return old_Handle(...)
+    end
+
+    print("✔ Skin FX Patch Loaded — can block VFXController")
+end)
+
+
+--=========================================================
+-- PATCH UNIVERSAL: BLOCK ALL CAMERA SCRIPTABLE / CFRAME
+--=========================================================
+
+task.spawn(function()
+    local cam = workspace.CurrentCamera
+
+task.spawn(function()
+    local cam = workspace.CurrentCamera
+    local LOCK_FOV = 65 -- ubah sesuai selera (60–75 aman)
+
+    cam.FieldOfView = LOCK_FOV
+
+    cam:GetPropertyChangedSignal("FieldOfView"):Connect(function()
+        if math.abs(cam.FieldOfView - LOCK_FOV) > 0.1 then
+            cam.FieldOfView = LOCK_FOV
+        end
+    end)
+end)
+
+    -- optional: block FOV ulang
+    cam:GetPropertyChangedSignal("FieldOfView"):Connect(function()
+        cam.FieldOfView = 65
+    end)
+
+    print("✔ UNIVERSAL CAMERA PATCH ACTIVE")
+end)
+
+
+--======================================================
+-- PATCH: BLOCK GAME FROM HIDING HUD (INVENTORY FIX)
+--======================================================
+
+task.spawn(function()
+    local ok, GuiControl = pcall(function()
+        return require(ReplicatedStorage.Modules.GuiControl)
+    end)
+
+    if ok and GuiControl then
+        -- Patch: force HUD always visible
+        GuiControl.SetHUDVisibility = function()
+            -- override → do nothing
+        end
+
+        print("✔ HUD PATCH ACTIVE — Inventory will NOT hide anymore")
+    end
+end)
+
+
+-- === UI KILL LOOP (SAFE) ===
+task.spawn(function()
+    local pg = LP:WaitForChild("PlayerGui")
+
+    while _G.FishItHubLoaded do
+        task.wait()
+
+        if _G.DisableFishingFX then
+            -- Charge Bar
+            local charge = pg:FindFirstChild("Charge")
+            if charge then charge.Enabled = false end
+
+            -- Minigame UI
+            local fishingUI = pg:FindFirstChild("Fishing")
+            if fishingUI then fishingUI.Enabled = false end
+        end
+    end
+end)
+
+----------------------------------------------------
+-- FULL OFF ANIMATIONS FUNCTIONS (NO UI)
+----------------------------------------------------
+
+_G.FullOffAnimEnabled = false
+
+local ORIGINAL_ANIM_STATE = {}
+
+local function BackupAnimationData()
+    local Animations = require(ReplicatedStorage.Modules.Animations)
+    for name, data in pairs(Animations) do
+        if typeof(data) == "table" then
+            ORIGINAL_ANIM_STATE[name] = data.Disabled
+        end
+    end
+end
+
+BackupAnimationData()
+
+local function DisableModuleAnimations()
+    local Animations = require(ReplicatedStorage.Modules.Animations)
+    for _, data in pairs(Animations) do
+        if typeof(data) == "table" then
+            data.Disabled = true
+        end
+    end
+end
+
+local function RestoreModuleAnimations()
+    local Animations = require(ReplicatedStorage.Modules.Animations)
+    for name, data in pairs(Animations) do
+        if typeof(data) == "table" then
+            data.Disabled = ORIGINAL_ANIM_STATE[name]
+        end
+    end
+end
+
+local function DisableRobloxAnimate()
+    local char = LP.Character
+    if not char then return end
+    local animate = char:FindFirstChild("Animate")
+    if animate then animate.Disabled = true end
+end
+
+local function HardStopAnimations()
+    local char = LP.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    local animator = hum:FindFirstChildOfClass("Animator")
+    if not animator then return end
+
+    for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+        track:Stop(0)
+    end
+end
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if _G.FullOffAnimEnabled then
+            DisableRobloxAnimate()
+            HardStopAnimations()
+        end
+    end
+end)
+
+
+--====================================================--
+--================== BATCH 2 / 5 =====================
+--============= GLASS UI + PAGE SYSTEM ===============
+--====================================================--
+
+------------------------------------------------------
+-- REMOVE OLD UI (SAFE)
+------------------------------------------------------
+
+pcall(function()
+    LP.PlayerGui:FindFirstChild("FishItHubUI"):Destroy()
+end)
+
+------------------------------------------------------
+-- SCREEN GUI
+------------------------------------------------------
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "FishItHubUI"
+gui.ResetOnSpawn = false
+gui.Parent = LP.PlayerGui
+
+------------------------------------------------------
+-- GLOBAL UI SCALE (CIUTKAN SELURUH HUB)
+------------------------------------------------------
+
+local UIScale = Instance.new("UIScale", gui)
+UIScale.Scale = 0.75 -- 🔥 Kecil bagus (0.75)
+-- Rekomendasi nilai:
+-- 0.90 = Sedikit kecil
+-- 0.80 = Pas untuk HP medium
+-- 0.75 = Kecil tapi nyaman
+-- 0.65 = Super mini (HP kecil)
+
+------------------------------------------------------
+-- BLUR EFFECT (SAFE)
+------------------------------------------------------
+
+local blur = Instance.new("BlurEffect")
+blur.Name = "FishItHubBlur"
+blur.Size = 0
+blur.Parent = Lighting
+
+------------------------------------------------------
+-- THEME (GLASS MINIMAL)
+------------------------------------------------------
+
+local THEME = {
+    BG = Color3.fromRGB(18,18,22),
+    PANEL = Color3.fromRGB(25,25,30),
+    BUTTON = Color3.fromRGB(35,35,40),
+    ACTIVE = Color3.fromRGB(80,160,255),
+    TEXT = Color3.fromRGB(235,235,245),
+    DIM = Color3.fromRGB(160,160,170),
+    BORDER = Color3.fromRGB(255,255,255)
+}
+
+------------------------------------------------------
+-- MAIN WINDOW
+------------------------------------------------------
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 620, 0, 380)
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.BackgroundColor3 = THEME.BG
+main.BackgroundTransparency = 0.02
+main.Active = true
+main.Draggable = true
+main.BorderSizePixel = 0
+
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
+
+local mainStroke = Instance.new("UIStroke", main)
+mainStroke.Color = THEME.BORDER
+mainStroke.Transparency = 0.75
+
+------------------------------------------------------
+-- TITLE BAR
+------------------------------------------------------
+
+local titleBar = Instance.new("Frame", main)
+titleBar.Size = UDim2.new(1,0,0,38)
+titleBar.BackgroundTransparency = 1
+
+local title = Instance.new("TextLabel", titleBar)
+title.Text = "SanzHuy — Di Joki ChatGPT"
+title.Size = UDim2.new(1,-50,1,0)
+title.Position = UDim2.new(0,16,0,0)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 14
+title.TextColor3 = THEME.TEXT
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.BackgroundTransparency = 1
+
+local closeBtn = Instance.new("TextButton", titleBar)
+closeBtn.Size = UDim2.new(0,32,0,32)
+closeBtn.Position = UDim2.new(1,-36,0,3)
+closeBtn.Text = "×"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 18
+closeBtn.TextColor3 = THEME.TEXT
+closeBtn.BackgroundTransparency = 1
+
+closeBtn.MouseButton1Click:Connect(function()
+    _G.FishItHubLoaded = false
+    pcall(function() blur:Destroy() end)
+    pcall(function() gui:Destroy() end)
+end)
+
+------------------------------------------------------
+-- SIDEBAR
+------------------------------------------------------
+
+local sidebar = Instance.new("Frame", main)
+sidebar.Size = UDim2.new(0,150,1,-42)
+sidebar.Position = UDim2.new(0,0,0,42)
+sidebar.BackgroundColor3 = THEME.PANEL
+sidebar.BackgroundTransparency = 0.08
+sidebar.BorderSizePixel = 0
+
+Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0,10)
+
+local sideLayout = Instance.new("UIListLayout", sidebar)
+sideLayout.Padding = UDim.new(0,6)
+sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+------------------------------------------------------
+-- PAGE CONTAINER
+------------------------------------------------------
+
+local pages = Instance.new("Frame", main)
+pages.Size = UDim2.new(1,-170,1,-42)
+pages.Position = UDim2.new(0,150,0,42)
+pages.BackgroundTransparency = 0.08
+pages.BackgroundColor3 = THEME.PANEL
+pages.ClipsDescendants = true
+------------------------------------------------------
+-- PAGE SYSTEM
+------------------------------------------------------
+
+local Pages = {}
+
+local function createPage(name)
+    -- PAGE BESAR
+    local page = Instance.new("Frame", pages)
+    page.Size = UDim2.new(1,0,1,0)
+    page.Visible = false
+    page.BackgroundTransparency = 1
+    page.ClipsDescendants = true
+
+    -- CONTENT FRAME (yang nyimpen tombol real)
+    local content = Instance.new("Frame", page)
+    content.Name = "Content"
+    content.Size = UDim2.new(0, 320, 1, 0) -- lebar fix, center
+    content.AnchorPoint = Vector2.new(0.5, 0)
+    content.Position = UDim2.new(0.5, 0, 0, 0) -- ⬅ CENTER HORIZONTAL
+    content.BackgroundTransparency = 1
+
+    local padding = Instance.new("UIPadding", content)
+    padding.PaddingTop = UDim.new(0, 10)
+
+    local layout = Instance.new("UIListLayout", content)
+    layout.Padding = UDim.new(0, 10)
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+    Pages[name] = content
+    return content
+end
+
+local function switchPage(name)
+    for n, p in pairs(Pages) do
+        p.Parent.Visible = (n == name) -- ⬅ BENERIN INI
+    end
+end
+
+------------------------------------------------------
+-- CREATE PAGES
+------------------------------------------------------
+
+local MainPage = createPage("Main")
+local PlayerPage = createPage("Players")
+local SpotPage = createPage("Spots")
+local VisualPage = createPage("Visual")
+local MiscPage = createPage("Misc")
+local ShopPage = createPage("Shop")
+
+switchPage("Main")
+
+------------------------------------------------------
+-- TAB BUTTON BUILDER
+------------------------------------------------------
+
+local function createTab(name)
+    local b = Instance.new("TextButton", sidebar)
+    b.Size = UDim2.new(1,-24,0,34)
+    b.Text = name
+    b.Font = Enum.Font.Gotham
+    b.TextSize = 12
+    b.TextColor3 = THEME.TEXT
+    b.BackgroundColor3 = THEME.BUTTON
+    b.BackgroundTransparency = 0.25
+    b.BorderSizePixel = 0
+
+    Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+
+    local s = Instance.new("UIStroke", b)
+    s.Color = THEME.BORDER
+    s.Transparency = 0.85
+
+    b.MouseButton1Click:Connect(function()
+        for _,x in ipairs(sidebar:GetChildren()) do
+            if x:IsA("TextButton") then
+                x.BackgroundColor3 = THEME.BUTTON
+                x.BackgroundTransparency = 0.25
+            end
+        end
+
+        b.BackgroundColor3 = THEME.ACTIVE
+        b.BackgroundTransparency = 0.05
+        switchPage(name)
+    end)
+end
+
+------------------------------------------------------
+-- CREATE TABS
+------------------------------------------------------
+
+createTab("Main")
+createTab("Players")
+createTab("Spots")
+createTab("Visual")
+createTab("Misc")
+createTab("Shop")
+
+------------------------------------------------------
+-- FLOATING TOGGLE BUTTON
+------------------------------------------------------
+
+local floatBtn = Instance.new("ImageButton", gui)
+floatBtn.Size = UDim2.new(0,48,0,48)
+floatBtn.Position = UDim2.new(0.03,0,0.4,0)
+floatBtn.Image = "rbxassetid://72407089659970"
+floatBtn.BackgroundColor3 = Color3.fromRGB(120,160,255)
+floatBtn.BackgroundTransparency = 0.15
+floatBtn.Active = true
+floatBtn.Draggable = true
+floatBtn.BorderSizePixel = 0
+
+Instance.new("UICorner", floatBtn).CornerRadius = UDim.new(0,14)
+
+local fs = Instance.new("UIStroke", floatBtn)
+fs.Color = THEME.BORDER
+fs.Transparency = 0.6
+
+local visible = true
+
+floatBtn.MouseButton1Click:Connect(function()
+    visible = not visible
+    main.Visible = visible
+    if blur then blur.Enabled = visible end
+end)
+
+------------------------------------------------------
+-- NOTIFICATION SYSTEM (KANAN BAWAH) - FIX FINAL
+------------------------------------------------------
+
+local NotificationFrame = Instance.new("Frame", gui)
+NotificationFrame.Size = UDim2.new(0, 320, 0, 0)
+NotificationFrame.AutomaticSize = Enum.AutomaticSize.Y
+NotificationFrame.AnchorPoint = Vector2.new(1,1)
+NotificationFrame.Position = UDim2.new(1, -15, 1, -15)
+NotificationFrame.BackgroundTransparency = 1
+NotificationFrame.BorderSizePixel = 0
+
+local NotiLayout = Instance.new("UIListLayout", NotificationFrame)
+NotiLayout.SortOrder = Enum.SortOrder.LayoutOrder
+NotiLayout.Padding = UDim.new(0, 6)
+NotiLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+
+function Notify(msg, color)
+    color = color or Color3.fromRGB(80,160,255)
+
+    local box = Instance.new("Frame", NotificationFrame)
+    box.Size = UDim2.new(1, 0, 0, 28)
+    box.BackgroundColor3 = Color3.fromRGB(25,25,30)
+    box.BackgroundTransparency = 0.15
+    box.BorderSizePixel = 0
+    box.ClipsDescendants = true
+
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
+
+    local stroke = Instance.new("UIStroke", box)
+    stroke.Color = color
+    stroke.Transparency = 0.4
+
+    local label = Instance.new("TextLabel", box)
+    label.Size = UDim2.new(1, -12, 1, 0)
+    label.Position = UDim2.new(0, 6, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.GothamSemibold
+    label.TextColor3 = color
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Text = msg
+
+    -- fade animation
+    task.spawn(function()
+        task.wait(2.2)
+        for i = 0,1,0.05 do
+            box.BackgroundTransparency = 0.15 + i
+            stroke.Transparency = 0.4 + i
+            label.TextTransparency = i
+            task.wait(0.05)
+        end
+        box:Destroy()
+    end)
+end
+
+print("✔ BATCH 2 Loaded | Glass UI Ready")
+
+--====================================================
+--================== BATCH 3 / 5 =====================
+--============= TOGGLES + FEATURES ENGINE ============
+--====================================================--
+
+local F = _G.FISH
+
+------------------------------------------------------
+-- WALK ON WATER ENGINE (FOR MISC TAB)
+------------------------------------------------------
+
+_G.WalkWaterEnabled = false
+local waterLoop
+local waterTargetY
+
+local function StartWalkOnWater()
+    local char = LP.Character or LP.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    local hum = char:WaitForChild("Humanoid")
+
+    waterTargetY = hrp.Position.Y
+    _G.WalkWaterEnabled = true
+
+    waterLoop = RS.RenderStepped:Connect(function()
+        if not _G.WalkWaterEnabled then return end
+        if not hrp or not hum then return end
+
+        -- tahan humanoid supaya ga jatuh
+        hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
+        hum.PlatformStand = false
+
+        -- lock posisi Y (jalan di air)
+        hrp.CFrame = CFrame.new(
+            hrp.Position.X,
+            waterTargetY,
+            hrp.Position.Z
+        )
+
+        -- buang velocity jatuh
+        hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
+    end)
+end
+
+local function StopWalkOnWater()
+    _G.WalkWaterEnabled = false
+    if waterLoop then waterLoop:Disconnect() end
+
+    local char = LP.Character
+    if char then
+        local hum = char:FindFirstChild("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end
+    end
+end
+
+
+------------------------------------------------------
+-- TOGGLE BUILDER (MASTER)
+------------------------------------------------------
+
+local function createToggle(parent, text, callback)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(0,300,0,34)
+    btn.BackgroundColor3 = THEME.BUTTON
+    btn.BackgroundTransparency = 0.1
+    btn.TextColor3 = THEME.TEXT
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 12
+    btn.BorderSizePixel = 0
+    btn.Text = text .. " : OFF"
+
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+    local state = false
+
+    btn.MouseButton1Click:Connect(function()
+        state = not state
+        local stateText = state and "ON" or "OFF"
+        local col = state and Color3.fromRGB(0,255,120) or Color3.fromRGB(255,80,80)
+
+        btn.Text = text .. " : " .. stateText
+        btn.BackgroundColor3 = state and THEME.ACTIVE or THEME.BUTTON
+
+        -- 🔔 NOTIFICATION
+        Notify(text .. " : " .. stateText, col)
+
+        callback(state)
+    end)
+end
+
+------------------------------------------------------
+-- TOGGLE + NUMBER INPUT (AUTO SELL COMBO ROW)
+------------------------------------------------------
+local function createAutoSellRow(parent)
+    local row = Instance.new("Frame", parent)
+    row.Size = UDim2.new(0,300,0,34)
+    row.BackgroundTransparency = 1
+
+    -- === TOGGLE BUTTON ===
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(0,200,1,0)
+    btn.Position = UDim2.new(0,0,0,0)
+    btn.BackgroundColor3 = THEME.BUTTON
+    btn.BackgroundTransparency = 0.1
+    btn.TextColor3 = THEME.TEXT
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 12
+    btn.BorderSizePixel = 0
+    btn.Text = "Auto Sell : OFF"
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+    -- === INPUT BOX ===
+    local box = Instance.new("TextBox", row)
+    box.Size = UDim2.new(0,80,1,0)
+    box.Position = UDim2.new(1,-80,0,0)
+    box.BackgroundColor3 = THEME.PANEL
+    box.BackgroundTransparency = 0.1
+    box.TextColor3 = THEME.TEXT
+    box.Font = Enum.Font.Gotham
+    box.TextSize = 12
+    box.ClearTextOnFocus = false
+    box.Text = tostring(F.SellInterval)
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0,8)
+
+    -- === LOGIC: TOGGLE ===
+    btn.MouseButton1Click:Connect(function()
+        F.AutoSell = not F.AutoSell
+        btn.Text = "Auto Sell : " .. (F.AutoSell and "ON" or "OFF")
+        btn.BackgroundColor3 = F.AutoSell and THEME.ACTIVE or THEME.BUTTON
+
+        Notify("Auto Sell : " .. (F.AutoSell and "ON" or "OFF"),
+               F.AutoSell and Color3.fromRGB(0,255,120) or Color3.fromRGB(255,80,80))
+    end)
+
+    -- === LOGIC: INPUT ===
+    box.FocusLost:Connect(function()
+        local n = tonumber(box.Text)
+        if n and n >= 1 then
+            F.SellInterval = n
+            Notify("Sell Delay → "..n.."s", Color3.fromRGB(80,160,255))
+        else
+            box.Text = tostring(F.SellInterval)
+            Notify("Minimum 1 detik", Color3.fromRGB(255,80,80))
+        end
+    end)
+end
+
+
+--=========================================
+-- SIMPLE 3-OPTION DROPDOWN FOR VISUAL TAB
+--=========================================
+local function createPullAnimDropdown(parent)
+    local holder = Instance.new("Frame", parent)
+    holder.Size = UDim2.new(0,300,0,60)
+    holder.BackgroundTransparency = 1
+    holder.ClipsDescendants = false
+
+    local label = Instance.new("TextLabel", holder)
+    label.Size = UDim2.new(1,0,0,20)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 12
+    label.TextColor3 = THEME.TEXT
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Text = "Pull Off Animation"
+
+    local dropBtn = Instance.new("TextButton", holder)
+    dropBtn.Size = UDim2.new(1,0,0,32)
+    dropBtn.Position = UDim2.new(0,0,0,22)
+    dropBtn.BackgroundColor3 = THEME.BUTTON
+    dropBtn.TextColor3 = THEME.TEXT
+    dropBtn.Font = Enum.Font.Gotham
+    dropBtn.TextSize = 12
+    dropBtn.BorderSizePixel = 0
+    dropBtn.Text = "Selected: No Animation"
+    dropBtn.ZIndex = 5
+    Instance.new("UICorner", dropBtn).CornerRadius = UDim.new(0,8)
+
+    local listFrame = Instance.new("Frame", holder)
+    listFrame.Size = UDim2.new(1,0,0,0)
+    listFrame.Position = UDim2.new(0,0,0,56)
+    listFrame.BackgroundColor3 = THEME.BUTTON
+    listFrame.Visible = false
+    listFrame.ZIndex = 6
+    listFrame.ClipsDescendants = false
+    Instance.new("UICorner", listFrame).CornerRadius = UDim.new(0,8)
+
+    local layout = Instance.new("UIListLayout", listFrame)
+    layout.Padding = UDim.new(0,4)
+
+    local options = {"No Animation","Harpoon","Holy Trident"}
+    local optHeight = 30
+
+    listFrame.Size = UDim2.new(1,0,0,#options * optHeight + 6)
+
+    for _,opt in ipairs(options) do
+        local b = Instance.new("TextButton", listFrame)
+        b.Size = UDim2.new(1,-6,0,optHeight)
+        b.BackgroundColor3 = THEME.PANEL
+        b.TextColor3 = THEME.TEXT
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 12
+        b.Text = opt
+        b.BorderSizePixel = 0
+        b.ZIndex = 7
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+
+        b.MouseButton1Click:Connect(function()
+            dropBtn.Text = "Selected: " .. opt
+            listFrame.Visible = false
+
+            _G.PullOffMode = opt
+            Notify("Pull Off Animation → " .. opt, Color3.fromRGB(80,160,255))
+        end)
+    end
+
+    dropBtn.MouseButton1Click:Connect(function()
+        listFrame.Visible = not listFrame.Visible
+    end)
+end
+
+
+------------------------------------------------------
+-- ENGINE ANIMATION OVERRIDE (Holy / Harpoon / None)
+------------------------------------------------------
+
+local RS = game:GetService("ReplicatedStorage")
+local AnimCtrl = require(RS.Controllers.AnimationController)
+local Original_GetAnim = AnimCtrl.GetAnimationData
+
+AnimCtrl.GetAnimationData = function(self, animName)
+    local mode = _G.PullOffMode
+    if not animName or not mode then
+        return Original_GetAnim(self, animName)
+    end
+
+    local base = tostring(animName)
+
+    -- No Animation Mode
+    if mode == "No Animation" then
+        return nil
+    end
+
+    -- Harpoon Mode
+    if mode == "Harpoon" then
+        local harpoonName = "Oceanic Harpoon - " .. base
+        if RS.Modules.Animations:FindFirstChild(harpoonName) then
+            return Original_GetAnim(self, harpoonName)
+        end
+    end
+
+    -- Holy Trident Mode
+    if mode == "Holy Trident" then
+        local holyName = "Holy Trident - " .. base
+        if RS.Modules.Animations:FindFirstChild(holyName) then
+            return Original_GetAnim(self, holyName)
+        end
+    end
+
+    -- Default fallback
+    return Original_GetAnim(self, animName)
+end
+
+
+
+
+
+
+-- ✔ PENUTUP FUNGSI YANG BENAR
+------------------------------------------------------
+-- UI → ENGINE TOGGLE MAP
+------------------------------------------------------
+
+local ToggleMap = {
+    ["Auto Fish"] = function(v) F.AutoFish = v end,
+    ["Auto Sell"] = function(v) F.AutoSell = v end,
+    ["Auto Weather"] = function(v) F.AutoWeather = v end,
+    ["Auto Totem"] = function(v) F.AutoTotem = v end,
+    ["Auto Equip Rod"] = function(v) F.AutoEquipRod = v end,
+    ["Fly"] = function(v)
+        F.FlyEnabled = v
+        if v then
+            _G.StartFly()
+        else
+            _G.StopFly()
+        end
+    end,
+}
+
+------------------------------------------------------
+-- APPLYTOGGLE WRAPPER
+------------------------------------------------------
+
+function _G.ApplyToggle(name, state)
+    if ToggleMap[name] then
+        ToggleMap[name](state)
+    end
+end
+
+------------------------------------------------------
+-- MAIN PAGE BUTTONS
+------------------------------------------------------
+
+createToggle(MainPage, "Auto Fish", function(v)
+    _G.ApplyToggle("Auto Fish", v)
+end)
+
+createAutoSellRow(MainPage)
+
+createToggle(MainPage, "Auto Weather", function(v)
+    _G.ApplyToggle("Auto Weather", v)
+end)
+
+createToggle(MainPage, "Auto Equip Rod", function(v)
+    _G.ApplyToggle("Auto Equip Rod", v)
+end)
+
+createToggle(MainPage, "Auto Totem", function(v)
+    _G.ApplyToggle("Auto Totem", v)
+end)
+
+------------------------------------------------------
+-- TOTEM STATUS LABEL (DI MAIN TAB)
+------------------------------------------------------
+
+local TotemStatus = Instance.new("TextLabel", MainPage)
+TotemStatus.Size = UDim2.new(0,300,0,20)
+TotemStatus.BackgroundTransparency = 1
+TotemStatus.Font = Enum.Font.Gotham
+TotemStatus.TextSize = 12
+TotemStatus.TextXAlignment = Enum.TextXAlignment.Left
+TotemStatus.TextColor3 = THEME.TEXT
+TotemStatus.Text = "Totem: --"
+
+function SetTotemStatus(text, color)
+    TotemStatus.Text = "Totem: " .. text
+    if color then
+        TotemStatus.TextColor3 = color
+    else
+        TotemStatus.TextColor3 = Color3.fromRGB(255,255,255)
+    end
+end
+
+------------------------------------------------------
+-- REFRESH TOTEM BUTTON (MAIN TAB)
+------------------------------------------------------
+
+local RefreshTotemBtn = Instance.new("TextButton", MainPage)
+RefreshTotemBtn.Size = UDim2.new(0,300,0,34)
+RefreshTotemBtn.BackgroundColor3 = THEME.BUTTON
+RefreshTotemBtn.BackgroundTransparency = 0.25
+RefreshTotemBtn.TextColor3 = THEME.TEXT
+RefreshTotemBtn.Font = Enum.Font.GothamBold
+RefreshTotemBtn.TextSize = 12
+RefreshTotemBtn.BorderSizePixel = 0
+RefreshTotemBtn.Text = "Refresh Totem Status"
+
+Instance.new("UICorner", RefreshTotemBtn).CornerRadius = UDim.new(0,8)
+
+RefreshTotemBtn.MouseButton1Click:Connect(function()
+    F.TotemCooldown = 0
+    F.RetryWait = false
+    SetTotemStatus("Idle", Color3.fromRGB(0,255,120))
+    Notify("Totem status refreshed", Color3.fromRGB(0,255,120))
+end)
+
+------------------------------------------------------
+-- FLY ENGINE (CONSTRAINT VERSION - FIX TOTAL)
+------------------------------------------------------
+
+local flyConn
+local lv, ao, attach
+
+function _G.StopFly()
+    F.FlyEnabled = false
+    if flyConn then flyConn:Disconnect() end
+    if lv then lv:Destroy() end
+    if ao then ao:Destroy() end
+    if attach then attach:Destroy() end
+
+    local hum = LP.Character and LP.Character:FindFirstChild("Humanoid")
+    if hum then hum.PlatformStand = false end
+end
+
+function _G.StartFly()
+    local char = LP.Character or LP.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    local hum = char:WaitForChild("Humanoid")
+
+    -- biar tidak ditarik physics game
+    hum.PlatformStand = true
+
+    -- attachment
+    attach = Instance.new("Attachment", hrp)
+
+    -- LINEAR VELOCITY (GERAK)
+    lv = Instance.new("LinearVelocity", hrp)
+    lv.Attachment0 = attach
+    lv.MaxForce = math.huge
+    lv.VectorVelocity = Vector3.zero
+    lv.RelativeTo = Enum.ActuatorRelativeTo.World
+
+    -- ALIGN ORIENTATION (ARAH)
+    ao = Instance.new("AlignOrientation", hrp)
+    ao.Attachment0 = attach
+    ao.MaxTorque = math.huge
+    ao.Responsiveness = 200
+
+    flyConn = RS.RenderStepped:Connect(function()
+        if not F.FlyEnabled then return end
+
+        local cam = workspace.CurrentCamera
+        local move = Vector3.zero
+
+        if UIS:IsKeyDown(Enum.KeyCode.W) then move += cam.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
+        if UIS:IsKeyDown(Enum.KeyCode.A) then move -= cam.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.D) then move += cam.CFrame.RightVector end
+        if UIS:IsKeyDown(Enum.KeyCode.Space) then move += Vector3.new(0,1,0) end
+        if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move -= Vector3.new(0,1,0) end
+
+        if move.Magnitude > 0 then
+            lv.VectorVelocity = move.Unit * F.FlySpeed
+        else
+            lv.VectorVelocity = Vector3.zero
+        end
+
+        ao.CFrame = cam.CFrame
+    end)
+end
+
+------------------------------------------------------
+-- AUTO FISH LOOP
+------------------------------------------------------
+
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        task.wait(F.FishDelay)
+
+        if F.AutoFish and FishingController then
+            local guid = FishingController:GetCurrentGUID()
+
+            if not guid then
+                pcall(function()
+                    FishingController:RequestChargeFishingRod(
+                        workspace.CurrentCamera.ViewportSize / 2,
+                        true
+                    )
+                end)
+            else
+                pcall(function()
+                    FishingController:FishingMinigameClick()
+                end)
+            end
+        end
+    end
+end)
+
+------------------------------------------------------
+-- AUTO SELL LOOP
+------------------------------------------------------
+
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        local d = F.SellInterval  -- AMBIL DELAY TERBARU
+        task.wait(d)
+
+        if F.AutoSell then
+            pcall(function()
+                sellRF:InvokeServer()
+            end)
+        end
+    end
+end)
+
+
+
+------------------------------------------------------
+-- AUTO WEATHER LOOP
+------------------------------------------------------
+
+local WeatherList = {"Storm", "Cloudy", "Wind"}
+
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        task.wait(F.WeatherDelay)
+
+        if F.AutoWeather then
+            for _,weather in ipairs(WeatherList) do
+                pcall(function()
+                    purchaseRF:InvokeServer(weather)
+                end)
+                task.wait(1.3)
+            end
+        end
+    end
+end)
+
+------------------------------------------------------
+-- MISC TAB : REJOIN BUTTON
+------------------------------------------------------
+
+local RejoinBtn = Instance.new("TextButton", MiscPage)
+RejoinBtn.Size = UDim2.new(0,300,0,34)
+RejoinBtn.BackgroundColor3 = THEME.BUTTON
+RejoinBtn.BackgroundTransparency = 0.25
+RejoinBtn.TextColor3 = THEME.TEXT
+RejoinBtn.Font = Enum.Font.GothamBold
+RejoinBtn.TextSize = 12
+RejoinBtn.BorderSizePixel = 0
+RejoinBtn.Text = "Rejoin Server"
+
+Instance.new("UICorner", RejoinBtn).CornerRadius = UDim.new(0,8)
+
+RejoinBtn.MouseButton1Click:Connect(function()
+    Notify("Rejoining server...", Color3.fromRGB(80,160,255))
+    pcall(function()
+        TeleportService:Teleport(game.PlaceId, LP)
+    end)
+end)
+
+createToggle(MiscPage, "Walk on Water", function(state)
+    if state then
+        StartWalkOnWater()
+    else
+        StopWalkOnWater()
+    end
+end)
+
+createToggle(MiscPage, "Fly", function(v)
+    _G.ApplyToggle("Fly", v)
+end)
+
+print("✔ BATCH 3 Loaded | Toggles + Engine Active")
+
+
+
+
+--====================================================--
+--================== BATCH 4 / 5 =====================--
+--=========== AUTO TOTEM + TELEPORT SYSTEM ===========--
+--====================================================--
+
+------------------------------------------------------
+-- AUTO TOTEM : GET UUID (SCRIPT 1 ORIGINAL)
+------------------------------------------------------
+
+local function GetTotemUUID()
+    local inv = Data:Get({"Inventory","Totems"})
+    if inv then
+        for _, item in ipairs(inv) do
+            return item.UUID
+        end
+    end
+    return nil
+end
+
+------------------------------------------------------
+-- AUTO ROD (SCRIPT 1)
+------------------------------------------------------
+
+local function EquipRod()
+    EquipToolFromHotbar:FireServer(1)
+end
+
+------------------------------------------------------
+-- AUTO EQUIP ROD LOOP (MANUAL TOGGLE, 1x / DETIK)
+------------------------------------------------------
+
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        task.wait(1) -- ✅ 1x per detik
+        if F.AutoEquipRod then
+            local char = LP.Character
+            if char then
+                local tool = char:FindFirstChildOfClass("Tool")
+                if not tool or not tool.Name:lower():find("rod") then
+                    EquipRod()
+                end
+            end
+        end
+    end
+end)
+
+------------------------------------------------------
+-- SERVER CONFIRM TOTEM (SET COOLDOWN + EQUIP ROD)
+------------------------------------------------------
+
+TotemSpawned.OnClientEvent:Connect(function()
+    Notify("Totem placed!", Color3.fromRGB(0,255,120))
+    F.TotemCooldown = 3600
+    SetTotemStatus("Cooldown: 3600s", Color3.fromRGB(255,200,0))
+
+    task.delay(0.25, function()
+        EquipRod()
+    end)
+end)
+
+------------------------------------------------------
+-- AUTO TOTEM LOOP (SCRIPT 1 LOGIC 100%)
+------------------------------------------------------
+
+local TRY_INTERVAL = 300 -- 5 menit retry
+
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        task.wait(1)
+
+        if not F.AutoTotem then
+            SetTotemStatus("Idle")
+            continue
+        end
+
+        -- COOLDOWN
+        if F.TotemCooldown > 0 then
+            SetTotemStatus("Cooldown: "..F.TotemCooldown.."s", Color3.fromRGB(255,200,0))
+            F.TotemCooldown -= 1
+            continue
+        end
+
+        -- AUTO EQUIP ROD jika tidak sedang memegang rod
+        local char = LP.Character
+        if char then
+            local tool = char:FindFirstChildOfClass("Tool")
+            if not tool or not tool.Name:lower():find("rod") then
+                EquipRod()
+                task.wait(0.2)
+            end
+        end
+
+        -- RETRY WAIT
+        if F.RetryWait then
+            local s = math.floor(F.RetryWait - os.clock())
+            if s > 0 then
+                SetTotemStatus("Retry in "..s.."s", Color3.fromRGB(255,150,0))
+                continue
+            else
+                F.RetryWait = false
+            end
+        end
+
+        -- AMBIL UUID TOTEM
+        local uuid = GetTotemUUID()
+        if not uuid then
+            SetTotemStatus("No Totem Found", Color3.fromRGB(255,80,80))
+            task.wait(3)
+            continue
+        end
+
+        -- REQUEST PASANG TOTEM
+        SetTotemStatus("Placing Totem...", Color3.fromRGB(80,160,255))
+        SpawnTotem:FireServer(uuid)
+
+        -- tunggu server respon (script 1 pakai 0.5)
+        task.wait(0.7)
+
+        -- kalau server TIDAK BALAS → retry 5 menit
+        if F.TotemCooldown <= 0 then
+            SetTotemStatus("Failed! Retry in 5 min", Color3.fromRGB(255,120,0))
+            F.RetryWait = os.clock() + TRY_INTERVAL
+        end
+    end
+end)
+
+--====================================================
+-- TELEPORT MENU — MODE 1 (Players Tab + Spots Tab)
+--====================================================
+
+function _G.RefreshPlayerList(scroll)
+
+    -- clear buttons
+    for _,v in ipairs(scroll:GetChildren()) do
+        if v:IsA("TextButton") then v:Destroy() end
+    end
+
+    -- build new list
+    for _,plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LP then
+            local b = Instance.new("TextButton", scroll)
+            b.Size = UDim2.new(1, -6, 0, 32)
+            b.BackgroundColor3 = THEME.BUTTON
+            b.TextColor3 = THEME.TEXT
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 12
+            b.Text = plr.Name
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+
+            b.MouseButton1Click:Connect(function()
+                local me = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+                local target = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+
+                if me and target then
+                    me.CFrame = target.CFrame * CFrame.new(0,0,-3)
+                    Notify("Teleported to "..plr.Name, Color3.fromRGB(0,255,120))
+                else
+                    Notify("Target not available", Color3.fromRGB(255,80,80))
+                end
+            end)
+        end
+    end
+end
+
+
+
+
+------------------------------------------------------
+-- PLAYER PAGE LIST POPULATE
+------------------------------------------------------
+
+task.spawn(function()
+    task.wait(1)
+    _G.RefreshPlayerList(_G.PlayerScroll)
+end)
+
+Players.PlayerAdded:Connect(function()
+    task.delay(0.5, function()
+        _G.RefreshPlayerList(_G.PlayerScroll)
+    end)
+end)
+
+Players.PlayerRemoving:Connect(function()
+    task.delay(0.5, function()
+        _G.RefreshPlayerList(_G.PlayerScroll)
+    end)
+end)
+
+--====================================================
+-- TELEPORT SPOTS (FULL A–Z)
+--====================================================
+
+local SpotList = {
+    { Name = "Ancient Jungle", CFrame = CFrame.new(1562.54, 6.62, -233.16) },
+    { Name = "Ancient Ruin", CFrame = CFrame.new(6076.29, -585.92, 4625.92) },
+    { Name = "Captain Jones (Quest)", CFrame = CFrame.new(3312.16, 9.09, 3681.58) },
+    { Name = "Coral Reefs", CFrame = CFrame.new(-2752.8, 4.0, 2165.78) },
+    { Name = "Crater Island", CFrame = CFrame.new(1027.12, 2.89, 5148.10) },
+    { Name = "Deadman Compass (Quest)", CFrame = CFrame.new(-3437.02, -22.36, -1500.29) },
+    { Name = "Esoteric Depths", CFrame = CFrame.new(3249.08, -1301.52, 1373.68) },
+    { Name = "Fisherman Island", CFrame = CFrame.new(73.35, 9.53, 2709.50) },
+    { Name = "Kohana", CFrame = CFrame.new(-595.69, 19.25, 429.86) },
+    { Name = "Kohana Volcano", CFrame = CFrame.new(-559.59, 21.22, 153.75) },
+    { Name = "Kuil Suci", CFrame = CFrame.new(1471.79, -22.12, -607.50) },
+    { Name = "Pirate Cove", CFrame = CFrame.new(3398.70, 10.34, 3491.11) },
+    { Name = "Pirate Treasure Room", CFrame = CFrame.new(3340.80, -301.51, 3090.66) },
+    { Name = "Sisyphus Statue", CFrame = CFrame.new(-3745.26, -135.07, -1008.68) },
+    { Name = "Traveling Merchant", CFrame = CFrame.new(-133.94, 3.18, 2767.25) },
+    { Name = "Treasure Room", CFrame = CFrame.new(-3597.20, -280.11, -1633.28) },
+    { Name = "Tropical Grove", CFrame = CFrame.new(-2128.62, 53.48, 3637.66) },
+    { Name = "Weather Machine", CFrame = CFrame.new(-1527.67, 2.87, 1914.66) },
+}
+
+------------------------------------------------------
+-- REFRESH SPOT LIST
+------------------------------------------------------
+
+function _G.RefreshSpotList(scroll)
+
+    for _,v in ipairs(scroll:GetChildren()) do
+        if v:IsA("TextButton") then v:Destroy() end
+    end
+
+    for _,spot in ipairs(SpotList) do
+        local b = Instance.new("TextButton", scroll)
+        b.Size = UDim2.new(1, -6, 0, 32)
+        b.BackgroundColor3 = THEME.BUTTON
+        b.TextColor3 = THEME.TEXT
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 12
+        b.Text = spot.Name
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+
+        b.MouseButton1Click:Connect(function()
+            local hrp = LP.Character and LP.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.CFrame = spot.CFrame + Vector3.new(0,5,0)
+                Notify("Teleported to "..spot.Name, Color3.fromRGB(0,255,120))
+            else
+                Notify("Teleport failed", Color3.fromRGB(255,80,80))
+            end
+        end)
+    end
+end
+
+
+
+
+------------------------------------------------------
+-- INITIALIZE SPOT PAGE
+------------------------------------------------------
+
+task.spawn(function()
+    task.wait(1)
+    _G.RefreshSpotList(_G.SpotScroll)
+end)
+
+print("✔ BATCH 4 Loaded | Auto Totem + Teleport Ready")
+
+--====================================================--
+--================== BATCH 5 / 5 =====================--
+--========= CLEAN UI + FPS BOOST + FINALIZE ==========--
+--====================================================--
+
+------------------------------------------------------
+-- REAL PING FUNCTION (PORT FROM FishItWORKUI)
+------------------------------------------------------
+
+local function GetRealPing()
+    local network = Stats:FindFirstChild("Network")
+    if not network then return nil end
+
+    local serverStats = network:FindFirstChild("ServerStatsItem")
+    if not serverStats then return nil end
+
+    local pingStat = serverStats:FindFirstChild("Data Ping")
+    if not pingStat then return nil end
+
+    local value = pingStat:GetValue()
+    if type(value) ~= "number" then return nil end
+
+    return value
+end
+
+------------------------------------------------------
+-- PING PANEL (FRAME, BUKAN TEXTLABEL)
+------------------------------------------------------
+
+local PingPanel = Instance.new("Frame", gui)
+PingPanel.Name = "PingPanel"
+PingPanel.Size = UDim2.new(0,140,0,26)
+PingPanel.BackgroundColor3 = THEME.PANEL
+PingPanel.BackgroundTransparency = 0.15
+PingPanel.Visible = false
+PingPanel.BorderSizePixel = 0
+
+Instance.new("UICorner", PingPanel).CornerRadius = UDim.new(0,8)
+
+local ps = Instance.new("UIStroke", PingPanel)
+ps.Color = THEME.BORDER
+ps.Transparency = 0.6
+
+-- TEXT DI DALAM PANEL
+local PingText = Instance.new("TextLabel", PingPanel)
+PingText.Size = UDim2.new(1,0,1,0)
+PingText.BackgroundTransparency = 1
+PingText.Font = Enum.Font.Gotham
+PingText.TextSize = 12
+PingText.TextColor3 = THEME.TEXT
+PingText.Text = "Ping: --"
+
+Instance.new("UICorner", PingPanel).CornerRadius = UDim.new(0,8)
+
+------------------------------------------------------
+-- VISUAL TAB : SHOW PING PANEL TOGGLE
+------------------------------------------------------
+
+
+createToggle(VisualPage, "Show Ping Panel", function(state)
+    PingPanel.Visible = state
+end)
+
+createPullAnimDropdown(VisualPage)
+
+createToggle(VisualPage, "Disable Skin FX", function(state)
+    _G.DisableSkinFX = state
+
+    if state then
+        Notify("Skin FX OFF — All blar effects disabled", Color3.fromRGB(0,255,120))
+    else
+        Notify("Skin FX ON — Effects restored", Color3.fromRGB(255,200,80))
+    end
+end)
+
+------------------------------------------------------
+-- DISABLE FISHING FX (ALL-IN-ONE)
+------------------------------------------------------
+
+createToggle(VisualPage, "Disable Fishing FX (All-in-One)", function(state)
+    _G.DisableFishingFX = state
+
+    if state then
+        Notify("Fishing FX OFF (VFX + Charge + Minigame UI)", Color3.fromRGB(0,255,120))
+    else
+        Notify("Fishing FX ON (Restored)", Color3.fromRGB(255,200,80))
+    end
+end)
+
+------------------------------------------------------
+-- REDUCE MAP
+------------------------------------------------------
+
+createToggle(VisualPage, "Reduce Map", function(state)
+    if state then
+        -- REDUCE MAP EXECUTE 1X
+        pcall(function()
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        end)
+
+        Lighting.FogEnd = 50
+        Lighting.FogStart = 0
+        Lighting.GlobalShadows = false
+        Lighting.Brightness = 0
+        Lighting.ExposureCompensation = -1
+        Lighting.EnvironmentDiffuseScale = 0
+        Lighting.EnvironmentSpecularScale = 0
+
+        pcall(function()
+            local t = workspace.Terrain
+            t.WaterWaveSize = 0
+            t.WaterWaveSpeed = 0
+            t.WaterReflectance = 0
+            t.WaterTransparency = 1
+        end)
+
+        Notify("Reduce Map: ON (Executed 1x)", Color3.fromRGB(0,255,150))
+    else
+        Notify("Reduce Map: OFF (cannot restore map)", Color3.fromRGB(255,80,80))
+    end
+end)
+
+------------------------------------------------------
+-- PERFORMANCE MODE
+------------------------------------------------------
+
+createToggle(VisualPage, "Performance Mode", function(state)
+    if state then
+        -- TRUE ONE CLICK ULTRA LOW GRAPHICS
+        pcall(function()
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        end)
+
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 60
+        Lighting.Brightness = 0
+        Lighting.ExposureCompensation = -1
+        Lighting.EnvironmentDiffuseScale = 0
+        Lighting.EnvironmentSpecularScale = 0
+
+        pcall(function()
+            Lighting.Bloom.Enabled = false
+            Lighting.Blur.Enabled = false
+            Lighting.ColorCorrection.Enabled = false
+            Lighting.SunRays.Enabled = false
+        end)
+
+        pcall(function()
+            local t = workspace.Terrain
+            t.WaterWaveSize = 0
+            t.WaterWaveSpeed = 0
+            t.WaterReflectance = 0
+            t.WaterTransparency = 1
+        end)
+
+        Notify("Performance Mode: ON (Ultra Low Graphics)", Color3.fromRGB(0,255,120))
+    else
+        Notify("Performance Mode: OFF (cannot restore lighting)", Color3.fromRGB(255,80,80))
+    end
+end)
+
+------------------------------------------------------
+-- EXTREME POTATO MODE
+------------------------------------------------------
+
+createToggle(VisualPage, "Extreme Potato Mode", function(state)
+    if not state then
+        Notify("Extreme Potato Mode OFF (cannot restore fully)", Color3.fromRGB(255,80,80))
+        return
+    end
+
+    Notify("Extreme Potato Mode: ACTIVATED ⚡", Color3.fromRGB(255,200,50))
+
+    -- 🔥 QUALITY LEVEL
+    pcall(function()
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    end)
+
+    -- 🔥 LIGHTING REMOVE EVERYTHING
+    for _,v in ipairs(Lighting:GetChildren()) do
+        if v:IsA("PostEffect") then
+            v.Enabled = false
+        end
+    end
+
+    Lighting.GlobalShadows = false
+    Lighting.Brightness = 0
+    Lighting.FogStart = 0
+    Lighting.FogEnd = 25
+    Lighting.ExposureCompensation = -2
+    Lighting.EnvironmentDiffuseScale = 0
+    Lighting.EnvironmentSpecularScale = 0
+
+    -- 🔥 REMOVE SKYBOX
+    pcall(function()
+        Lighting.Sky:Destroy()
+    end)
+
+    -- 🔥 TERRAIN OPTIMIZE
+    pcall(function()
+        local t = workspace.Terrain
+        t.WaterWaveSize = 0
+        t.WaterWaveSpeed = 0
+        t.WaterReflectance = 0
+        t.WaterTransparency = 1
+    end)
+
+    -- 🔥 DELETE PARTICLES
+    task.spawn(function()
+        for _,obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("ParticleEmitter") or
+               obj:IsA("Trail") or
+               obj:IsA("Beam") or
+               obj:IsA("Fire") or
+               obj:IsA("Smoke") or
+               obj:IsA("Sparkles") then
+                obj.Enabled = false
+            end
+        end
+    end)
+
+    -- 🔥 DELETE DECALS & TEXTURES
+    task.spawn(function()
+        for _,obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("Decal") or obj:IsA("Texture") then
+                obj:Destroy()
+            end
+        end
+    end)
+
+    -- 🔥 FORCE MATERIAL LIGHTWEIGHT
+    task.spawn(function()
+        for _,p in ipairs(workspace:GetDescendants()) do
+            if p:IsA("BasePart") then
+                p.Material = Enum.Material.SmoothPlastic
+                p.Reflectance = 0
+            end
+        end
+    end)
+
+    Notify("🔥 Extreme Potato Mode Applied — MAX FPS!", Color3.fromRGB(0,255,120))
+end)
+
+
+
+------------------------------------------------------
+-- MERCHANT BUTTON (AUTO CLOSE 5s)
+------------------------------------------------------
+
+local MerchantBtn = Instance.new("TextButton", ShopPage)
+MerchantBtn.Size = UDim2.new(0,300,0,34)
+MerchantBtn.BackgroundColor3 = THEME.BUTTON
+MerchantBtn.BackgroundTransparency = 0.25
+MerchantBtn.TextColor3 = THEME.TEXT
+MerchantBtn.Font = Enum.Font.GothamBold
+MerchantBtn.TextSize = 12
+MerchantBtn.BorderSizePixel = 0
+MerchantBtn.Text = "Open Merchant (Auto Close 5s)"
+
+Instance.new("UICorner", MerchantBtn).CornerRadius = UDim.new(0,8)
+
+local merchantGui = LP.PlayerGui:FindFirstChild("Merchant")
+
+MerchantBtn.MouseButton1Click:Connect(function()
+    Notify("Merchant opened", Color3.fromRGB(80,160,255)) -- ⬅ Tambah DI SINI
+
+    if not merchantGui then return end
+
+    merchantGui.Enabled = true
+    main.Visible = false
+    if blur then blur.Enabled = false end
+
+    task.delay(5, function()
+        if merchantGui then merchantGui.Enabled = false end
+        if blur then blur.Enabled = true end
+
+        Notify("Merchant closed", Color3.fromRGB(255,80,80)) -- ⬅ DAN DI SINI
+    end)
+end)
+
+
+
+------------------------------------------------------
+-- PING UPDATE LOOP (COLOR SYSTEM + SAFE)
+------------------------------------------------------
+
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        task.wait(1)
+
+        if not PingPanel.Visible then continue end
+
+        local ping = GetRealPing()
+
+        if not ping then
+            PingText.Text = "Ping: --"
+            PingText.TextColor3 = Color3.fromRGB(200,200,200)
+        else
+            PingText.Text = string.format("Ping: %.1f ms", ping)
+
+            -- ⚡ WARNA PING
+            if ping < 60 then
+                PingText.TextColor3 = Color3.fromRGB(0,255,120)
+            elseif ping < 120 then
+                PingText.TextColor3 = Color3.fromRGB(255,255,0)
+            elseif ping < 200 then
+                PingText.TextColor3 = Color3.fromRGB(255,150,0)
+            else
+                PingText.TextColor3 = Color3.fromRGB(255,70,70)
+            end
+        end
+    end
+end)
+
+------------------------------------------------------
+-- AUTO FOLLOW FLOAT BUTTON
+------------------------------------------------------
+
+task.spawn(function()
+    while _G.FishItHubLoaded do
+        task.wait()
+        if PingPanel.Visible then
+            PingPanel.Position = UDim2.new(
+                floatBtn.Position.X.Scale,
+                floatBtn.Position.X.Offset,
+                floatBtn.Position.Y.Scale,
+                floatBtn.Position.Y.Offset + floatBtn.Size.Y.Offset + 5
+            )
+        end
+    end
+end)
+
+------------------------------------------------------
+-- MAKE PING PANEL DRAGGABLE
+------------------------------------------------------
+
+local dragging = false
+local dragPos = Vector2.new()
+
+PingPanel.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragPos = Vector2.new(
+            input.Position.X - PingPanel.AbsolutePosition.X,
+            input.Position.Y - PingPanel.AbsolutePosition.Y
+        )
+    end
+end)
+
+PingPanel.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        PingPanel.Position = UDim2.fromOffset(
+            input.Position.X - dragPos.X,
+            input.Position.Y - dragPos.Y
+        )
+    end
+end)
+
+------------------------------------------------------
+-- PATCH: SCROLL PLAYER & SPOT
+------------------------------------------------------
+
+local function makeScrollable(pageContent)
+    local scroll = Instance.new("ScrollingFrame", pageContent)
+    scroll.Size = UDim2.new(1, 0, 1, 0)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scroll.BackgroundTransparency = 1
+    scroll.BorderSizePixel = 0
+    scroll.ScrollBarThickness = 4
+
+    -- pindahkan tombol lama
+    for _, child in ipairs(pageContent:GetChildren()) do
+        if child:IsA("TextButton") then
+            child.Parent = scroll
+        end
+    end
+
+    local layout = Instance.new("UIListLayout", scroll)
+    layout.Padding = UDim.new(0, 10)
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+    return scroll -- ⬅⬅⬅⬅ FIX PALING PENTING
+end
+
+
+------------------------------------------------------
+-- APPLY TO PLAYER & SPOT PAGE
+------------------------------------------------------
+-- INITIAL REFRESH (BUAT TOMBOL DULU)
+task.delay(0.1, function()
+    local PlayerScroll = makeScrollable(PlayerPage)
+    local SpotScroll = makeScrollable(SpotPage)
+
+    task.wait(0.1)
+    _G.RefreshPlayerList(PlayerScroll)
+    _G.RefreshSpotList(SpotScroll)
+
+    -- SIMPAN REFERENSI AGAR UPDATE PLAYER AJAR
+    _G.PlayerScroll = PlayerScroll
+    _G.SpotScroll   = SpotScroll
+end)
+
+
+
+print("✔ PATCH FIXED | Player & Spot now scrollable & visible")
+
+
+------------------------------------------------------
+-- CLEAN FISHING UI (KEEP ONLY "You got:")
+------------------------------------------------------
+
+local function shouldHideFishLabel(lb)
+    if not lb:IsA("TextLabel") then return false end
+    if not lb.Text or lb.Text == "" then return false end
+
+    local t = lb.Text:lower()
+
+    if t:match("^%s*you%s+got") then return false end
+    if t:match("^1%s+in") then return true end
+    if t:find("kg") then return true end
+    if t:find("lvl") then return true end
+
+    if lb.TextSize >= 26 then
+        local scrY = workspace.CurrentCamera.ViewportSize.Y
+        local pos = lb.AbsolutePosition.Y
+        if pos > scrY * 0.15 and pos < scrY * 0.7 then
+            return true
+        end
+    end
+
+    return false
+end
+
+task.spawn(function()
+    local pg = LP:WaitForChild("PlayerGui")
+
+    while _G.FishItHubLoaded do
+        task.wait(2)
+
+        local fishUI = pg:FindFirstChild("FishingUI")
+        if not fishUI then continue end
+
+        for _,v in ipairs(fishUI:GetDescendants()) do
+            if shouldHideFishLabel(v) then
+                v.Visible = false
+            end
+        end
+    end
+end)
+
+------------------------------------------------------
+-- LOW GFX MODE (ULTRA LIGHT)
+------------------------------------------------------
+
+task.spawn(function()
+    Lighting.GlobalShadows = false
+    Lighting.EnvironmentDiffuseScale = 0
+    Lighting.EnvironmentSpecularScale = 0
+    Lighting.FogEnd = 999999
+    Lighting.Brightness = 1
+
+    for _,fx in ipairs(Lighting:GetChildren()) do
+        if fx:IsA("SunRaysEffect")
+        or fx:IsA("DepthOfFieldEffect")
+        or fx:IsA("BloomEffect")
+        or fx:IsA("ColorCorrectionEffect") then
+            fx.Enabled = false
+        end
+    end
+end)
+
+------------------------------------------------------
+-- FINAL STYLE PASS (GLASS MINIMAL)
+------------------------------------------------------
+
+local function applyStyle(obj)
+    if obj:IsA("Frame") then
+        obj.BackgroundTransparency = obj.BackgroundTransparency
+        obj.BackgroundColor3 = obj.BackgroundColor3 or THEME.BG
+
+    elseif obj:IsA("TextButton") then
+        obj.BackgroundColor3 = obj.BackgroundColor3 or THEME.BUTTON
+        obj.TextColor3 = THEME.TEXT
+        obj.AutoButtonColor = false
+
+    elseif obj:IsA("TextLabel") then
+        obj.TextColor3 = THEME.TEXT
+    end
+
+    if (obj:IsA("Frame") or obj:IsA("TextButton")) and not obj:FindFirstChild("UICorner") then
+        local c = Instance.new("UICorner", obj)
+        c.CornerRadius = UDim.new(0, 10)
+    end
+
+    if (obj:IsA("Frame") or obj:IsA("TextButton")) and not obj:FindFirstChild("UIStroke") then
+        local s = Instance.new("UIStroke", obj)
+        s.Color = THEME.BORDER
+        s.Thickness = 1
+        s.Transparency = 0.75
+    end
+end
+
+for _,v in ipairs(gui:GetDescendants()) do
+    applyStyle(v)
+end
+
+------------------------------------------------------
+-- SAFE EXIT HANDLER
+------------------------------------------------------
+
+function _G.CloseHub()
+    _G.FishItHubLoaded = false
+    F.FlyEnabled = false
+
+    pcall(function()
+        _G.StopFly()
+    end)
+
+    pcall(function()
+        gui:Destroy()
+    end)
+
+    pcall(function()
+        if Lighting:FindFirstChild("FishItHubBlur") then
+            Lighting.FishItHubBlur:Destroy()
+        end
+    end)
+end
+
+print("====================================================")
+print("✔ FISHIT HUB — FULL MERGE COMPLETE")
+print("✔ ALL FEATURES ACTIVE & UI LOADED")
+print("✔ Enjoy your new Glass Minimal Hub!")
+print("====================================================")
